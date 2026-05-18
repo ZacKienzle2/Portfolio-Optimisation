@@ -50,10 +50,8 @@ class PortfolioVisualiser:
             weights: pd.Series
             if isinstance(weights_data, dict):
                 weights = pd.Series(weights_data)
-            elif isinstance(weights_data, pd.Series):
-                weights = weights_data
             else:
-                continue
+                weights = weights_data
 
             ret = (weights * self.mu).sum()
             vol = np.sqrt(np.dot(weights.T, np.dot(self.s, weights)))
