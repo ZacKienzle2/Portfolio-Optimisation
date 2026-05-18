@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,9 +23,9 @@ class PortfolioVisualiser:
 
     def __init__(
         self,
-        mu: Union[pd.Series, NDArray[np.float64]],
-        s: Union[pd.DataFrame, NDArray[np.float64]],
-        allWeights: Dict[str, Union[pd.Series, Dict[str, float]]],
+        mu: pd.Series | NDArray[np.float64],
+        s: pd.DataFrame | NDArray[np.float64],
+        allWeights: dict[str, pd.Series | dict[str, float]],
     ):
         """Initialise the visualiser.
 
@@ -41,9 +41,9 @@ class PortfolioVisualiser:
     def plotEfficientFrontier(self):
         """Plot the efficient frontier and overlay portfolio risk/return points."""
         ef = EfficientFrontier(self.mu, self.s)
-        fig: Figure
+        _fig: Figure
         ax: Axes
-        fig, ax = plt.subplots(figsize=(10, 6))
+        _fig, ax = plt.subplots(figsize=(10, 6))
         pypfopt_plotting.plot_efficient_frontier(ef, ax=ax, show_assets=False)
 
         for name, weightsData in self.allWeights.items():
@@ -80,9 +80,9 @@ class PortfolioVisualiser:
             raise RuntimeError("HRP model must be optimized first.")
 
         figSize = kwargs.get("figsize", (10, 7))
-        fig: Figure
+        _fig: Figure
         ax: Axes
-        fig, ax = plt.subplots(figsize=figSize)
+        _fig, ax = plt.subplots(figsize=figSize)
         ax.set_title("Hierarchical Clustering Dendrogram")
 
         labels = hrpModel.returns.columns.tolist()

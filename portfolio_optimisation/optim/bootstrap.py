@@ -1,6 +1,5 @@
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -32,7 +31,7 @@ class HRPAnalyser:
         """
         self.returns: pd.DataFrame = returns
         self.riskFreeRate: float = riskFreeRate
-        self.bootstrapResults: Optional[pd.DataFrame] = None
+        self.bootstrapResults: pd.DataFrame | None = None
         self.cacheDir: Path = Path("cache")
         self.cacheDir.mkdir(exist_ok=True)
 
@@ -43,7 +42,7 @@ class HRPAnalyser:
 
     def runBootstrap(
         self,
-        linkageMethods: Optional[List[str]] = None,
+        linkageMethods: list[str] | None = None,
         reps: int = 500,
         verbose: bool = True,
         forceRecalculate: bool = False,
@@ -75,14 +74,14 @@ class HRPAnalyser:
         if verbose:
             print(f"Running bootstrap with {reps} reps...")
 
-        allResults: List[pd.DataFrame] = []
+        allResults: list[pd.DataFrame] = []
         for method in linkageMethods:
             nCores = max(1, cpu_count() - 1)
             seeds: NDArray[np.int32] = np.random.randint(
                 0, 1_000_000, size=reps, dtype=np.int32
             )
             args = [(seed, method) for seed in seeds]
-            resultsList: List[Dict[str, float]]
+            resultsList: list[dict[str, float]]
 
             with Pool(nCores) as pool:
                 resultsList = pool.starmap(self._bootstrapSingleMethod, args)
@@ -96,7 +95,7 @@ class HRPAnalyser:
         if verbose:
             print("Bootstrap complete and results saved to cache.")
 
-    def _bootstrapSingleMethod(self, seed: int, linkageMethod: str) -> Dict[str, float]:
+    def _bootstrapSingleMethod(self, seed: int, linkageMethod: str) -> dict[str, float]:
         """Performs a single HRP optimisation on a bootstrapped sample."""
         rs = np.random.default_rng(seed)
 
@@ -202,9 +201,13 @@ class HRPAnalyser:
             xaxis_title="Linkage Method",
             yaxis_title=metricTitle,
             legend_title="Linkage Method",
-            legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5
-            ),
+            legend={
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "center",
+                "x": 0.5,
+            },
         )
         fig.show()
 
@@ -238,14 +241,14 @@ class HRPAnalyser:
                     mode="markers",
                     name=method,
                     hovertext=dfSubset["sharpe_ratio"].round(2),
-                    marker=dict(
-                        color=dfSubset["sharpe_ratio"],
-                        cmin=shMin,
-                        cmax=shMax,
-                        colorscale="Viridis",
-                        showscale=(i == 0),
-                        colorbar=dict(title="Sharpe Ratio") if i == 0 else None,
-                    ),
+                    marker={
+                        "color": dfSubset["sharpe_ratio"],
+                        "cmin": shMin,
+                        "cmax": shMax,
+                        "colorscale": "Viridis",
+                        "showscale": (i == 0),
+                        "colorbar": {"title": "Sharpe Ratio"} if i == 0 else None,
+                    },
                 ),
                 row=rowIdx,
                 col=colIdx,
@@ -290,8 +293,12 @@ class HRPAnalyser:
         )
         fig.update_layout(
             yaxis_title="Investment Value ($)",
-            legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5
-            ),
+            legend={
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "center",
+                "x": 0.5,
+            },
         )
         fig.show()

@@ -1,4 +1,4 @@
-from typing import Dict, Literal
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,7 @@ def calculateRiskMetrics(
     simulatedReturns: pd.DataFrame,
     alpha: float = 0.05,
     method: Literal["empirical", "parametric"] = "empirical",
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Calculate Value at Risk (VaR) and Conditional VaR (CVaR).
 
     Computes VaR using either the empirical quantile of simulated returns
@@ -63,7 +63,7 @@ def calculateRiskMetrics(
 
 def calculatePerformanceMetrics(
     portfolioReturns: pd.Series, riskFreeRate: float = 0.02
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Calculate standard portfolio performance metrics.
 
     Computes annualised return, volatility, Sharpe ratio, Sortino ratio,
