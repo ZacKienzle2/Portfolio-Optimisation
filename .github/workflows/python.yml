@@ -59,6 +59,15 @@ jobs:
       - name: Pin Python ${{ matrix.python }}
         run: uv python pin ${{ matrix.python }}
 
+      - name: Cache matplotlib + numba font/JIT directories
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/.cache/matplotlib
+            ~/.numba_cache
+          key: pycache-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('uv.lock') }}
+          restore-keys: pycache-${{ runner.os }}-${{ matrix.python }}-
+
       - name: Sync dependencies
         run: uv sync --frozen --all-extras
 
