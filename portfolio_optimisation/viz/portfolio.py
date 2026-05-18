@@ -10,7 +10,7 @@ from pypfopt import EfficientFrontier
 from pypfopt import plotting as pypfopt_plotting
 from scipy.cluster.hierarchy import dendrogram
 
-from markets.optim.hrp import HRPModel
+from portfolio_optimisation.optim.hrp import HRPModel
 
 
 class PortfolioVisualiser:

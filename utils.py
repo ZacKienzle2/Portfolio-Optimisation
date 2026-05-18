@@ -1,10 +1,10 @@
-"""Deprecation shim. Import from ``markets.infra`` instead."""
+"""Deprecation shim. Import from ``portfolio_optimisation.infra`` instead."""
 
 from __future__ import annotations
 
 import warnings
 
-from markets.infra import (
+from portfolio_optimisation.infra import (
     generateFinalReport,
     getData,
     get_discrete_portfolio,
@@ -12,7 +12,7 @@ from markets.infra import (
 )
 
 warnings.warn(
-    "`utils` is a transitional shim. Import from `markets.infra` instead.",
+    "`utils` is a transitional shim. Import from `portfolio_optimisation.infra` instead.",
     DeprecationWarning,
     stacklevel=2,
 )

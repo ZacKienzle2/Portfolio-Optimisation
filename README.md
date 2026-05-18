@@ -1,6 +1,8 @@
-# Markets
+# Portfolio Optimisation
 
-Derivatives pricing and risk infrastructure. Python 3.12 over QuantLib.
+Quant infrastructure for portfolio construction, risk modelling and time
+series diagnostics. Python 3.12+ over numpy, scipy, pandas, statsmodels,
+arch, sklearn, pypfopt and pymle.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fe5196.svg)](https://www.conventionalcommits.org/en/v1.0.0/)
@@ -11,10 +13,18 @@ Derivatives pricing and risk infrastructure. Python 3.12 over QuantLib.
 
 ## Scope
 
-- FX forwards, vanilla options and swaps
-- IRS, FRAs, caps, floors and collars
-- Curve bootstrap and log-DF monotone-Hermite interpolation
-- Greeks, parametric and historical VaR, ICR stress, minimum-variance hedge ratios
+- Hierarchical Risk Parity (HRP) portfolio construction with Ledoit-Wolf
+  shrinkage and stationary-bootstrap robustness checks
+- Value-at-Risk and Conditional VaR (empirical and parametric)
+- Student t-copula simulation with Kendall-tau correlation and MLE
+  degrees-of-freedom estimation
+- Annualised performance metrics: Sharpe, Sortino, max drawdown
+- Econometric test battery: Jarque-Bera, ADF, Ljung-Box, Breusch-Pagan,
+  ARCH-LM, CUSUM
+- Maximum-likelihood SDE fitting: Geometric Brownian Motion,
+  Ornstein-Uhlenbeck
+- Plotly and matplotlib visualisation for efficient frontier, weights,
+  dendrogram, correlation heatmap
 
 ## Install
 
@@ -27,10 +37,13 @@ Requires `uv >= 0.5`. Python 3.12 auto-selected via `.python-version`.
 ## Usage
 
 ```python
-import markets
+from portfolio_optimisation.optim import HRPModel
+from portfolio_optimisation.risk import calculateRiskMetrics, CopulaRiskAnalyser
+from portfolio_optimisation.econometrics import Econometrics
+from portfolio_optimisation.sde import SDEFitter
 ```
 
-Case archives at `case-comp/<year>/`. Template at `case-comp/_template/`.
+See `main.ipynb` for an end-to-end worked example.
 
 ## Maintainers
 
@@ -38,7 +51,8 @@ See [CODEOWNERS](.github/CODEOWNERS).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Conventional Commits 1.0.0 and DCO sign-off required.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Conventional Commits 1.0.0 and DCO
+sign-off required.
 
 ## License
 
@@ -46,4 +60,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Conventional Commits 1.0.0 and DCO sign-
 
 ## Related
 
-[SECURITY](SECURITY.md) | [SUPPORT](SUPPORT.md) | [GOVERNANCE](GOVERNANCE.md) | [CHANGELOG](CHANGELOG.md) | [ROADMAP](ROADMAP.md) | [CITATION](CITATION.cff) | [ADRs](docs/adr/)
+[SECURITY](SECURITY.md) | [SUPPORT](SUPPORT.md) | [GOVERNANCE](GOVERNANCE.md) | [CHANGELOG](CHANGELOG.md) | [ROADMAP](ROADMAP.md) | [CITATION](CITATION.cff)

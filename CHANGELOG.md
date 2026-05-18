@@ -23,6 +23,7 @@ Each release section uses the following subsections, omitting any that do not ap
 - Repo metadata: CODEOWNERS, PR template, issue templates, FUNDING, CITATION.
 - Tooling configuration: .editorconfig, .yamllint.yaml, .markdownlint.yaml, _typos.toml, commitlint.config.cjs.
 - Baseline files: LICENSE (MIT), .gitignore, .gitattributes, CHANGELOG, SUPPORT, GOVERNANCE, AUTHORS, ROADMAP.
-- Python stack scaffold: pyproject.toml (uv-managed), .python-version (3.12), empty `markets/` package, smoke tests, `python` CI workflow, ADR-0004 recording the QuantLib choice.
+- Python stack scaffold: pyproject.toml (uv-managed), .python-version (3.12), `portfolio_optimisation/` package layered as risk / optim / econometrics / sde / viz / infra / domain, smoke tests, `python` CI workflow.
+- LaTeX scaffold: neutral report-class `main.tex`, shared preamble at `preamble/packages.tex`, chapters/preliminary/appendix shells with TODO placeholders.
 
-[Unreleased]: https://github.com/ZacKienzle2/Markets/compare/HEAD
+[Unreleased]: https://github.com/ZacKienzle2/Portfolio-Optimisation/compare/HEAD

@@ -10,25 +10,25 @@ import importlib
 
 
 def test_root_package_importable() -> None:
-    module = importlib.import_module("markets")
+    module = importlib.import_module("portfolio_optimisation")
     assert hasattr(module, "__version__")
 
 
 def test_subpackage_imports() -> None:
     for name in (
-        "markets.domain",
-        "markets.econometrics",
-        "markets.infra",
-        "markets.optim",
-        "markets.risk",
-        "markets.sde",
-        "markets.viz",
+        "portfolio_optimisation.domain",
+        "portfolio_optimisation.econometrics",
+        "portfolio_optimisation.infra",
+        "portfolio_optimisation.optim",
+        "portfolio_optimisation.risk",
+        "portfolio_optimisation.sde",
+        "portfolio_optimisation.viz",
     ):
         importlib.import_module(name)
 
 
 def test_risk_exports() -> None:
-    risk = importlib.import_module("markets.risk")
+    risk = importlib.import_module("portfolio_optimisation.risk")
     for symbol in (
         "CopulaRiskAnalyser",
         "calculatePerformanceMetrics",
@@ -40,28 +40,28 @@ def test_risk_exports() -> None:
 
 
 def test_optim_exports() -> None:
-    optim = importlib.import_module("markets.optim")
+    optim = importlib.import_module("portfolio_optimisation.optim")
     for symbol in ("HRPAnalyser", "HRPModel"):
         assert hasattr(optim, symbol), symbol
 
 
 def test_econometrics_exports() -> None:
-    econometrics = importlib.import_module("markets.econometrics")
+    econometrics = importlib.import_module("portfolio_optimisation.econometrics")
     assert hasattr(econometrics, "Econometrics")
 
 
 def test_sde_exports() -> None:
-    sde = importlib.import_module("markets.sde")
+    sde = importlib.import_module("portfolio_optimisation.sde")
     assert hasattr(sde, "SDEFitter")
 
 
 def test_viz_exports() -> None:
-    viz = importlib.import_module("markets.viz")
+    viz = importlib.import_module("portfolio_optimisation.viz")
     assert hasattr(viz, "PortfolioVisualiser")
 
 
 def test_infra_exports() -> None:
-    infra = importlib.import_module("markets.infra")
+    infra = importlib.import_module("portfolio_optimisation.infra")
     for symbol in (
         "generateFinalReport",
         "getData",

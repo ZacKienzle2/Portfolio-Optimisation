@@ -12,7 +12,7 @@ from plotly.subplots import make_subplots
 from pypfopt import expected_returns
 from sklearn.covariance import ledoit_wolf
 
-from markets.optim.hrp import HRPModel
+from portfolio_optimisation.optim.hrp import HRPModel
 
 
 class HRPAnalyser:
