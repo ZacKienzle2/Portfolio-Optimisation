@@ -1,6 +1,6 @@
 import contextlib
 import os
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -28,13 +28,13 @@ class SDEFitter:
         """
         self.pricesDf: pd.DataFrame = pricesDf
         self.dt: float = dt
-        self.gbmResults: Optional[pd.DataFrame] = None
-        self.ouResults: Optional[pd.DataFrame] = None
+        self.gbmResults: pd.DataFrame | None = None
+        self.ouResults: pd.DataFrame | None = None
 
     def fitGbm(
         self,
-        paramBounds: Optional[List[Tuple[float, float]]] = None,
-        initialGuess: Optional[NDArray[np.float64]] = None,
+        paramBounds: list[tuple[float, float]] | None = None,
+        initialGuess: NDArray[np.float64] | None = None,
     ) -> pd.DataFrame:
         """Fit GBM to each asset price series via analytical MLE."""
         if initialGuess is None:
@@ -76,8 +76,8 @@ class SDEFitter:
 
     def fitOu(
         self,
-        paramBounds: Optional[List[Tuple[float, float]]] = None,
-        initialGuess: Optional[NDArray[np.float64]] = None,
+        paramBounds: list[tuple[float, float]] | None = None,
+        initialGuess: NDArray[np.float64] | None = None,
     ) -> pd.DataFrame:
         """Fit Ornstein-Uhlenbeck to each asset price series via analytical MLE."""
         if initialGuess is None:

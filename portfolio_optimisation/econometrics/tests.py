@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from functools import reduce
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -28,15 +29,15 @@ class Econometrics:
         self.returnsDf: pd.DataFrame = returnsDf.dropna()
 
     @staticmethod
-    def _run_normality(series: pd.Series) -> Tuple[float, float]:
+    def _run_normality(series: pd.Series) -> tuple[float, float]:
         """Jarque-Bera test."""
         jbStat, jbPval = jarque_bera(series.to_numpy())
         return jbStat, jbPval
 
     @staticmethod
     def _run_stationarity(
-        series: pd.Series, regression: str = "c", autolag: Optional[str] = "AIC"
-    ) -> Tuple[float, float]:
+        series: pd.Series, regression: str = "c", autolag: str | None = "AIC"
+    ) -> tuple[float, float]:
         """Augmented Dickey-Fuller test."""
         adfStat, pVal, _, _, _, _ = adfuller(
             series.to_numpy(), regression=regression, autolag=autolag
@@ -44,7 +45,7 @@ class Econometrics:
         return adfStat, pVal
 
     @staticmethod
-    def _run_autocorrelation(series: pd.Series, lags: int) -> Tuple[float, float]:
+    def _run_autocorrelation(series: pd.Series, lags: int) -> tuple[float, float]:
         """Ljung-Box test up to a given lag."""
         res: pd.DataFrame = acorr_ljungbox(
             series.to_numpy(), lags=lags, return_df=True, model_df=0
@@ -54,20 +55,20 @@ class Econometrics:
         return lbStat, lbPval
 
     @staticmethod
-    def _run_heteroskedasticity(series: pd.Series) -> Tuple[float, float]:
+    def _run_heteroskedasticity(series: pd.Series) -> tuple[float, float]:
         """Breusch-Pagan (Koenker) test."""
         exog: NDArray[np.float64] = sm.add_constant(np.arange(len(series)))
         lmStat, lmPval, _, _ = het_breuschpagan(series.to_numpy(), exog, robust=True)
         return lmStat, lmPval
 
     @staticmethod
-    def _run_arch_effect(series: pd.Series, lags: int) -> Tuple[float, float]:
+    def _run_arch_effect(series: pd.Series, lags: int) -> tuple[float, float]:
         """ARCH-LM test."""
         lmStat, lmPval, _, _ = het_arch(series.to_numpy(), nlags=lags)
         return lmStat, lmPval
 
     @staticmethod
-    def _run_structural_break(series: pd.Series) -> Tuple[float, float]:
+    def _run_structural_break(series: pd.Series) -> tuple[float, float]:
         """CUSUM test on OLS residuals."""
         exog = sm.add_constant(np.ones_like(series))
         model = sm.OLS(series.to_numpy(), exog)
@@ -77,12 +78,12 @@ class Econometrics:
 
     def _apply_test_to_all(
         self,
-        testRunner: Callable[..., Tuple[float, float]],
-        columns: List[str],
+        testRunner: Callable[..., tuple[float, float]],
+        columns: list[str],
         **kwargs: Any,
     ) -> pd.DataFrame:
         """Applies a test runner function to all tickers."""
-        results: Dict[str, Tuple[float, float]] = {}
+        results: dict[str, tuple[float, float]] = {}
         for ticker in self.returnsDf.columns:
             try:
                 results[ticker] = testRunner(self.returnsDf[ticker], **kwargs)
@@ -98,7 +99,7 @@ class Econometrics:
         )
 
     def stationarity_test(
-        self, regression: str = "c", autolag: Optional[str] = "AIC"
+        self, regression: str = "c", autolag: str | None = "AIC"
     ) -> pd.DataFrame:
         """Augmented Dickey-Fuller test for stationarity (Unit Root Test)."""
         return self._apply_test_to_all(

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List, Tuple, Union
+from typing import Any
 
 import pandas as pd
 import yfinance as yf
@@ -7,8 +7,8 @@ from rich.console import Console
 
 
 def getData(
-    tickers: List[str], startDate: str, console: Console
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    tickers: list[str], startDate: str, console: Console
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Fetch and preprocess financial time series data.
 
     Downloads or loads cached adjusted closing prices using yfinance,
@@ -29,7 +29,7 @@ def getData(
     cachePath = Path.cwd() / "Initial_Files" / "market_data.parquet"
     cachePath.parent.mkdir(exist_ok=True)
 
-    pricesRaw: Union[pd.DataFrame, pd.Series, None]
+    pricesRaw: pd.DataFrame | pd.Series | None
     if cachePath.exists():
         console.print(f"[green]Loading cached data from {cachePath}...[/green]")
         pricesRaw = pd.read_parquet(cachePath, engine="pyarrow")

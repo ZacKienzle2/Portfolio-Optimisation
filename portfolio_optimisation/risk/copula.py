@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,9 +36,9 @@ class CopulaRiskAnalyser:
         if self.returns.empty or self.weights.empty:
             raise ValueError("Filtered returns or weights are empty.")
 
-        self.fitMarginals: Dict[str, Dict[str, Any]] = {}
-        self.copula: Optional[Any] = None
-        self.uniformReturns: Optional[pd.DataFrame] = None
+        self.fitMarginals: dict[str, dict[str, Any]] = {}
+        self.copula: Any | None = None
+        self.uniformReturns: pd.DataFrame | None = None
 
     def fit_marginal_distributions(self, dist: Any = stats.t):
         """Fit a univariate distribution to each asset's returns series.

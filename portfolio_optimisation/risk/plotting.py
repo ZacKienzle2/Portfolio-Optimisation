@@ -1,4 +1,3 @@
-from typing import Dict, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,7 +7,7 @@ from matplotlib.axes import Axes
 
 def plotSimulationResults(
     simulatedReturns: pd.DataFrame,
-    riskMetrics: Dict[str, float],
+    riskMetrics: dict[str, float],
 ):
     """Visualise the distribution of simulated returns with VaR/CVaR.
 
@@ -24,8 +23,8 @@ def plotSimulationResults(
         return
 
     returnsSeries: pd.Series = simulatedReturns["simulated_returns"]
-    varValue: Optional[float] = riskMetrics.get("VaR")
-    cvarValue: Optional[float] = riskMetrics.get("CVaR")
+    varValue: float | None = riskMetrics.get("VaR")
+    cvarValue: float | None = riskMetrics.get("CVaR")
 
     if varValue is None or cvarValue is None:
         print("Warning: Valid VaR or CVaR missing in riskMetrics for plotting.")
