@@ -11,18 +11,20 @@ from sklearn.covariance import ledoit_wolf
 
 
 class HRPModel:
-    """Implements the Hierarchical Risk Parity (HRP) portfolio model.
+    """Hierarchical Risk Parity portfolio model.
 
-    Calculates portfolio weights based on hierarchical clustering of asset
-    returns, promoting diversification by correlation-based risk budgeting.
-    Uses Ledoit-Wolf covariance shrinkage.
+    Computes portfolio weights from a hierarchical clustering of asset
+    returns with correlation-based risk budgeting. Uses Ledoit-Wolf
+    covariance shrinkage. The recursive bisection step operates on a
+    contiguous numpy view of the shrunk covariance so the inner loop
+    avoids pandas `.loc` indexing overhead.
     """
 
     def __init__(self, returns: pd.DataFrame):
-        """Initialise the HRP model.
+        """Initialise the model.
 
         Args:
-            returns (pd.DataFrame): Historical asset returns (columns=assets).
+            returns (pd.DataFrame): Historical asset returns, columns are tickers.
 
         Raises:
             TypeError: If returns is not a pandas DataFrame.
@@ -34,16 +36,22 @@ class HRPModel:
         self.ordered_tickers: list[str] = []
         self.cov_matrix: pd.DataFrame = self._calculate_covariance()
         self.linkage_matrix: NDArray[Any] | None = None
+        # Numpy view + ticker->row index map are rebuilt lazily inside
+        # optimize() so the inner-loop hot path never touches pandas.
+        self._cov_values: NDArray[np.float64] | None = None
+        self._ticker_to_idx: dict[str, int] = {}
 
     def _calculate_covariance(self) -> pd.DataFrame:
         """Calculate the Ledoit-Wolf shrunk covariance matrix."""
         cov_matrix_internal, _ = ledoit_wolf(self.returns, assume_centered=False)
         return pd.DataFrame(
-            cov_matrix_internal, index=self.returns.columns, columns=self.returns.columns
+            cov_matrix_internal,
+            index=self.returns.columns,
+            columns=self.returns.columns,
         )
 
     def _get_quasi_diag(self, linkage_matrix: NDArray[Any]) -> list[int]:
-        """Sorts assets according to the quasi-diagonalisation algorithm."""
+        """Quasi-diagonalise asset ordering from the linkage matrix."""
         num_items = linkage_matrix.shape[0] + 1
         sorted_index: list[float] = [linkage_matrix[-1, 0], linkage_matrix[-1, 1]]
 
@@ -71,45 +79,64 @@ class HRPModel:
 
         return [int(i) for i in sorted_index]
 
-    def _get_cluster_var(self, cov: pd.DataFrame, cluster_items: list[str]) -> float:
-        """Calculate the variance of an Inverse Variance Portfolio within a cluster."""
-        cov_slice = cov.loc[cluster_items, cluster_items]
-        inv_diag = 1 / np.diag(cov_slice)
-        weights_internal = (inv_diag / inv_diag.sum()).reshape(-1, 1)
-        cluster_var = (weights_internal.T @ cov_slice @ weights_internal).iloc[0, 0]
-        return float(cluster_var)
+    @staticmethod
+    def _cluster_var_numpy(
+        cov_values: NDArray[np.float64], idx: NDArray[np.intp]
+    ) -> float:
+        """Inverse-variance portfolio variance for the index-selected sub-matrix.
 
-    def _recursive_bisection(self, ordered_tickers: list[str]):
-        """Recursively bisects the clusters and weights the sub-portfolios."""
-        self.weights = pd.Series(1.0, index=ordered_tickers)
-        cluster_items: list[list[str]] = [ordered_tickers]
+        Numpy-only hot path: takes the dense covariance buffer + an integer
+        ticker-index array and computes ``w' @ cov_sub @ w`` where ``w`` is
+        proportional to ``1/diag(cov_sub)``. Avoids pandas slicing and the
+        DataFrame matmul wrap.
+        """
+        cov_sub = cov_values[np.ix_(idx, idx)]
+        inv_diag = 1.0 / np.diag(cov_sub)
+        w = inv_diag / inv_diag.sum()
+        return float(w @ cov_sub @ w)
 
-        while len(cluster_items) > 0:
-            next_clusters: list[list[str]] = []
-            for cluster in cluster_items:
-                if len(cluster) > 1:
-                    mid = len(cluster) // 2
-                    next_clusters.extend([cluster[:mid], cluster[mid:]])
-            cluster_items = next_clusters
+    def _recursive_bisection_numpy(self, ordered_idx: NDArray[np.intp]) -> NDArray[np.float64]:
+        """Recursive bisection over integer indices into the numpy cov view.
 
-            for i in range(0, len(cluster_items), 2):
-                cluster1 = cluster_items[i]
-                cluster2 = cluster_items[i + 1]
-                var1 = self._get_cluster_var(self.cov_matrix, cluster1)
-                var2 = self._get_cluster_var(self.cov_matrix, cluster2)
+        Returns a 1D weight vector aligned with ``ordered_idx``.
+        """
+        assert self._cov_values is not None
+        cov_values = self._cov_values
+        n = ordered_idx.size
+        weights = np.ones(n, dtype=np.float64)
 
-                var_sum = var1 + var2
-                alpha = 1 - var1 / var_sum if var_sum != 0 else 0.5
+        # Track clusters as (start, stop) half-open ranges within ordered_idx.
+        cluster_ranges: list[tuple[int, int]] = [(0, n)]
+        while cluster_ranges:
+            next_ranges: list[tuple[int, int]] = []
+            for start, stop in cluster_ranges:
+                if stop - start > 1:
+                    mid = start + (stop - start) // 2
+                    next_ranges.append((start, mid))
+                    next_ranges.append((mid, stop))
+            cluster_ranges = next_ranges
 
-                self.weights.loc[cluster1] *= alpha
-                self.weights.loc[cluster2] *= 1 - alpha
+            # Pair adjacent siblings and split weight by inverse cluster variance.
+            for i in range(0, len(cluster_ranges), 2):
+                left = cluster_ranges[i]
+                right = cluster_ranges[i + 1]
+                idx_left = ordered_idx[left[0] : left[1]]
+                idx_right = ordered_idx[right[0] : right[1]]
+                var_left = self._cluster_var_numpy(cov_values, idx_left)
+                var_right = self._cluster_var_numpy(cov_values, idx_right)
+                var_sum = var_left + var_right
+                alpha = 1.0 - var_left / var_sum if var_sum != 0 else 0.5
+                weights[left[0] : left[1]] *= alpha
+                weights[right[0] : right[1]] *= 1.0 - alpha
+
+        return weights
 
     def optimize(self, linkage_method: str = "ward"):
-        """Perform the Hierarchical Risk Parity optimisation.
+        """Run the HRP optimisation.
 
         Args:
-            linkage_method (str, optional): Clustering method (e.g., 'ward',
-                                           'single', 'complete'). Defaults to 'ward'.
+            linkage_method (str, optional): Clustering method passed to
+                ``scipy.cluster.hierarchy.linkage``. Defaults to ``"ward"``.
 
         Raises:
             ValueError: If the linkage matrix computation fails.
@@ -122,18 +149,28 @@ class HRPModel:
         if self.linkage_matrix is None:
             raise ValueError("Linkage matrix could not be computed.")
 
+        # Materialise a dense numpy view of the shrunk covariance and a
+        # ticker -> row index map. Subsequent bisection touches only numpy.
+        cov_values = np.ascontiguousarray(self.cov_matrix.to_numpy(dtype=np.float64))
+        self._cov_values = cov_values
+        cols = list(self.cov_matrix.columns)
+        self._ticker_to_idx = {ticker: i for i, ticker in enumerate(cols)}
+
         sorted_indices = self._get_quasi_diag(self.linkage_matrix)
-        self.ordered_tickers = list(self.cov_matrix.index[sorted_indices])
-        self._recursive_bisection(self.ordered_tickers)
+        self.ordered_tickers = [cols[i] for i in sorted_indices]
+
+        ordered_idx = np.array(sorted_indices, dtype=np.intp)
+        weight_values = self._recursive_bisection_numpy(ordered_idx)
+        self.weights = pd.Series(weight_values, index=self.ordered_tickers)
 
     def clean_weights(self) -> Series:
-        """Returns the final HRP weights, sorted by ticker.
+        """Return the final HRP weights sorted by ticker.
 
         Raises:
-            RuntimeError: If `optimize()` has not been called.
+            RuntimeError: If ``optimize()`` has not been called.
 
         Returns:
-            Series: The final HRP weights.
+            Series: Final HRP weights, alphabetically indexed.
         """
         if self.weights.empty:
             raise RuntimeError("Optimisation must be run before accessing weights.")
@@ -142,15 +179,15 @@ class HRPModel:
     def get_discrete_allocation(
         self, prices: pd.DataFrame, total_portfolio_value: float
     ) -> tuple[dict[str, int], float]:
-        """Converts continuous HRP weights to a discrete share allocation.
+        """Convert continuous HRP weights to a discrete share allocation.
 
         Args:
-            prices (pd.DataFrame): Historical asset prices (latest row used).
-            total_portfolio_value (float): Total cash available for allocation.
+            prices (pd.DataFrame): Historical asset prices, latest row used.
+            total_portfolio_value (float): Total cash available.
 
         Returns:
-            Tuple[Dict[str, int], float]: Dictionary of {ticker: shares}
-                                         and the leftover cash amount.
+            tuple[dict[str, int], float]: Map of ticker -> share count and
+            the leftover cash amount.
         """
         weights_cleaned = self.clean_weights()
         latest_prices = prices.iloc[-1]
