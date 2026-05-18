@@ -5,9 +5,12 @@ import pandas as pd
 from numpy.typing import NDArray
 from scipy import stats
 
+ANNUAL_FACTOR: int = 252
+SQRT_ANNUAL_FACTOR: float = float(np.sqrt(ANNUAL_FACTOR))
 
-def calculateRiskMetrics(
-    simulatedReturns: pd.DataFrame,
+
+def calculate_risk_metrics(
+    simulated_returns: pd.DataFrame,
     alpha: float = 0.05,
     method: Literal["empirical", "parametric"] = "empirical",
 ) -> dict[str, float]:
@@ -18,17 +21,17 @@ def calculateRiskMetrics(
     below the selected VaR threshold.
 
     Args:
-        simulatedReturns (pd.DataFrame): DataFrame with 'simulated_returns'.
+        simulated_returns (pd.DataFrame): DataFrame with 'simulated_returns'.
         alpha (float): Significance level for VaR (e.g., 0.05).
         method (Literal["empirical", "parametric"]): VaR calculation method.
 
     Returns:
         Dict[str, float]: VaR, CVaR, Empirical VaR, and Parametric VaR.
     """
-    returnsSeries: pd.Series = simulatedReturns["simulated_returns"]
-    returnsArray: NDArray[np.float64] = returnsSeries.to_numpy()
+    returns_series: pd.Series = simulated_returns["simulated_returns"]
+    returns_array: NDArray[np.float64] = returns_series.to_numpy()
 
-    if returnsArray.size == 0:
+    if returns_array.size == 0:
         return {
             "VaR": np.nan,
             "CVaR": np.nan,
@@ -36,33 +39,31 @@ def calculateRiskMetrics(
             "Parametric VaR": np.nan,
         }
 
-    empiricalVar: float = float(np.quantile(returnsArray, alpha))
-    meanReturns: float = float(returnsArray.mean())
-    stdDevReturns: float = float(returnsArray.std())
+    empirical_var: float = float(np.quantile(returns_array, alpha))
+    mean_returns: float = float(returns_array.mean())
+    std_dev_returns: float = float(returns_array.std())
 
-    parametricVar: float
-    if stdDevReturns < 1e-12:
-        parametricVar = meanReturns
+    parametric_var: float
+    if std_dev_returns < 1e-12:
+        parametric_var = mean_returns
     else:
-        parametricVar = float(
-            stats.norm.ppf(alpha, loc=meanReturns, scale=stdDevReturns)
-        )
+        parametric_var = float(stats.norm.ppf(alpha, loc=mean_returns, scale=std_dev_returns))
 
-    selectedVar: float = parametricVar if method == "parametric" else empiricalVar
+    selected_var: float = parametric_var if method == "parametric" else empirical_var
 
-    tailReturns = returnsArray[returnsArray <= selectedVar]
-    cvar: float = float(np.mean(tailReturns)) if tailReturns.size > 0 else selectedVar
+    tail_returns = returns_array[returns_array <= selected_var]
+    cvar: float = float(np.mean(tail_returns)) if tail_returns.size > 0 else selected_var
 
     return {
-        "VaR": selectedVar,
+        "VaR": selected_var,
         "CVaR": cvar,
-        "Empirical VaR": empiricalVar,
-        "Parametric VaR": parametricVar,
+        "Empirical VaR": empirical_var,
+        "Parametric VaR": parametric_var,
     }
 
 
-def calculatePerformanceMetrics(
-    portfolioReturns: pd.Series, riskFreeRate: float = 0.02
+def calculate_performance_metrics(
+    portfolio_returns: pd.Series, risk_free_rate: float = 0.02
 ) -> dict[str, float]:
     """Calculate standard portfolio performance metrics.
 
@@ -70,16 +71,13 @@ def calculatePerformanceMetrics(
     and maximum drawdown from a series of returns.
 
     Args:
-        portfolioReturns (pd.Series): Time series of portfolio returns.
-        riskFreeRate (float): Annual risk-free rate.
+        portfolio_returns (pd.Series): Time series of portfolio returns.
+        risk_free_rate (float): Annual risk-free rate.
 
     Returns:
         Dict[str, float]: Key performance metrics.
     """
-    ANNUAL_FACTOR = 252
-    SQRT_ANNUAL_FACTOR = np.sqrt(ANNUAL_FACTOR)
-
-    if portfolioReturns.empty:
+    if portfolio_returns.empty:
         return {
             "Annualised Return": np.nan,
             "Annualised Volatility": np.nan,
@@ -88,37 +86,35 @@ def calculatePerformanceMetrics(
             "Max Drawdown": np.nan,
         }
 
-    annualisedReturn: float = float(portfolioReturns.mean()) * ANNUAL_FACTOR
-    annualisedVolatility: float = float(portfolioReturns.std()) * SQRT_ANNUAL_FACTOR
+    annualised_return: float = float(portfolio_returns.mean()) * ANNUAL_FACTOR
+    annualised_volatility: float = float(portfolio_returns.std()) * SQRT_ANNUAL_FACTOR
 
-    targetReturnDaily: float = (1 + riskFreeRate) ** (1 / ANNUAL_FACTOR) - 1
-    downsideReturns: pd.Series = portfolioReturns.loc[
-        portfolioReturns < targetReturnDaily
-    ]
-    downsideStd: float = (
-        float(downsideReturns.std()) * SQRT_ANNUAL_FACTOR
-        if not downsideReturns.empty and downsideReturns.std() > 0
+    target_return_daily: float = (1 + risk_free_rate) ** (1 / ANNUAL_FACTOR) - 1
+    downside_returns: pd.Series = portfolio_returns.loc[portfolio_returns < target_return_daily]
+    downside_std: float = (
+        float(downside_returns.std()) * SQRT_ANNUAL_FACTOR
+        if not downside_returns.empty and downside_returns.std() > 0
         else 0.0
     )
 
-    cumulativeReturns: pd.Series = (1 + portfolioReturns).cumprod()
-    peak: pd.Series = cumulativeReturns.expanding(min_periods=1).max()
-    drawdown: pd.Series = (cumulativeReturns - peak) / peak
-    maxDrawdown: float = float(drawdown.min()) if not drawdown.empty else 0.0
+    cumulative_returns: pd.Series = (1 + portfolio_returns).cumprod()
+    peak: pd.Series = cumulative_returns.expanding(min_periods=1).max()
+    drawdown: pd.Series = (cumulative_returns - peak) / peak
+    max_drawdown: float = float(drawdown.min()) if not drawdown.empty else 0.0
 
-    sharpeRatio: float = (
-        (annualisedReturn - riskFreeRate) / annualisedVolatility
-        if annualisedVolatility > 1e-9
+    sharpe_ratio: float = (
+        (annualised_return - risk_free_rate) / annualised_volatility
+        if annualised_volatility > 1e-9
         else 0.0
     )
-    sortinoRatio: float = (
-        (annualisedReturn - riskFreeRate) / downsideStd if downsideStd > 1e-9 else 0.0
+    sortino_ratio: float = (
+        (annualised_return - risk_free_rate) / downside_std if downside_std > 1e-9 else 0.0
     )
 
     return {
-        "Annualised Return": annualisedReturn,
-        "Annualised Volatility": annualisedVolatility,
-        "Sharpe Ratio": sharpeRatio,
-        "Sortino Ratio": sortinoRatio,
-        "Max Drawdown": maxDrawdown,
+        "Annualised Return": annualised_return,
+        "Annualised Volatility": annualised_volatility,
+        "Sharpe Ratio": sharpe_ratio,
+        "Sortino Ratio": sortino_ratio,
+        "Max Drawdown": max_drawdown,
     }

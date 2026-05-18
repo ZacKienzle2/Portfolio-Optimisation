@@ -31,9 +31,9 @@ def test_risk_exports() -> None:
     risk = importlib.import_module("portfolio_optimisation.risk")
     for symbol in (
         "CopulaRiskAnalyser",
-        "calculatePerformanceMetrics",
-        "calculateRiskMetrics",
-        "plotSimulationResults",
+        "calculate_performance_metrics",
+        "calculate_risk_metrics",
+        "plot_simulation_results",
         "run_historical_simulation",
     ):
         assert hasattr(risk, symbol), symbol
@@ -63,9 +63,9 @@ def test_viz_exports() -> None:
 def test_infra_exports() -> None:
     infra = importlib.import_module("portfolio_optimisation.infra")
     for symbol in (
-        "generateFinalReport",
-        "getData",
+        "generate_final_report",
+        "get_data",
         "get_discrete_portfolio",
-        "inverseVarianceWeights",
+        "inverse_variance_weights",
     ):
         assert hasattr(infra, symbol), symbol

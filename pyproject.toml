@@ -113,13 +113,13 @@ select = [
   "ERA", # eradicate (no commented-out code)
 ]
 ignore = [
-  "E501", # line length governed by formatter
+  "E501",   # line length governed by formatter
+  "TRY003", # long messages on built-in exceptions are clearer than custom classes
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["ARG001", "ARG002"]
-"portfolio_optimisation/**/*.py" = ["N802", "N803", "N806", "N815", "PLR0913", "TRY003", "TRY400"]
-"portfolio_optimisation/**/__init__.py" = ["F401", "N802", "N803", "N806", "N815"]
+"portfolio_optimisation/**/__init__.py" = ["F401"]
 
 [tool.ruff.format]
 docstring-code-format = true

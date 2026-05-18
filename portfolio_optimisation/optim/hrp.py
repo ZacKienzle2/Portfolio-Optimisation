@@ -31,102 +31,102 @@ class HRPModel:
             raise TypeError("Returns must be a pandas DataFrame.")
         self.returns: pd.DataFrame = returns
         self.weights: Series = pd.Series(dtype=np.float64)
-        self.orderedTickers: list[str] = []
-        self.covMatrix: pd.DataFrame = self._calculateCovariance()
-        self.linkageMatrix: NDArray[Any] | None = None
+        self.ordered_tickers: list[str] = []
+        self.cov_matrix: pd.DataFrame = self._calculate_covariance()
+        self.linkage_matrix: NDArray[Any] | None = None
 
-    def _calculateCovariance(self) -> pd.DataFrame:
+    def _calculate_covariance(self) -> pd.DataFrame:
         """Calculate the Ledoit-Wolf shrunk covariance matrix."""
-        covMatrixInternal, _ = ledoit_wolf(self.returns, assume_centered=False)
+        cov_matrix_internal, _ = ledoit_wolf(self.returns, assume_centered=False)
         return pd.DataFrame(
-            covMatrixInternal, index=self.returns.columns, columns=self.returns.columns
+            cov_matrix_internal, index=self.returns.columns, columns=self.returns.columns
         )
 
-    def _getQuasiDiag(self, linkageMatrix: NDArray[Any]) -> list[int]:
+    def _get_quasi_diag(self, linkage_matrix: NDArray[Any]) -> list[int]:
         """Sorts assets according to the quasi-diagonalisation algorithm."""
-        numItems = linkageMatrix.shape[0] + 1
-        sortedIndex: list[float] = [linkageMatrix[-1, 0], linkageMatrix[-1, 1]]
+        num_items = linkage_matrix.shape[0] + 1
+        sorted_index: list[float] = [linkage_matrix[-1, 0], linkage_matrix[-1, 1]]
 
-        while len(sortedIndex) < numItems:
-            expandClusterIdx = -1
-            for i, item in enumerate(sortedIndex):
-                if item >= numItems:
-                    expandClusterIdx = i
+        while len(sorted_index) < num_items:
+            expand_cluster_idx = -1
+            for i, item in enumerate(sorted_index):
+                if item >= num_items:
+                    expand_cluster_idx = i
                     break
 
-            if expandClusterIdx == -1:
+            if expand_cluster_idx == -1:
                 break
 
-            clusterVal = sortedIndex[expandClusterIdx]
-            linkRow = int(clusterVal - numItems)
-            item1 = linkageMatrix[linkRow, 0]
-            item2 = linkageMatrix[linkRow, 1]
+            cluster_val = sorted_index[expand_cluster_idx]
+            link_row = int(cluster_val - num_items)
+            item1 = linkage_matrix[link_row, 0]
+            item2 = linkage_matrix[link_row, 1]
 
-            sortedIndex = [
-                *sortedIndex[:expandClusterIdx],
+            sorted_index = [
+                *sorted_index[:expand_cluster_idx],
                 item1,
                 item2,
-                *sortedIndex[expandClusterIdx + 1 :],
+                *sorted_index[expand_cluster_idx + 1 :],
             ]
 
-        return [int(i) for i in sortedIndex]
+        return [int(i) for i in sorted_index]
 
-    def _getClusterVar(self, cov: pd.DataFrame, clusterItems: list[str]) -> float:
+    def _get_cluster_var(self, cov: pd.DataFrame, cluster_items: list[str]) -> float:
         """Calculate the variance of an Inverse Variance Portfolio within a cluster."""
-        covSlice = cov.loc[clusterItems, clusterItems]
-        invDiag = 1 / np.diag(covSlice)
-        weightsInternal = (invDiag / invDiag.sum()).reshape(-1, 1)
-        clusterVar = (weightsInternal.T @ covSlice @ weightsInternal).iloc[0, 0]
-        return float(clusterVar)
+        cov_slice = cov.loc[cluster_items, cluster_items]
+        inv_diag = 1 / np.diag(cov_slice)
+        weights_internal = (inv_diag / inv_diag.sum()).reshape(-1, 1)
+        cluster_var = (weights_internal.T @ cov_slice @ weights_internal).iloc[0, 0]
+        return float(cluster_var)
 
-    def _recursiveBisection(self, orderedTickers: list[str]):
+    def _recursive_bisection(self, ordered_tickers: list[str]):
         """Recursively bisects the clusters and weights the sub-portfolios."""
-        self.weights = pd.Series(1.0, index=orderedTickers)
-        clusterItems: list[list[str]] = [orderedTickers]
+        self.weights = pd.Series(1.0, index=ordered_tickers)
+        cluster_items: list[list[str]] = [ordered_tickers]
 
-        while len(clusterItems) > 0:
-            nextClusters: list[list[str]] = []
-            for cluster in clusterItems:
+        while len(cluster_items) > 0:
+            next_clusters: list[list[str]] = []
+            for cluster in cluster_items:
                 if len(cluster) > 1:
                     mid = len(cluster) // 2
-                    nextClusters.extend([cluster[:mid], cluster[mid:]])
-            clusterItems = nextClusters
+                    next_clusters.extend([cluster[:mid], cluster[mid:]])
+            cluster_items = next_clusters
 
-            for i in range(0, len(clusterItems), 2):
-                cluster1 = clusterItems[i]
-                cluster2 = clusterItems[i + 1]
-                var1 = self._getClusterVar(self.covMatrix, cluster1)
-                var2 = self._getClusterVar(self.covMatrix, cluster2)
+            for i in range(0, len(cluster_items), 2):
+                cluster1 = cluster_items[i]
+                cluster2 = cluster_items[i + 1]
+                var1 = self._get_cluster_var(self.cov_matrix, cluster1)
+                var2 = self._get_cluster_var(self.cov_matrix, cluster2)
 
-                varSum = var1 + var2
-                alpha = 1 - var1 / varSum if varSum != 0 else 0.5
+                var_sum = var1 + var2
+                alpha = 1 - var1 / var_sum if var_sum != 0 else 0.5
 
                 self.weights.loc[cluster1] *= alpha
                 self.weights.loc[cluster2] *= 1 - alpha
 
-    def optimize(self, linkageMethod: str = "ward"):
+    def optimize(self, linkage_method: str = "ward"):
         """Perform the Hierarchical Risk Parity optimisation.
 
         Args:
-            linkageMethod (str, optional): Clustering method (e.g., 'ward',
+            linkage_method (str, optional): Clustering method (e.g., 'ward',
                                            'single', 'complete'). Defaults to 'ward'.
 
         Raises:
             ValueError: If the linkage matrix computation fails.
         """
-        corr = risk_models.cov_to_corr(self.covMatrix)
-        distMatrix = np.sqrt((1 - corr.round(8).fillna(0)) / 2)
-        condensedDist = squareform(distMatrix, checks=False)
-        self.linkageMatrix = linkage(condensedDist, method=linkageMethod)
+        corr = risk_models.cov_to_corr(self.cov_matrix)
+        dist_matrix = np.sqrt((1 - corr.round(8).fillna(0)) / 2)
+        condensed_dist = squareform(dist_matrix, checks=False)
+        self.linkage_matrix = linkage(condensed_dist, method=linkage_method)
 
-        if self.linkageMatrix is None:
+        if self.linkage_matrix is None:
             raise ValueError("Linkage matrix could not be computed.")
 
-        sortedIndices = self._getQuasiDiag(self.linkageMatrix)
-        self.orderedTickers = list(self.covMatrix.index[sortedIndices])
-        self._recursiveBisection(self.orderedTickers)
+        sorted_indices = self._get_quasi_diag(self.linkage_matrix)
+        self.ordered_tickers = list(self.cov_matrix.index[sorted_indices])
+        self._recursive_bisection(self.ordered_tickers)
 
-    def cleanWeights(self) -> Series:
+    def clean_weights(self) -> Series:
         """Returns the final HRP weights, sorted by ticker.
 
         Raises:
@@ -139,26 +139,26 @@ class HRPModel:
             raise RuntimeError("Optimisation must be run before accessing weights.")
         return self.weights.sort_index()
 
-    def getDiscreteAllocation(
-        self, prices: pd.DataFrame, totalPortfolioValue: float
+    def get_discrete_allocation(
+        self, prices: pd.DataFrame, total_portfolio_value: float
     ) -> tuple[dict[str, int], float]:
         """Converts continuous HRP weights to a discrete share allocation.
 
         Args:
             prices (pd.DataFrame): Historical asset prices (latest row used).
-            totalPortfolioValue (float): Total cash available for allocation.
+            total_portfolio_value (float): Total cash available for allocation.
 
         Returns:
             Tuple[Dict[str, int], float]: Dictionary of {ticker: shares}
                                          and the leftover cash amount.
         """
-        weightsCleaned = self.cleanWeights()
-        latestPrices = prices.iloc[-1]
+        weights_cleaned = self.clean_weights()
+        latest_prices = prices.iloc[-1]
 
         da = discrete_allocation.DiscreteAllocation(
-            weights=weightsCleaned.to_dict(),
-            latest_prices=latestPrices,
-            total_portfolio_value=int(totalPortfolioValue),
+            weights=weights_cleaned.to_dict(),
+            latest_prices=latest_prices,
+            total_portfolio_value=int(total_portfolio_value),
         )
         allocation: dict[str, int]
         leftover: float
