@@ -72,76 +72,74 @@ class SDEFitter:
     when more than one column is present.
     """
 
-    def __init__(self, pricesDf: pd.DataFrame, dt: float = 1 / 252):
+    def __init__(self, prices_df: pd.DataFrame, dt: float = 1 / 252):
         """Initialise the fitter.
 
         Args:
-            pricesDf (pd.DataFrame): Asset price time series.
+            prices_df (pd.DataFrame): Asset price time series.
             dt (float, optional): Time step. Defaults to 1/252 for daily data.
         """
-        self.pricesDf: pd.DataFrame = pricesDf
+        self.prices_df: pd.DataFrame = prices_df
         self.dt: float = dt
-        self.gbmResults: pd.DataFrame | None = None
-        self.ouResults: pd.DataFrame | None = None
+        self.gbm_results: pd.DataFrame | None = None
+        self.ou_results: pd.DataFrame | None = None
 
-    def _resolveWorkers(self) -> int:
+    def _resolve_workers(self) -> int:
         """Worker count: at most one per column, never more than cpu_count-1."""
-        return max(1, min(cpu_count() - 1, len(self.pricesDf.columns)))
+        return max(1, min(cpu_count() - 1, len(self.prices_df.columns)))
 
-    def fitGbm(
+    def fit_gbm(
         self,
-        paramBounds: list[tuple[float, float]] | None = None,
-        initialGuess: NDArray[np.float64] | None = None,
+        param_bounds: list[tuple[float, float]] | None = None,
+        initial_guess: NDArray[np.float64] | None = None,
     ) -> pd.DataFrame:
         """Fit GBM to each asset price series via analytical MLE."""
-        if initialGuess is None:
-            initialGuess = np.array([0.01, 0.2])
-        if paramBounds is None:
-            paramBounds = [(-1.0, 1.0), (1e-5, 5.0)]
+        if initial_guess is None:
+            initial_guess = np.array([0.01, 0.2])
+        if param_bounds is None:
+            param_bounds = [(-1.0, 1.0), (1e-5, 5.0)]
 
         jobs = [
-            (ticker, self.pricesDf[ticker].values, paramBounds, self.dt, initialGuess)
-            for ticker in self.pricesDf.columns
+            (ticker, self.prices_df[ticker].values, param_bounds, self.dt, initial_guess)
+            for ticker in self.prices_df.columns
         ]
 
-        nWorkers = self._resolveWorkers()
-        if nWorkers <= 1:
+        n_workers = self._resolve_workers()
+        if n_workers <= 1:
             results = [_fit_one_gbm(job) for job in jobs]
         else:
-            with Pool(nWorkers) as pool:
+            with Pool(n_workers) as pool:
                 results = pool.map(_fit_one_gbm, jobs)
 
-        self.gbmResults = pd.DataFrame(results).set_index("Ticker")
-        return self.gbmResults
+        self.gbm_results = pd.DataFrame(results).set_index("Ticker")
+        return self.gbm_results
 
-    def fitOu(
+    def fit_ou(
         self,
-        paramBounds: list[tuple[float, float]] | None = None,
-        initialGuess: NDArray[np.float64] | None = None,
+        param_bounds: list[tuple[float, float]] | None = None,
+        initial_guess: NDArray[np.float64] | None = None,
     ) -> pd.DataFrame:
         """Fit Ornstein-Uhlenbeck to each asset price series via analytical MLE."""
-        if initialGuess is None:
-            initialMean = (
-                self.pricesDf.mean().mean() if not self.pricesDf.empty else 1.0
-            )
-            initialGuess = np.array([1.0, initialMean, 0.2])
+        if initial_guess is None:
+            initial_mean = self.prices_df.mean().mean() if not self.prices_df.empty else 1.0
+            initial_guess = np.array([1.0, initial_mean, 0.2])
 
-        if paramBounds is None:
-            minVal = self.pricesDf.min().min() if not self.pricesDf.empty else 0.0
-            maxVal = self.pricesDf.max().max() if not self.pricesDf.empty else 1000.0
-            paramBounds = [(1e-5, 20.0), (minVal, maxVal), (1e-5, 5.0)]
+        if param_bounds is None:
+            min_val = self.prices_df.min().min() if not self.prices_df.empty else 0.0
+            max_val = self.prices_df.max().max() if not self.prices_df.empty else 1000.0
+            param_bounds = [(1e-5, 20.0), (min_val, max_val), (1e-5, 5.0)]
 
         jobs = [
-            (ticker, self.pricesDf[ticker].values, paramBounds, self.dt, initialGuess)
-            for ticker in self.pricesDf.columns
+            (ticker, self.prices_df[ticker].values, param_bounds, self.dt, initial_guess)
+            for ticker in self.prices_df.columns
         ]
 
-        nWorkers = self._resolveWorkers()
-        if nWorkers <= 1:
+        n_workers = self._resolve_workers()
+        if n_workers <= 1:
             results = [_fit_one_ou(job) for job in jobs]
         else:
-            with Pool(nWorkers) as pool:
+            with Pool(n_workers) as pool:
                 results = pool.map(_fit_one_ou, jobs)
 
-        self.ouResults = pd.DataFrame(results).set_index("Ticker")
-        return self.ouResults
+        self.ou_results = pd.DataFrame(results).set_index("Ticker")
+        return self.ou_results

@@ -6,8 +6,8 @@ import yfinance as yf
 from rich.console import Console
 
 
-def getData(
-    tickers: list[str], startDate: str, console: Console
+def get_data(
+    tickers: list[str], start_date: str, console: Console
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Fetch and preprocess financial time series data.
 
@@ -17,7 +17,7 @@ def getData(
 
     Args:
         tickers (List[str]): Asset symbols.
-        startDate (str): Start date (YYYY-MM-DD).
+        start_date (str): Start date (YYYY-MM-DD).
         console (Console): Rich console for status messages.
 
     Returns:
@@ -26,49 +26,45 @@ def getData(
     Raises:
         ValueError: If data download fails or yields empty data.
     """
-    cachePath = Path.cwd() / "Initial_Files" / "market_data.parquet"
-    cachePath.parent.mkdir(exist_ok=True)
+    cache_path = Path.cwd() / "Initial_Files" / "market_data.parquet"
+    cache_path.parent.mkdir(exist_ok=True)
 
-    pricesRaw: pd.DataFrame | pd.Series | None
-    if cachePath.exists():
-        console.print(f"[green]Loading cached data from {cachePath}...[/green]")
-        pricesRaw = pd.read_parquet(cachePath, engine="pyarrow")
+    prices_raw: pd.DataFrame | pd.Series | None
+    if cache_path.exists():
+        console.print(f"[green]Loading cached data from {cache_path}...[/green]")
+        prices_raw = pd.read_parquet(cache_path, engine="pyarrow")
     else:
         console.print(
-            f"[yellow]Fetching data for {len(tickers)} assets "
-            f"from {startDate}...[/yellow]"
+            f"[yellow]Fetching data for {len(tickers)} assets from {start_date}...[/yellow]"
         )
-        downloadedData: Any = yf.download(
-            tickers, start=startDate, auto_adjust=False, progress=False
+        downloaded_data: Any = yf.download(
+            tickers, start=start_date, auto_adjust=False, progress=False
         )
-        if (
-            isinstance(downloadedData, pd.DataFrame)
-            and "Adj Close" in downloadedData.columns
-        ):
-            pricesRaw = downloadedData["Adj Close"]
-        elif isinstance(downloadedData, pd.Series):
-            pricesRaw = downloadedData
+        if isinstance(downloaded_data, pd.DataFrame) and "Adj Close" in downloaded_data.columns:
+            prices_raw = downloaded_data["Adj Close"]
+        elif isinstance(downloaded_data, pd.Series):
+            prices_raw = downloaded_data
         else:
-            pricesRaw = None
+            prices_raw = None
 
-        if pricesRaw is None or pricesRaw.empty:
+        if prices_raw is None or prices_raw.empty:
             raise ValueError("Failed to download valid price data.")
 
-        pricesRaw.to_parquet(cachePath, engine="pyarrow")
-        console.print(f"[green]Saved new data cache to {cachePath}.[/green]")
+        prices_raw.to_parquet(cache_path, engine="pyarrow")
+        console.print(f"[green]Saved new data cache to {cache_path}.[/green]")
 
-    if pricesRaw is None:
+    if prices_raw is None:
         raise ValueError("Price data is None after download/load.")
 
-    pricesRawDf: pd.DataFrame
-    if isinstance(pricesRaw, pd.Series):
-        pricesRawDf = pricesRaw.to_frame(name=tickers[0])
+    prices_raw_df: pd.DataFrame
+    if isinstance(prices_raw, pd.Series):
+        prices_raw_df = prices_raw.to_frame(name=tickers[0])
     else:
-        pricesRawDf = pricesRaw
+        prices_raw_df = prices_raw
 
-    first_indices: pd.Series = pricesRawDf.apply(lambda col: col.first_valid_index())
-    commonStart: pd.Timestamp = first_indices.max()
-    prices: pd.DataFrame = pricesRawDf.loc[commonStart:].dropna(axis=1)
+    first_indices: pd.Series = prices_raw_df.apply(lambda col: col.first_valid_index())
+    common_start: pd.Timestamp = first_indices.max()
+    prices: pd.DataFrame = prices_raw_df.loc[common_start:].dropna(axis=1)
     returns: pd.DataFrame = prices.pct_change().dropna()
 
     console.print(

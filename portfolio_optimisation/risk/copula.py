@@ -36,9 +36,9 @@ class CopulaRiskAnalyser:
         if self.returns.empty or self.weights.empty:
             raise ValueError("Filtered returns or weights are empty.")
 
-        self.fitMarginals: dict[str, dict[str, Any]] = {}
+        self.fit_marginals_: dict[str, dict[str, Any]] = {}
         self.copula: Any | None = None
-        self.uniformReturns: pd.DataFrame | None = None
+        self.uniform_returns: pd.DataFrame | None = None
 
     def fit_marginal_distributions(self, dist: Any = stats.t):
         """Fit a univariate distribution to each asset's returns series.
@@ -50,46 +50,44 @@ class CopulaRiskAnalyser:
             raise TypeError("dist object must have fit, cdf, and ppf methods.")
 
         for ticker in self.returns.columns:
-            seriesData = self.returns[ticker].dropna()
-            if len(seriesData) < 10:
+            series_data = self.returns[ticker].dropna()
+            if len(series_data) < 10:
                 print(f"Warning: Insufficient data for {ticker} marginal fit.")
-                self.fitMarginals[ticker] = {"dist": None, "params": None}
+                self.fit_marginals_[ticker] = {"dist": None, "params": None}
                 continue
             try:
-                params: tuple[Any, ...] = dist.fit(seriesData.to_numpy())
-                self.fitMarginals[ticker] = {"dist": dist, "params": params}
+                params: tuple[Any, ...] = dist.fit(series_data.to_numpy())
+                self.fit_marginals_[ticker] = {"dist": dist, "params": params}
             except Exception as e:
                 print(f"Warning: Failed marginal fit for {ticker}: {e}")
-                self.fitMarginals[ticker] = {"dist": None, "params": None}
+                self.fit_marginals_[ticker] = {"dist": None, "params": None}
 
     def _estimate_copula_params(self) -> tuple[NDArray[np.float64], float]:
         """Estimate correlation matrix and degrees of freedom for the t-copula."""
-        if self.uniformReturns is None:
+        if self.uniform_returns is None:
             raise RuntimeError("Uniform returns required but not generated.")
 
-        kendall_tau: pd.DataFrame = self.uniformReturns.corr("kendall")
+        kendall_tau: pd.DataFrame = self.uniform_returns.corr("kendall")
         tau: NDArray[np.float64] = kendall_tau.to_numpy()
         corr: NDArray[np.float64] = np.sin(tau * np.pi / 2)
         corr = self._ensure_psd(corr)
 
-        def log_likelihood(dfParam: float) -> float:
+        def log_likelihood(df_param: float) -> float:
             """Calculate negative log-likelihood of t-copula given data."""
-            if self.uniformReturns is None:
-                raise RuntimeError("Internal Error: uniformReturns became None.")
+            if self.uniform_returns is None:
+                raise RuntimeError("Internal Error: uniform_returns became None.")
             try:
-                copulaInternal: Any = StudentTCopula(
-                    corr=corr, df=dfParam, k_dim=self.returns.shape[1]
+                copula_internal: Any = StudentTCopula(
+                    corr=corr, df=df_param, k_dim=self.returns.shape[1]
                 )
-                uniform_vals_np = self.uniformReturns.to_numpy()
-                uniformValues = np.clip(uniform_vals_np, 1e-9, 1 - 1e-9)
-                pdfValues: NDArray[np.float64] = copulaInternal.pdf(uniformValues)
-                pdfValues = np.maximum(pdfValues, 1e-12)
-                penalty = (
-                    0.01 * (dfParam - 10) ** 2 if dfParam > 25 or dfParam < 3 else 0
-                )
-                return -np.sum(np.log(pdfValues)) + penalty
+                uniform_vals_np = self.uniform_returns.to_numpy()
+                uniform_values = np.clip(uniform_vals_np, 1e-9, 1 - 1e-9)
+                pdf_values: NDArray[np.float64] = copula_internal.pdf(uniform_values)
+                pdf_values = np.maximum(pdf_values, 1e-12)
+                penalty = 0.01 * (df_param - 10) ** 2 if df_param > 25 or df_param < 3 else 0
+                return -np.sum(np.log(pdf_values)) + penalty
             except Exception as e:
-                print(f"Warning: Error in likelihood calc for df={dfParam}: {e}")
+                print(f"Warning: Error in likelihood calc for df={df_param}: {e}")
                 return np.inf
 
         result: OptimizeResult = minimize(
@@ -101,8 +99,8 @@ class CopulaRiskAnalyser:
         if not result.success:
             print(f"Warning: Copula df optimization issue: {result.message}")
 
-        estimatedDf: float = float(result.x[0])
-        return corr, estimatedDf
+        estimated_df: float = float(result.x[0])
+        return corr, estimated_df
 
     def _ensure_psd(
         self, matrix: NDArray[np.float64], epsilon: float = 1e-8
@@ -110,63 +108,60 @@ class CopulaRiskAnalyser:
         """Ensure matrix positive semi-definiteness via eigenvalue adjustment."""
         eigenvalues, eigenvectors = np.linalg.eigh(matrix)
         eigenvalues[eigenvalues < epsilon] = epsilon
-        psdMatrix = eigenvectors @ np.diag(eigenvalues) @ eigenvectors.T
-        scale = np.sqrt(np.diag(psdMatrix))
+        psd_matrix = eigenvectors @ np.diag(eigenvalues) @ eigenvectors.T
+        scale = np.sqrt(np.diag(psd_matrix))
         scale = np.where(scale < epsilon, 1.0, scale)
-        psdMatrix = psdMatrix / np.outer(scale, scale)
-        return np.clip(psdMatrix, -1.0, 1.0)
+        psd_matrix = psd_matrix / np.outer(scale, scale)
+        return np.clip(psd_matrix, -1.0, 1.0)
 
     def fit_copula(self):
         """Fit the Student's t-copula to transformed marginal returns."""
-        if not self.fitMarginals:
+        if not self.fit_marginals_:
             raise RuntimeError("Fit marginal distributions first.")
 
-        uniformData = {}
-        validTickers = []
+        uniform_data = {}
+        valid_tickers = []
         for ticker in self.returns.columns:
-            marginalInfo = self.fitMarginals.get(ticker)
+            marginal_info = self.fit_marginals_.get(ticker)
             if (
-                marginalInfo
-                and marginalInfo["dist"] is not None
-                and marginalInfo["params"] is not None
+                marginal_info
+                and marginal_info["dist"] is not None
+                and marginal_info["params"] is not None
             ):
-                dist = marginalInfo["dist"]
-                params = marginalInfo["params"]
-                seriesData = self.returns[ticker].dropna()
-                if not seriesData.empty:
+                dist = marginal_info["dist"]
+                params = marginal_info["params"]
+                series_data = self.returns[ticker].dropna()
+                if not series_data.empty:
                     try:
-                        uniformData[ticker] = dist.cdf(seriesData, *params)
-                        validTickers.append(ticker)
+                        uniform_data[ticker] = dist.cdf(series_data, *params)
+                        valid_tickers.append(ticker)
                     except Exception as e:
                         print(f"Warning: CDF transformation failed for {ticker}: {e}")
             else:
                 print(f"Warning: Skipping {ticker} (no valid marginal fit).")
 
-        if not validTickers:
+        if not valid_tickers:
             raise RuntimeError("No valid marginals; cannot fit copula.")
 
-        self.returns = self.returns[validTickers]
-        self.weights = self.weights.loc[validTickers]
+        self.returns = self.returns[valid_tickers]
+        self.weights = self.weights.loc[valid_tickers]
         if not np.isclose(self.weights.sum(), 1.0):
             self.weights /= self.weights.sum()
 
-        self.uniformReturns = pd.DataFrame(uniformData)
-        self.uniformReturns.dropna(inplace=True)
+        self.uniform_returns = pd.DataFrame(uniform_data)
+        self.uniform_returns.dropna(inplace=True)
 
-        if (
-            self.uniformReturns.empty
-            or len(self.uniformReturns) < self.returns.shape[1] + 1
-        ):
+        if self.uniform_returns.empty or len(self.uniform_returns) < self.returns.shape[1] + 1:
             raise RuntimeError("Insufficient valid uniform data; cannot fit copula.")
 
         corr, df = self._estimate_copula_params()
         self.copula = StudentTCopula(corr=corr, df=df, k_dim=self.returns.shape[1])
 
-    def run_simulation(self, nSimulations: int = 10000) -> pd.DataFrame:
+    def run_simulation(self, n_simulations: int = 10000) -> pd.DataFrame:
         """Generate correlated portfolio returns using the fitted copula.
 
         Args:
-            nSimulations (int): Number of simulation paths.
+            n_simulations (int): Number of simulation paths.
 
         Returns:
             pd.DataFrame: Simulated portfolio returns ('simulated_returns').
@@ -174,103 +169,101 @@ class CopulaRiskAnalyser:
         if self.copula is None:
             raise RuntimeError("Fit the copula first.")
 
-        simulatedUniform: NDArray[np.float64] = self.copula.rvs(nSimulations)
-        np.clip(simulatedUniform, 1e-9, 1 - 1e-9, out=simulatedUniform)
+        simulated_uniform: NDArray[np.float64] = self.copula.rvs(n_simulations)
+        np.clip(simulated_uniform, 1e-9, 1 - 1e-9, out=simulated_uniform)
 
         # Pre-allocate the inverse-CDF matrix once and fill column-wise so the
         # downstream DataFrame is constructed from a contiguous buffer instead
         # of dict-of-arrays.
         tickers = list(self.returns.columns)
-        nTickers = len(tickers)
-        ppfMatrix = np.empty((nSimulations, nTickers), dtype=np.float64)
+        n_tickers = len(tickers)
+        ppf_matrix = np.empty((n_simulations, n_tickers), dtype=np.float64)
 
-        validMask = np.zeros(nTickers, dtype=bool)
+        valid_mask = np.zeros(n_tickers, dtype=bool)
         for i, ticker in enumerate(tickers):
-            marginalInfo = self.fitMarginals.get(ticker)
+            marginal_info = self.fit_marginals_.get(ticker)
             if (
-                marginalInfo
-                and marginalInfo["dist"] is not None
-                and marginalInfo["params"] is not None
+                marginal_info
+                and marginal_info["dist"] is not None
+                and marginal_info["params"] is not None
             ):
-                dist = marginalInfo["dist"]
-                params = marginalInfo["params"]
+                dist = marginal_info["dist"]
+                params = marginal_info["params"]
                 try:
-                    ppfMatrix[:, i] = dist.ppf(simulatedUniform[:, i], *params)
-                    validMask[i] = True
+                    ppf_matrix[:, i] = dist.ppf(simulated_uniform[:, i], *params)
+                    valid_mask[i] = True
                 except Exception as e:
                     print(f"Warning: PPF failed for {ticker}: {e}")
-                    ppfMatrix[:, i] = np.nan
+                    ppf_matrix[:, i] = np.nan
             else:
-                ppfMatrix[:, i] = np.nan
+                ppf_matrix[:, i] = np.nan
 
-        if not validMask.any():
+        if not valid_mask.any():
             print("Warning: Simulation yielded empty DataFrame after NaNs.")
             return pd.DataFrame({"simulated_returns": []})
 
-        validTickers = [t for t, ok in zip(tickers, validMask, strict=True) if ok]
-        simulatedReturnsDf = pd.DataFrame(
-            ppfMatrix[:, validMask], columns=validTickers
+        valid_tickers = [t for t, ok in zip(tickers, valid_mask, strict=True) if ok]
+        simulated_returns_df = pd.DataFrame(
+            ppf_matrix[:, valid_mask], columns=valid_tickers
         ).dropna()
 
-        if simulatedReturnsDf.empty:
+        if simulated_returns_df.empty:
             print("Warning: Simulation yielded empty DataFrame after NaNs.")
             return pd.DataFrame({"simulated_returns": []})
 
-        alignedWeights = self.weights.reindex(simulatedReturnsDf.columns).fillna(0.0)
-        portfolioReturnsGenerated: pd.Series = simulatedReturnsDf.dot(alignedWeights)
+        aligned_weights = self.weights.reindex(simulated_returns_df.columns).fillna(0.0)
+        portfolio_returns_generated: pd.Series = simulated_returns_df.dot(aligned_weights)
 
-        return pd.DataFrame({"simulated_returns": portfolioReturnsGenerated})
+        return pd.DataFrame({"simulated_returns": portfolio_returns_generated})
 
     def plot_marginal_fits(self):
         """Plot fitted marginal distributions against historical data."""
-        if self.returns.empty or not self.fitMarginals:
+        if self.returns.empty or not self.fit_marginals_:
             print("Return data or marginal fits missing for plotting.")
             return
 
-        nAssets = len(self.returns.columns)
-        if nAssets == 0:
+        n_assets = len(self.returns.columns)
+        if n_assets == 0:
             return
-        nCols = 2
-        nRows = (nAssets + nCols - 1) // nCols
+        n_cols = 2
+        n_rows = (n_assets + n_cols - 1) // n_cols
 
         fig: plt.Figure
         axes: NDArray[Axes]
-        fig, axes = plt.subplots(nRows, nCols, figsize=(14, nRows * 5), squeeze=False)
-        fig.suptitle(
-            "Fitted Marginal Distributions vs. Historical Returns", fontsize=16
-        )
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(14, n_rows * 5), squeeze=False)
+        fig.suptitle("Fitted Marginal Distributions vs. Historical Returns", fontsize=16)
         axes_flat: NDArray[Axes] = axes.flatten()
 
-        plotIndex = 0
+        plot_index = 0
         for ticker in self.returns.columns:
-            ax: Axes = axes_flat[plotIndex]
+            ax: Axes = axes_flat[plot_index]
             data = self.returns[ticker].dropna()
 
             if data.empty:
                 ax.set_title(f"{ticker}: No Data")
                 ax.set_xticks([])
                 ax.set_yticks([])
-                plotIndex += 1
+                plot_index += 1
                 continue
 
             sns.histplot(x=data, bins=50, stat="density", ax=ax, label="Historical")
 
-            marginalInfo = self.fitMarginals.get(ticker)
+            marginal_info = self.fit_marginals_.get(ticker)
             if (
-                marginalInfo
-                and marginalInfo["dist"] is not None
-                and marginalInfo["params"] is not None
+                marginal_info
+                and marginal_info["dist"] is not None
+                and marginal_info["params"] is not None
             ):
-                dist = marginalInfo["dist"]
-                params = marginalInfo["params"]
-                xMin, xMax = data.min(), data.max()
-                if np.isclose(xMin, xMax):
-                    xMin -= 0.1
-                    xMax += 0.1
-                xRange: NDArray[np.float64] = np.linspace(xMin, xMax, 200)
+                dist = marginal_info["dist"]
+                params = marginal_info["params"]
+                x_min, x_max = data.min(), data.max()
+                if np.isclose(x_min, x_max):
+                    x_min -= 0.1
+                    x_max += 0.1
+                x_range: NDArray[np.float64] = np.linspace(x_min, x_max, 200)
                 try:
-                    pdfValues = dist.pdf(xRange, *params)
-                    ax.plot(xRange, pdfValues, "r-", lw=2, label="Fitted PDF")
+                    pdf_values = dist.pdf(x_range, *params)
+                    ax.plot(x_range, pdf_values, "r-", lw=2, label="Fitted PDF")
                 except Exception as e:
                     print(f"Warning: PDF plot failed for {ticker}: {e}")
                     ax.plot([], [], "r-", lw=2, label="Fit Error")
@@ -279,9 +272,9 @@ class CopulaRiskAnalyser:
 
             ax.set_title(f"Fit for {ticker}")
             ax.legend()
-            plotIndex += 1
+            plot_index += 1
 
-        for j in range(plotIndex, len(axes_flat)):
+        for j in range(plot_index, len(axes_flat)):
             fig.delaxes(axes_flat[j])
 
         fig.tight_layout(rect=(0, 0.03, 1, 0.96))
@@ -289,12 +282,12 @@ class CopulaRiskAnalyser:
 
     def plot_copula_dependence(self):
         """Visualise pairwise dependence structure in uniform (copula) space."""
-        if self.uniformReturns is None or self.uniformReturns.empty:
+        if self.uniform_returns is None or self.uniform_returns.empty:
             print("Uniform returns unavailable/empty; cannot plot dependence.")
             return
 
         g: Any = sns.pairplot(
-            self.uniformReturns,
+            self.uniform_returns,
             kind="scatter",
             diag_kind="kde",
             plot_kws={"alpha": 0.4},
@@ -305,7 +298,7 @@ class CopulaRiskAnalyser:
 
 
 def run_historical_simulation(
-    returns: pd.DataFrame, weights: pd.Series, nSimulations: int = 10000
+    returns: pd.DataFrame, weights: pd.Series, n_simulations: int = 10000
 ) -> pd.DataFrame:
     """Simulate portfolio returns by resampling historical daily returns.
 
@@ -316,7 +309,7 @@ def run_historical_simulation(
     Args:
         returns (pd.DataFrame): Historical asset returns.
         weights (pd.Series): Portfolio weights.
-        nSimulations (int): Number of simulated days.
+        n_simulations (int): Number of simulated days.
 
     Returns:
         pd.DataFrame: Simulated portfolio returns ('simulated_returns').
@@ -324,14 +317,14 @@ def run_historical_simulation(
     if returns.empty or weights.empty:
         return pd.DataFrame({"simulated_returns": []})
 
-    alignedWeights = weights.reindex(returns.columns).fillna(0.0)
-    historicalPortfolioReturns: pd.Series = returns.dot(alignedWeights)
+    aligned_weights = weights.reindex(returns.columns).fillna(0.0)
+    historical_portfolio_returns: pd.Series = returns.dot(aligned_weights)
 
-    validHistoricalReturns = historicalPortfolioReturns.dropna()
-    if validHistoricalReturns.empty:
+    valid_historical_returns = historical_portfolio_returns.dropna()
+    if valid_historical_returns.empty:
         return pd.DataFrame({"simulated_returns": []})
 
-    simulatedReturnsArray = np.random.choice(
-        validHistoricalReturns.to_numpy(), size=nSimulations, replace=True
+    simulated_returns_array = np.random.choice(
+        valid_historical_returns.to_numpy(), size=n_simulations, replace=True
     )
-    return pd.DataFrame({"simulated_returns": simulatedReturnsArray})
+    return pd.DataFrame({"simulated_returns": simulated_returns_array})

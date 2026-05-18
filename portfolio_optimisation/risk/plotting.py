@@ -1,13 +1,12 @@
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
 
-def plotSimulationResults(
-    simulatedReturns: pd.DataFrame,
-    riskMetrics: dict[str, float],
+def plot_simulation_results(
+    simulated_returns: pd.DataFrame,
+    risk_metrics: dict[str, float],
 ):
     """Visualise the distribution of simulated returns with VaR/CVaR.
 
@@ -15,27 +14,27 @@ def plotSimulationResults(
     VaR and CVaR lines. A rug plot below highlights tail events.
 
     Args:
-        simulatedReturns (pd.DataFrame): DataFrame with 'simulated_returns'.
-        riskMetrics (Dict[str, float]): Dictionary containing 'VaR' and 'CVaR'.
+        simulated_returns (pd.DataFrame): DataFrame with 'simulated_returns'.
+        risk_metrics (Dict[str, float]): Dictionary containing 'VaR' and 'CVaR'.
     """
-    if simulatedReturns.empty or "simulated_returns" not in simulatedReturns.columns:
+    if simulated_returns.empty or "simulated_returns" not in simulated_returns.columns:
         print("Warning: Empty or invalid DataFrame provided for plotting.")
         return
 
-    returnsSeries: pd.Series = simulatedReturns["simulated_returns"]
-    varValue: float | None = riskMetrics.get("VaR")
-    cvarValue: float | None = riskMetrics.get("CVaR")
+    returns_series: pd.Series = simulated_returns["simulated_returns"]
+    var_value: float | None = risk_metrics.get("VaR")
+    cvar_value: float | None = risk_metrics.get("CVaR")
 
-    if varValue is None or cvarValue is None:
-        print("Warning: Valid VaR or CVaR missing in riskMetrics for plotting.")
+    if var_value is None or cvar_value is None:
+        print("Warning: Valid VaR or CVaR missing in risk_metrics for plotting.")
         return
 
-    tailReturns: pd.Series = returnsSeries[returnsSeries <= varValue]
+    tail_returns: pd.Series = returns_series[returns_series <= var_value]
 
     fig: plt.Figure
-    axHist: Axes
-    axRug: Axes
-    fig, (axHist, axRug) = plt.subplots(
+    ax_hist: Axes
+    ax_rug: Axes
+    fig, (ax_hist, ax_rug) = plt.subplots(
         2,
         1,
         figsize=(12, 8),
@@ -43,42 +42,42 @@ def plotSimulationResults(
         gridspec_kw={"height_ratios": [0.8, 0.2]},
     )
 
-    plotTitle = "Distribution of Simulated Portfolio Returns"
-    axHist = sns.histplot(
-        x=returnsSeries,
+    plot_title = "Distribution of Simulated Portfolio Returns"
+    ax_hist = sns.histplot(
+        x=returns_series,
         bins=70,
         stat="density",
-        ax=axHist,
+        ax=ax_hist,
         label="Simulated Returns",
         alpha=0.7,
         color="skyblue",
         kde=False,
     )
-    axHist.axvline(
-        varValue,
+    ax_hist.axvline(
+        var_value,
         color="red",
         linestyle="--",
         lw=2,
-        label=f"VaR (95%): {varValue:.2%}",
+        label=f"VaR (95%): {var_value:.2%}",
     )
-    axHist.axvline(
-        cvarValue,
+    ax_hist.axvline(
+        cvar_value,
         color="purple",
         linestyle="-",
         lw=2,
-        label=f"CVaR (95%): {cvarValue:.2%}",
+        label=f"CVaR (95%): {cvar_value:.2%}",
     )
-    axHist.set_title(plotTitle)
-    axHist.set_ylabel("Density")
-    axHist.legend()
-    axHist.grid(True, alpha=0.3)
+    ax_hist.set_title(plot_title)
+    ax_hist.set_ylabel("Density")
+    ax_hist.legend()
+    ax_hist.grid(True, alpha=0.3)
 
-    axRug = sns.rugplot(x=tailReturns, ax=axRug, color="darkviolet", height=0.5)
-    axRug.axvline(cvarValue, color="purple", linestyle="-", lw=2)
-    axRug.set_title("Individual Tail Events (Losses Beyond VaR)")
-    axRug.set_xlabel("Daily Portfolio Return")
-    axRug.set_yticks([])
-    axRug.grid(True, axis="x", alpha=0.3)
+    ax_rug = sns.rugplot(x=tail_returns, ax=ax_rug, color="darkviolet", height=0.5)
+    ax_rug.axvline(cvar_value, color="purple", linestyle="-", lw=2)
+    ax_rug.set_title("Individual Tail Events (Losses Beyond VaR)")
+    ax_rug.set_xlabel("Daily Portfolio Return")
+    ax_rug.set_yticks([])
+    ax_rug.grid(True, axis="x", alpha=0.3)
 
     fig.tight_layout()
     plt.show()
