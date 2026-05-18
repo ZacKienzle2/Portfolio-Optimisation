@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+title: "Markets"
+abstract: "Workspace for market data, analytics, and trading research."
+type: software
+authors:
+  - family-names: "ZacKienzle2"
+    given-names: "ZacKienzle2"
+repository-code: "https://github.com/ZacKienzle2/Markets"
+url: "https://github.com/ZacKienzle2/Markets"
+license: MIT
+keywords:
+  - markets
+  - finance
+  - quantitative-research
+  - trading
