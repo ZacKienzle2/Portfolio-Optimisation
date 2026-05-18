@@ -7,11 +7,14 @@ from portfolio_optimisation.optim.denoise import (
     detone_correlation,
 )
 from portfolio_optimisation.optim.hrp import HRPModel
+from portfolio_optimisation.optim.nco import NCOOptimiser, nco_weights
 
 __all__ = [
     "HRPAnalyser",
     "HRPModel",
+    "NCOOptimiser",
     "denoise_correlation",
     "denoise_covariance",
     "detone_correlation",
+    "nco_weights",
 ]
