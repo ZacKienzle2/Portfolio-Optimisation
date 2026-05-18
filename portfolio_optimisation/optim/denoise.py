@@ -1,12 +1,12 @@
 """Random Matrix Theory denoising and detoning of sample correlation matrices.
 
 References:
-    Marčenko, V.A., Pastur, L.A. (1967). Distribution of eigenvalues for some
+    Marchenko, V.A., Pastur, L.A. (1967). Distribution of eigenvalues for some
         sets of random matrices. Math USSR-Sbornik 1:457-483.
     Lopez de Prado, M. (2020). Machine Learning for Asset Managers.
         Cambridge Elements in Quantitative Finance.
 
-The Marčenko-Pastur (MP) theorem characterises the eigenvalue distribution of
+The Marchenko-Pastur (MP) theorem characterises the eigenvalue distribution of
 the sample correlation of T iid N(0, 1) observations on N variables. Sample
 eigenvalues that fall inside the MP support are statistically indistinguishable
 from noise; replacing them with their mean while leaving signal eigenvalues
@@ -23,7 +23,7 @@ from scipy.optimize import minimize_scalar
 
 
 def _mp_pdf(var: float, q: float, points: int = 1000) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """Marčenko-Pastur density evaluated on the support [lam_minus, lam_plus]."""
+    """Marchenko-Pastur density evaluated on the support [lam_minus, lam_plus]."""
     lam_minus = var * (1.0 - np.sqrt(1.0 / q)) ** 2
     lam_plus = var * (1.0 + np.sqrt(1.0 / q)) ** 2
     grid = np.linspace(lam_minus, lam_plus, points)

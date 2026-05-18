@@ -99,7 +99,7 @@ def herc_weights(
     # Reuse HRP's quasi-diagonalisation to obtain a leaf ordering.
     helper = HRPModel(returns, cov_matrix=cov_df)
     helper.linkage_matrix = z
-    sorted_indices = helper._get_quasi_diag(z)
+    sorted_indices = helper._get_quasi_diag(z)  # pyright: ignore[reportPrivateUsage]
     ordered_idx = np.array(sorted_indices, dtype=np.intp)
     n = ordered_idx.size
     weights = np.ones(n, dtype=np.float64)

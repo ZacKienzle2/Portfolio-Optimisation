@@ -9,7 +9,7 @@ benchmark ``Y`` if and only if
 
     E[max(eta - X, 0)] <= E[max(eta - Y, 0)]    for all eta in R.
 
-On a discrete return panel with T scenarios, Dentcheva-Ruszczyński show that
+On a discrete return panel with T scenarios, Dentcheva-Ruszczynski show that
 the continuum of constraints collapses to constraints evaluated at the
 benchmark realisations: ``eta_i = Y_i, i = 1, ..., T``. The SSD-constrained
 expected-return maximisation becomes the LP
