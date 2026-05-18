@@ -47,11 +47,9 @@ class PortfolioVisualiser:
         pypfopt_plotting.plot_efficient_frontier(ef, ax=ax, show_assets=False)
 
         for name, weights_data in self.all_weights.items():
-            weights: pd.Series
-            if isinstance(weights_data, dict):
-                weights = pd.Series(weights_data)
-            else:
-                weights = weights_data
+            weights: pd.Series = (
+                pd.Series(weights_data) if isinstance(weights_data, dict) else weights_data
+            )
 
             ret = (weights * self.mu).sum()
             vol = np.sqrt(np.dot(weights.T, np.dot(self.s, weights)))
