@@ -1101,3 +1101,7 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,linux,visualstudiocode,jetbrains+all,vim,emacs,python,jupyternotebooks,node,c++,cmake,rust,go,java,visualstudio,dotenv,direnv,ssh,gpg
+
+# pyright debug output
+pyright_errors.txt
+pyright.json
