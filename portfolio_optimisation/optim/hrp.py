@@ -20,11 +20,20 @@ class HRPModel:
     avoids pandas `.loc` indexing overhead.
     """
 
-    def __init__(self, returns: pd.DataFrame):
+    def __init__(
+        self,
+        returns: pd.DataFrame,
+        *,
+        cov_matrix: pd.DataFrame | None = None,
+    ):
         """Initialise the model.
 
         Args:
             returns (pd.DataFrame): Historical asset returns, columns are tickers.
+            cov_matrix (pd.DataFrame | None, optional): Pre-computed covariance
+                matrix to use instead of the default Ledoit-Wolf shrinkage. Use
+                this entry point to inject RMT-denoised, DCC-GARCH conditional,
+                or any other externally estimated covariance.
 
         Raises:
             TypeError: If returns is not a pandas DataFrame.
@@ -34,7 +43,9 @@ class HRPModel:
         self.returns: pd.DataFrame = returns
         self.weights: Series = pd.Series(dtype=np.float64)
         self.ordered_tickers: list[str] = []
-        self.cov_matrix: pd.DataFrame = self._calculate_covariance()
+        self.cov_matrix: pd.DataFrame = (
+            cov_matrix if cov_matrix is not None else self._calculate_covariance()
+        )
         self.linkage_matrix: NDArray[Any] | None = None
         # Numpy view + ticker->row index map are rebuilt lazily inside
         # optimize() so the inner-loop hot path never touches pandas.
