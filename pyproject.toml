@@ -60,6 +60,13 @@ perf = [
   "numba>=0.60",
   "numexpr>=2.10",
 ]
+optim = [
+  # Convex optimisation: CDaR LP, SSD constraints, Min-CVaR, ERC, PGP.
+  # Opt-in to keep default install lean.
+  "cvxpy>=1.5",
+  "ecos>=2.0",
+  "scs>=3.2",
+]
 
 [dependency-groups]
 dev = [
