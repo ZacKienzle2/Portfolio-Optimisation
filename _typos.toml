@@ -1,7 +1,12 @@
 [default]
-extend-ignore-identifiers-re = []
+# Skip identifiers that look like TeX theorem env names (thm/cor/lem/prop/defn).
+extend-ignore-identifiers-re = [
+  "^(thm|cor|lem|prop|defn)$",
+]
 
 [default.extend-words]
+# Words that are real in this project even though typos flags them.
+thm = "thm"
 
 [files]
 extend-exclude = [
@@ -19,4 +24,10 @@ extend-exclude = [
   "Cargo.lock",
   "go.sum",
   "uv.lock",
+  # External Zotero export; we do not edit author-supplied titles or keys.
+  "references/references.bib",
+  # LaTeX preamble uses 'thm' / 'lem' / 'cor' tcolorbox theorem keys.
+  "preamble/packages.tex",
+  # Generated notebook outputs (cell results) are not source.
+  "main.ipynb",
 ]
