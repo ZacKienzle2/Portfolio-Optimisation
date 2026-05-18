@@ -13,6 +13,12 @@ from portfolio_optimisation.optim.denoise import (
     detone_correlation,
 )
 from portfolio_optimisation.optim.herc import HERCModel, herc_weights
+from portfolio_optimisation.optim.higher_moments import (
+    HigherMomentResult,
+    cokurtosis_tensor,
+    coskewness_tensor,
+    pgp_higher_moment_weights,
+)
 from portfolio_optimisation.optim.hrp import HRPModel
 from portfolio_optimisation.optim.nco import NCOOptimiser, nco_weights
 from portfolio_optimisation.optim.stochastic_dominance import (
@@ -25,9 +31,12 @@ __all__ = [
     "HERCModel",
     "HRPAnalyser",
     "HRPModel",
+    "HigherMomentResult",
     "NCOOptimiser",
     "black_litterman_weights",
     "cdar",
+    "cokurtosis_tensor",
+    "coskewness_tensor",
     "denoise_correlation",
     "denoise_covariance",
     "detone_correlation",
@@ -35,6 +44,7 @@ __all__ = [
     "implied_equilibrium_returns",
     "min_cdar_weights",
     "nco_weights",
+    "pgp_higher_moment_weights",
     "ssd_constrained_weights",
     "ssd_dominates",
 ]
