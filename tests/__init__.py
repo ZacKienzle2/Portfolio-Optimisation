@@ -1,1 +1,1 @@
-"""Test suite for the markets package."""
+"""Test suite for the portfolio_optimisation package."""

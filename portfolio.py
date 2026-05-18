@@ -1,13 +1,13 @@
-"""Deprecation shim. Import from ``markets.optim`` instead."""
+"""Deprecation shim. Import from ``portfolio_optimisation.optim`` instead."""
 
 from __future__ import annotations
 
 import warnings
 
-from markets.optim import HRPAnalyser, HRPModel
+from portfolio_optimisation.optim import HRPAnalyser, HRPModel
 
 warnings.warn(
-    "`portfolio` is a transitional shim. Import from `markets.optim` instead.",
+    "`portfolio` is a transitional shim. Import from `portfolio_optimisation.optim` instead.",
     DeprecationWarning,
     stacklevel=2,
 )

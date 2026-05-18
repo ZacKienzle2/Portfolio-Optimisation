@@ -47,7 +47,7 @@ Governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Report violations privatel
 
 ```bash
 git clone <repository-url>
-cd Markets
+cd Portfolio-Optimisation
 git config commit.gpgsign true
 ```
 
@@ -59,7 +59,7 @@ Install dependencies. Run the test suite.
 
 Before submitting:
 
-- Check the [issue tracker](https://github.com/ZacKienzle2/Markets/issues) for duplicates.
+- Check the [issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues) for duplicates.
 - Reproduce against the latest `main`.
 - Collect reproduction info.
 
