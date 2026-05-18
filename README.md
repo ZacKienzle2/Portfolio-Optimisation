@@ -13,18 +13,36 @@ arch, sklearn, pypfopt and pymle.
 
 ## Scope
 
-- Hierarchical Risk Parity (HRP) portfolio construction with Ledoit-Wolf
-  shrinkage and stationary-bootstrap robustness checks
+### Allocation
+- Hierarchical Risk Parity (HRP) with Ledoit-Wolf shrinkage and
+  stationary-bootstrap robustness checks
+- Nested Clustered Optimisation (NCO) and Hierarchical Equal Risk
+  Contribution (HERC), with variance- or CVaR-driven cluster splits
+- Marchenko-Pastur correlation denoising plus market-mode detoning
+- Black-Litterman Bayesian view blending against an HRP equilibrium prior
+- Minimum Conditional Drawdown-at-Risk (Chekhlov-Uryasev) LP
+- Second-order Stochastic Dominance constrained LP
+- Polynomial Goal Programming over Mean-Variance-Skewness-Kurtosis with
+  empirical co-skewness M3 and co-kurtosis M4 tensors
+
+### Risk
 - Value-at-Risk and Conditional VaR (empirical and parametric)
+- Entropic VaR (coherent, Chernoff-bound formulation)
+- Spectral risk via exponential or power admissible spectra
+- Wang-transform distortion risk
 - Student t-copula simulation with Kendall-tau correlation and MLE
   degrees-of-freedom estimation
-- Annualised performance metrics: Sharpe, Sortino, max drawdown
-- Econometric test battery: Jarque-Bera, ADF, Ljung-Box, Breusch-Pagan,
-  ARCH-LM, CUSUM
+- Probabilistic and Deflated Sharpe Ratio (Bailey-Lopez de Prado), plus
+  Politis-Romano stationary-bootstrap CIs on the Sharpe ratio
+
+### Econometrics + processes
+- Test battery: Jarque-Bera, ADF, Ljung-Box, Breusch-Pagan, ARCH-LM, CUSUM
 - Maximum-likelihood SDE fitting: Geometric Brownian Motion,
   Ornstein-Uhlenbeck
-- Plotly and matplotlib visualisation for efficient frontier, weights,
-  dendrogram, correlation heatmap
+
+### Visualisation
+- Plotly and matplotlib for efficient frontier, weights, dendrogram,
+  correlation heatmap
 
 ## Install
 
