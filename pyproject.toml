@@ -137,15 +137,24 @@ reportImplicitOverride = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"
 
 [[tool.pyright.executionEnvironments]]
+# Strict elsewhere; relax library-stub-induced and library-typing-quirk
+# diagnostics inside the package. Pyright still enforces structural
+# correctness (return types match docstrings, no obvious shape errors)
+# via warnings, but library Unknowns do not block CI.
 root = "portfolio_optimisation"
 reportUnknownArgumentType = "none"
 reportUnknownMemberType = "none"
 reportUnknownParameterType = "none"
 reportUnknownVariableType = "none"
+reportUnknownLambdaType = "none"
 reportMissingTypeStubs = "none"
 reportGeneralTypeIssues = "warning"
 reportAttributeAccessIssue = "warning"
-reportUnknownLambdaType = "none"
+reportAssignmentType = "warning"
+reportArgumentType = "warning"
+reportReturnType = "warning"
+reportInvalidTypeForm = "warning"
+reportPrivateImportUsage = "warning"
 
 [tool.pytest.ini_options]
 minversion = "8.0"

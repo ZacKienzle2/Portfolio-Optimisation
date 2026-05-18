@@ -29,7 +29,7 @@ class HRPModel:
         Raises:
             TypeError: If returns is not a pandas DataFrame.
         """
-        if not isinstance(returns, pd.DataFrame):
+        if not isinstance(returns, pd.DataFrame):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise TypeError("Returns must be a pandas DataFrame.")
         self.returns: pd.DataFrame = returns
         self.weights: Series = pd.Series(dtype=np.float64)
