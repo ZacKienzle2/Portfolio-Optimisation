@@ -1,5 +1,5 @@
 [project]
-name = "markets"
+name = "portfolio-optimisation"
 version = "0.0.0"
 description = "Quant infrastructure for portfolio optimisation and risk modelling."
 readme = "README.md"
@@ -50,7 +50,7 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["markets"]
+packages = ["portfolio_optimisation"]
 
 [tool.uv]
 required-version = ">=0.5"
@@ -94,8 +94,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["ARG001", "ARG002"]
-"markets/**/*.py" = ["N802", "N803", "N806", "N815", "PLR0913", "TRY003", "TRY400"]
-"markets/**/__init__.py" = ["F401", "N802", "N803", "N806", "N815"]
+"portfolio_optimisation/**/*.py" = ["N802", "N803", "N806", "N815", "PLR0913", "TRY003", "TRY400"]
+"portfolio_optimisation/**/__init__.py" = ["F401", "N802", "N803", "N806", "N815"]
 "portfolio.py" = ["F401", "N802", "N803", "N806", "N815"]
 "risk.py" = ["F401", "N802", "N803", "N806", "N815"]
 "econometrics.py" = ["F401", "N802", "N803", "N806", "N815"]
@@ -108,7 +108,7 @@ docstring-code-format = true
 docstring-code-line-length = 80
 
 [tool.pyright]
-include = ["markets", "tests"]
+include = ["portfolio_optimisation", "tests"]
 exclude = ["case-comp", "docs", "**/__pycache__", ".venv"]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
@@ -119,7 +119,7 @@ reportImplicitOverride = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"
 
 [[tool.pyright.executionEnvironments]]
-root = "markets"
+root = "portfolio_optimisation"
 reportUnknownArgumentType = "none"
 reportUnknownMemberType = "none"
 reportUnknownParameterType = "none"
@@ -145,7 +145,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["markets"]
+source = ["portfolio_optimisation"]
 branch = true
 
 [tool.coverage.report]

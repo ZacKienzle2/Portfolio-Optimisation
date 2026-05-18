@@ -4,21 +4,21 @@
 
 ### Questions and discussions
 
-"How do I...?", design discussions, feature ideation: [GitHub Discussions](https://github.com/ZacKienzle2/Markets/discussions).
+"How do I...?", design discussions, feature ideation: [GitHub Discussions](https://github.com/ZacKienzle2/Portfolio-Optimisation/discussions).
 
 ### Bug reports
 
-Use the [bug report template](https://github.com/ZacKienzle2/Markets/issues/new?template=bug_report.yml).
+Use the [bug report template](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues/new?template=bug_report.yml).
 
 Before filing:
 
-1. Search [existing issues](https://github.com/ZacKienzle2/Markets/issues?q=is%3Aissue) for duplicates.
+1. Search [existing issues](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues?q=is%3Aissue) for duplicates.
 2. Reproduce against latest `main`.
 3. Collect version or commit SHA, OS, runtime version, minimal reproduction.
 
 ### Feature requests
 
-Use the [feature request template](https://github.com/ZacKienzle2/Markets/issues/new?template=feature_request.yml).
+Use the [feature request template](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues/new?template=feature_request.yml).
 
 ### Security vulnerabilities
 

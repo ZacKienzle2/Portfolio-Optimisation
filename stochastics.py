@@ -1,13 +1,13 @@
-"""Deprecation shim. Import from ``markets.sde`` instead."""
+"""Deprecation shim. Import from ``portfolio_optimisation.sde`` instead."""
 
 from __future__ import annotations
 
 import warnings
 
-from markets.sde import SDEFitter
+from portfolio_optimisation.sde import SDEFitter
 
 warnings.warn(
-    "`stochastics` is a transitional shim. Import from `markets.sde` instead.",
+    "`stochastics` is a transitional shim. Import from `portfolio_optimisation.sde` instead.",
     DeprecationWarning,
     stacklevel=2,
 )

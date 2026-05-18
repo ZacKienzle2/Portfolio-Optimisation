@@ -1,16 +1,18 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata from this file."
-title: "Markets"
-abstract: "Workspace for market data, analytics, and trading research."
+title: "Portfolio Optimisation"
+abstract: "Quant infrastructure for portfolio construction, risk modelling and time series diagnostics."
 type: software
 authors:
-  - family-names: "ZacKienzle2"
-    given-names: "ZacKienzle2"
-repository-code: "https://github.com/ZacKienzle2/Markets"
-url: "https://github.com/ZacKienzle2/Markets"
+  - family-names: "Kienzle"
+    given-names: "Zac"
+repository-code: "https://github.com/ZacKienzle2/Portfolio-Optimisation"
+url: "https://github.com/ZacKienzle2/Portfolio-Optimisation"
 license: MIT
 keywords:
-  - markets
-  - finance
-  - quantitative-research
-  - trading
+  - portfolio-optimisation
+  - quantitative-finance
+  - risk-management
+  - hierarchical-risk-parity
+  - copula
+  - cvar

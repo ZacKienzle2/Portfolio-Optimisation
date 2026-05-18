@@ -1,6 +1,6 @@
 # Roadmap
 
-This document tracks high-level direction. For granular work see the [issue tracker](https://github.com/ZacKienzle2/Markets/issues) and [project boards](https://github.com/ZacKienzle2/Markets/projects).
+This document tracks high-level direction. For granular work see the [issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues) and [project boards](https://github.com/ZacKienzle2/Portfolio-Optimisation/projects).
 
 The roadmap is intentionally aspirational. Items are not commitments. Priorities shift as the project learns from users and contributors.
 
@@ -32,5 +32,5 @@ Explicitly not on the roadmap. Open an issue to challenge if you disagree.
 
 - Comment on items above with use cases.
 - File feature requests using the [feature template](.github/ISSUE_TEMPLATE/feature_request.yml).
-- Join discussions in [GitHub Discussions](https://github.com/ZacKienzle2/Markets/discussions).
+- Join discussions in [GitHub Discussions](https://github.com/ZacKienzle2/Portfolio-Optimisation/discussions).
 - Submit a pull request demonstrating the idea.
