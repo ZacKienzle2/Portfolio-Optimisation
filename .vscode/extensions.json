@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "davidanson.vscode-markdownlint",
+    "editorconfig.editorconfig",
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+    "ms-azuretools.vscode-docker",
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github",
+    "eamodio.gitlens",
+    "vivaxy.vscode-conventional-commits",
+    "bierner.markdown-mermaid",
+    "tyriar.sort-lines",
+    "streetsidesoftware.code-spell-checker",
+    "tekumara.typos-vscode",
+    "esbenp.prettier-vscode"
+  ],
+  "unwantedRecommendations": []
+}
