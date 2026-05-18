@@ -1,5 +1,5 @@
 % ***************************************************
-% Protocol Policy Lab shared preamble
+% Shared preamble
 % ***************************************************
 % Loaded by every document root. Single source of packages, colours, fonts,
 % headers, theorem environments, listings, alert boxes and math macros.
@@ -114,8 +114,8 @@
 \usepackage{xurl}
 \usepackage[nameinlink]{cleveref}
 \usepackage{bookmark}
-\providecommand{\PPLBib}{References/References.bib}
-\addbibresource{\PPLBib}
+% Bibliography file path is provided by the document root via \BibFile and
+% loaded with \addbibresource there, keeping the preamble project-agnostic.
 \hypersetup{
     colorlinks=true,
     linkcolor=darkblue,
@@ -161,49 +161,50 @@
 \setcounter{tocdepth}{3}
 
 % ***************************************************
-% Instructional environment
+% Draft note environment
 % ***************************************************
-% Soft blue mdframed box for drafter guidance. Suppress for final lodgement
-% by redefining the env to \comment / \endcomment in the document root.
+% Soft blue mdframed box for drafter guidance. Suppress for the final
+% build by redefining the env to \comment / \endcomment in the document
+% root, or by switching the documentclass options.
 
 \newmdenv[
   linewidth=0.5pt,linecolor=airforceblue,backgroundcolor=defncolor,
   innertopmargin=4pt,innerbottommargin=4pt,innerleftmargin=6pt,innerrightmargin=6pt,
   skipabove=8pt,skipbelow=8pt
-]{instructional}
+]{draftnote}
 
 \DeclareUnicodeCharacter{03B1}{\ensuremath{\alpha}}
 
 % ***************************************************
 % Latin abbreviations
 % ***************************************************
-% \pplnewcommand forces an override so newtxmath's \vv (vector accent) and
+% \latincmd forces an override so newtxmath's \vv (vector accent) and
 % similar upstream definitions do not shadow these textual idioms.
 
-\providecommand{\pplnewcommand}[2]{%
+\providecommand{\latincmd}[2]{%
     \expandafter\let\csname #1\endcsname\relax
     \expandafter\newcommand\csname #1\endcsname{#2}%
 }
-\pplnewcommand{via}{\textit{via}}
-\pplnewcommand{ie}{\textit{i.e.}}
-\pplnewcommand{eg}{\textit{e.g.}}
-\pplnewcommand{etc}{\textit{etc.}}
-\pplnewcommand{vv}{\textit{vice versa}}
-\pplnewcommand{viz}{\textit{viz}.}
-\pplnewcommand{cf}{\textit{cf}.}
-\pplnewcommand{apr}{\textit{a priori}}
-\pplnewcommand{apo}{\textit{a posteriori}}
-\pplnewcommand{vivo}{\textit{in vivo}}
-\pplnewcommand{situ}{\textit{in situ}}
-\pplnewcommand{silico}{\textit{in silico}}
-\pplnewcommand{vitro}{\textit{in vitro}}
-\pplnewcommand{vs}{\textit{versus}}
-\pplnewcommand{ala}{\textit{\`{a} la}}
-\pplnewcommand{apriori}{\textit{a priori}}
-\pplnewcommand{etal}{\textit{et al.}}
-\pplnewcommand{naive}{na\"\i{}ve}
-\pplnewcommand{Levy}{L\'{e}vy}
-\pplnewcommand{Ito}{It\^{o}}
+\latincmd{via}{\textit{via}}
+\latincmd{ie}{\textit{i.e.}}
+\latincmd{eg}{\textit{e.g.}}
+\latincmd{etc}{\textit{etc.}}
+\latincmd{vv}{\textit{vice versa}}
+\latincmd{viz}{\textit{viz}.}
+\latincmd{cf}{\textit{cf}.}
+\latincmd{apr}{\textit{a priori}}
+\latincmd{apo}{\textit{a posteriori}}
+\latincmd{vivo}{\textit{in vivo}}
+\latincmd{situ}{\textit{in situ}}
+\latincmd{silico}{\textit{in silico}}
+\latincmd{vitro}{\textit{in vitro}}
+\latincmd{vs}{\textit{versus}}
+\latincmd{ala}{\textit{\`{a} la}}
+\latincmd{apriori}{\textit{a priori}}
+\latincmd{etal}{\textit{et al.}}
+\latincmd{naive}{na\"\i{}ve}
+\latincmd{Levy}{L\'{e}vy}
+\latincmd{Ito}{It\^{o}}
 
 % ***************************************************
 % Paired delimiters
