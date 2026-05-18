@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -33,7 +33,7 @@ class HRPModel:
         self.weights: Series = pd.Series(dtype=np.float64)
         self.orderedTickers: list[str] = []
         self.covMatrix: pd.DataFrame = self._calculateCovariance()
-        self.linkageMatrix: Optional[NDArray[Any]] = None
+        self.linkageMatrix: NDArray[Any] | None = None
 
     def _calculateCovariance(self) -> pd.DataFrame:
         """Calculate the Ledoit-Wolf shrunk covariance matrix."""
@@ -62,11 +62,12 @@ class HRPModel:
             item1 = linkageMatrix[linkRow, 0]
             item2 = linkageMatrix[linkRow, 1]
 
-            sortedIndex = (
-                sortedIndex[:expandClusterIdx]
-                + [item1, item2]
-                + sortedIndex[expandClusterIdx + 1 :]
-            )
+            sortedIndex = [
+                *sortedIndex[:expandClusterIdx],
+                item1,
+                item2,
+                *sortedIndex[expandClusterIdx + 1 :],
+            ]
 
         return [int(i) for i in sortedIndex]
 
@@ -140,7 +141,7 @@ class HRPModel:
 
     def getDiscreteAllocation(
         self, prices: pd.DataFrame, totalPortfolioValue: float
-    ) -> Tuple[Dict[str, int], float]:
+    ) -> tuple[dict[str, int], float]:
         """Converts continuous HRP weights to a discrete share allocation.
 
         Args:
@@ -159,7 +160,7 @@ class HRPModel:
             latest_prices=latestPrices,
             total_portfolio_value=int(totalPortfolioValue),
         )
-        allocation: Dict[str, int]
+        allocation: dict[str, int]
         leftover: float
         allocation, leftover = da.lp_portfolio(verbose=False)
         return allocation, leftover

@@ -7,12 +7,14 @@ requires-python = ">=3.12,<3.14"
 license = { file = "LICENSE" }
 authors = [{ name = "Zac Kienzle" }]
 keywords = [
+  "portfolio-optimisation",
   "quantitative-finance",
-  "derivatives",
-  "fx",
-  "interest-rates",
-  "hedging",
-  "case-competition",
+  "risk-management",
+  "hierarchical-risk-parity",
+  "copula",
+  "cvar",
+  "value-at-risk",
+  "stochastic-processes",
 ]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
@@ -24,17 +26,39 @@ classifiers = [
   "Topic :: Office/Business :: Financial",
 ]
 dependencies = [
-  "quantlib>=1.34",
+  # Core numerical stack.
   "numpy>=2.1",
   "scipy>=1.14",
   "pandas>=2.2",
+  "pyarrow>=17.0",
+  # Plotting.
   "matplotlib>=3.9",
+  "seaborn>=0.13",
+  "plotly>=5.24",
+  # Portfolio + risk.
+  "scikit-learn>=1.5",
+  "pyportfolioopt>=1.5",
+  "arch>=7.0",
+  # Econometrics + statistics.
+  "statsmodels>=0.14",
+  # Stochastic processes. PyPI distribution name is pymle-diffusion; the
+  # import path remains `pymle`.
+  "pymle-diffusion>=0.0.1",
+  # Data + reporting.
+  "yfinance>=0.2.40",
+  "rich>=13.8",
 ]
 
 [project.optional-dependencies]
 notebooks = [
   "ipykernel>=6.29",
   "jupyterlab>=4.2",
+  "nbconvert>=7.16",
+]
+perf = [
+  # Hot-loop accelerators; opt-in to avoid pulling LLVM at import time.
+  "numba>=0.60",
+  "numexpr>=2.10",
 ]
 
 [dependency-groups]
@@ -135,7 +159,12 @@ addopts = [
 ]
 filterwarnings = [
   "error",
-  "ignore::DeprecationWarning:QuantLib.*",
+  # Upstream libraries warn liberally; downgrade to non-fatal in tests.
+  "ignore::DeprecationWarning:pkg_resources.*",
+  "ignore::PendingDeprecationWarning",
+  "ignore:.*scipy.*:DeprecationWarning",
+  "ignore:.*statsmodels.*:DeprecationWarning",
+  "ignore:.*pandas.*:DeprecationWarning",
 ]
 
 [tool.coverage.run]

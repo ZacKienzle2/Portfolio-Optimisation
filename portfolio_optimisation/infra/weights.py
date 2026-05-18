@@ -1,4 +1,3 @@
-from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -26,7 +25,7 @@ def inverseVarianceWeights(covMatrix: pd.DataFrame) -> pd.Series:
 
 def get_discrete_portfolio(
     weights: pd.Series, prices: pd.DataFrame, totalValue: float = 1_000_000.0
-) -> Tuple[Dict[str, int], float]:
+) -> tuple[dict[str, int], float]:
     """Convert continuous weights to a discrete number of shares (LP).
 
     Args:
@@ -43,7 +42,7 @@ def get_discrete_portfolio(
         latest_prices=latestPrices,
         total_portfolio_value=int(totalValue),
     )
-    allocation: Dict[str, int]
+    allocation: dict[str, int]
     leftover: float
     allocation, leftover = da.lp_portfolio(verbose=False)
     return allocation, leftover
