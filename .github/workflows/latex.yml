@@ -1,0 +1,78 @@
+name: LaTeX
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "main.tex"
+      - "preamble/**"
+      - "preliminary/**"
+      - "chapters/**"
+      - "appendix/**"
+      - "references/**"
+      - ".github/workflows/latex.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "main.tex"
+      - "preamble/**"
+      - "preliminary/**"
+      - "chapters/**"
+      - "appendix/**"
+      - "references/**"
+      - ".github/workflows/latex.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: latex-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build PDF with Tectonic
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Cache Tectonic resources
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: ~/.cache/Tectonic
+          key: tectonic-${{ runner.os }}-${{ hashFiles('main.tex', 'preamble/**', 'references/**') }}
+          restore-keys: tectonic-${{ runner.os }}-
+
+      - name: Install Tectonic
+        uses: wtfjoke/setup-tectonic@b5cef93d8b1ba8a93b94be5c30dd5cd55ed79bea # v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compile main.tex
+        run: tectonic -X compile main.tex --keep-logs --keep-intermediates
+
+      - name: Reject thesis-template leakage
+        run: |
+          set -euo pipefail
+          pattern='Thesis|Protocol Policy Lab|uqthesis|NAPLAN|ACARA|NCVER|ToR'
+          if grep -rnE "${pattern}" --include='*.tex' .; then
+            echo "::error::Thesis-template strings found in .tex sources."
+            exit 1
+          fi
+
+      - name: Upload PDF artefact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
+        with:
+          name: main-pdf
+          path: main.pdf
+          retention-days: 14
