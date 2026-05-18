@@ -96,12 +96,6 @@ ignore = [
 "tests/**/*.py" = ["ARG001", "ARG002"]
 "portfolio_optimisation/**/*.py" = ["N802", "N803", "N806", "N815", "PLR0913", "TRY003", "TRY400"]
 "portfolio_optimisation/**/__init__.py" = ["F401", "N802", "N803", "N806", "N815"]
-"portfolio.py" = ["F401", "N802", "N803", "N806", "N815"]
-"risk.py" = ["F401", "N802", "N803", "N806", "N815"]
-"econometrics.py" = ["F401", "N802", "N803", "N806", "N815"]
-"stochastics.py" = ["F401", "N802", "N803", "N806", "N815"]
-"plotting.py" = ["F401", "N802", "N803", "N806", "N815"]
-"utils.py" = ["F401", "N802", "N803", "N806", "N815"]
 
 [tool.ruff.format]
 docstring-code-format = true
