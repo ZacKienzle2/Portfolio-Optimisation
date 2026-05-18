@@ -1,0 +1,158 @@
+[project]
+name = "markets"
+version = "0.0.0"
+description = "Quant infrastructure for portfolio optimisation and risk modelling."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { file = "LICENSE" }
+authors = [{ name = "Zac Kienzle" }]
+keywords = [
+  "quantitative-finance",
+  "derivatives",
+  "fx",
+  "interest-rates",
+  "hedging",
+  "case-competition",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Financial and Insurance Industry",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Office/Business :: Financial",
+]
+dependencies = [
+  "quantlib>=1.34",
+  "numpy>=2.1",
+  "scipy>=1.14",
+  "pandas>=2.2",
+  "matplotlib>=3.9",
+]
+
+[project.optional-dependencies]
+notebooks = [
+  "ipykernel>=6.29",
+  "jupyterlab>=4.2",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-cov>=5.0",
+  "ruff>=0.7",
+  "pyright>=1.1.380",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["markets"]
+
+[tool.uv]
+required-version = ">=0.5"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+  "case-comp",
+  "docs",
+  ".github",
+  ".venv",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "N",   # pep8-naming
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "A",   # flake8-builtins
+  "C4",  # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "ARG", # flake8-unused-arguments
+  "PIE", # flake8-pie
+  "PT",  # flake8-pytest-style
+  "RUF", # ruff-specific
+  "PLE", # pylint errors
+  "PLW", # pylint warnings
+  "TRY", # tryceratops
+  "PERF",
+  "FURB",
+  "ERA", # eradicate (no commented-out code)
+]
+ignore = [
+  "E501", # line length governed by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ARG001", "ARG002"]
+"markets/**/*.py" = ["N802", "N803", "N806", "N815", "PLR0913", "TRY003", "TRY400"]
+"markets/**/__init__.py" = ["F401", "N802", "N803", "N806", "N815"]
+"portfolio.py" = ["F401", "N802", "N803", "N806", "N815"]
+"risk.py" = ["F401", "N802", "N803", "N806", "N815"]
+"econometrics.py" = ["F401", "N802", "N803", "N806", "N815"]
+"stochastics.py" = ["F401", "N802", "N803", "N806", "N815"]
+"plotting.py" = ["F401", "N802", "N803", "N806", "N815"]
+"utils.py" = ["F401", "N802", "N803", "N806", "N815"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
+
+[tool.pyright]
+include = ["markets", "tests"]
+exclude = ["case-comp", "docs", "**/__pycache__", ".venv"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+reportMissingImports = "error"
+reportMissingTypeStubs = "warning"
+reportImplicitOverride = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+
+[[tool.pyright.executionEnvironments]]
+root = "markets"
+reportUnknownArgumentType = "none"
+reportUnknownMemberType = "none"
+reportUnknownParameterType = "none"
+reportUnknownVariableType = "none"
+reportMissingTypeStubs = "none"
+reportGeneralTypeIssues = "warning"
+reportAttributeAccessIssue = "warning"
+reportUnknownLambdaType = "none"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--strict-config",
+  "--showlocals",
+  "--tb=short",
+]
+filterwarnings = [
+  "error",
+  "ignore::DeprecationWarning:QuantLib.*",
+]
+
+[tool.coverage.run]
+source = ["markets"]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+show_missing = true
+skip_covered = false
