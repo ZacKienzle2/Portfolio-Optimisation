@@ -34,6 +34,17 @@ class HRPAnalyser:
         self.bootstrapResults: pd.DataFrame | None = None
         self.cacheDir: Path = Path("cache")
         self.cacheDir.mkdir(exist_ok=True)
+        self._blockSize: int = self._computeBlockSize(returns)
+
+    @staticmethod
+    def _computeBlockSize(returns: pd.DataFrame) -> int:
+        """Optimal stationary-bootstrap block length on squared returns.
+
+        Hoisted out of the per-iteration worker because it depends only on
+        the full sample, not on the bootstrap seed.
+        """
+        blockLengths = optimal_block_length(returns**2)
+        return int(blockLengths.iloc[:, 0].mean())
 
     def _getCachePath(self) -> Path:
         """Generates a unique cache path based on the tickers used."""
@@ -74,23 +85,27 @@ class HRPAnalyser:
         if verbose:
             print(f"Running bootstrap with {reps} reps...")
 
-        allResults: list[pd.DataFrame] = []
+        nCores = max(1, cpu_count() - 1)
+        rng = np.random.default_rng()
+        # One job-list spanning all (seed, method) pairs so a single worker
+        # pool amortises spawn cost across every linkage method.
+        jobs: list[tuple[int, str]] = []
         for method in linkageMethods:
-            nCores = max(1, cpu_count() - 1)
-            seeds: NDArray[np.int32] = np.random.randint(
-                0, 1_000_000, size=reps, dtype=np.int32
+            seeds: NDArray[np.int64] = rng.integers(
+                0, 1_000_000, size=reps, dtype=np.int64
             )
-            args = [(seed, method) for seed in seeds]
-            resultsList: list[dict[str, float]]
+            jobs.extend((int(seed), method) for seed in seeds)
 
-            with Pool(nCores) as pool:
-                resultsList = pool.starmap(self._bootstrapSingleMethod, args)
+        with Pool(nCores) as pool:
+            results: list[dict[str, float]] = pool.starmap(
+                self._bootstrapSingleMethod, jobs
+            )
 
-            methodDf = pd.DataFrame(resultsList)
-            methodDf["linkage_method"] = method
-            allResults.append(methodDf)
+        methodColumn = [method for method in linkageMethods for _ in range(reps)]
+        df = pd.DataFrame(results)
+        df["linkage_method"] = methodColumn
+        self.bootstrapResults = df
 
-        self.bootstrapResults = pd.concat(allResults, ignore_index=True)
         self.bootstrapResults.to_parquet(cachePath)
         if verbose:
             print("Bootstrap complete and results saved to cache.")
@@ -98,10 +113,8 @@ class HRPAnalyser:
     def _bootstrapSingleMethod(self, seed: int, linkageMethod: str) -> dict[str, float]:
         """Performs a single HRP optimisation on a bootstrapped sample."""
         rs = np.random.default_rng(seed)
-
-        blockLengths = optimal_block_length(self.returns**2)
-        blockSize = int(blockLengths.iloc[:, 0].mean())
-        bs = StationaryBootstrap(blockSize, self.returns, seed=rs)
+        # _blockSize hoisted in __init__; reuse instead of recomputing per iter.
+        bs = StationaryBootstrap(self._blockSize, self.returns, seed=rs)
 
         sampleData = next(iter(bs.bootstrap(1)))
         sampleReturns: pd.DataFrame = sampleData[0][0]

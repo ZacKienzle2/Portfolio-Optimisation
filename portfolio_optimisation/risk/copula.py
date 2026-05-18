@@ -175,10 +175,17 @@ class CopulaRiskAnalyser:
             raise RuntimeError("Fit the copula first.")
 
         simulatedUniform: NDArray[np.float64] = self.copula.rvs(nSimulations)
-        simulatedUniform = np.clip(simulatedUniform, 1e-9, 1 - 1e-9)
+        np.clip(simulatedUniform, 1e-9, 1 - 1e-9, out=simulatedUniform)
 
-        simulatedReturnsData = {}
-        for i, ticker in enumerate(self.returns.columns):
+        # Pre-allocate the inverse-CDF matrix once and fill column-wise so the
+        # downstream DataFrame is constructed from a contiguous buffer instead
+        # of dict-of-arrays.
+        tickers = list(self.returns.columns)
+        nTickers = len(tickers)
+        ppfMatrix = np.empty((nSimulations, nTickers), dtype=np.float64)
+
+        validMask = np.zeros(nTickers, dtype=bool)
+        for i, ticker in enumerate(tickers):
             marginalInfo = self.fitMarginals.get(ticker)
             if (
                 marginalInfo
@@ -188,16 +195,22 @@ class CopulaRiskAnalyser:
                 dist = marginalInfo["dist"]
                 params = marginalInfo["params"]
                 try:
-                    simulatedReturnsData[ticker] = dist.ppf(
-                        simulatedUniform[:, i], *params
-                    )
+                    ppfMatrix[:, i] = dist.ppf(simulatedUniform[:, i], *params)
+                    validMask[i] = True
                 except Exception as e:
                     print(f"Warning: PPF failed for {ticker}: {e}")
-                    simulatedReturnsData[ticker] = np.full(nSimulations, np.nan)
+                    ppfMatrix[:, i] = np.nan
             else:
-                simulatedReturnsData[ticker] = np.full(nSimulations, np.nan)
+                ppfMatrix[:, i] = np.nan
 
-        simulatedReturnsDf = pd.DataFrame(simulatedReturnsData).dropna()
+        if not validMask.any():
+            print("Warning: Simulation yielded empty DataFrame after NaNs.")
+            return pd.DataFrame({"simulated_returns": []})
+
+        validTickers = [t for t, ok in zip(tickers, validMask, strict=True) if ok]
+        simulatedReturnsDf = pd.DataFrame(
+            ppfMatrix[:, validMask], columns=validTickers
+        ).dropna()
 
         if simulatedReturnsDf.empty:
             print("Warning: Simulation yielded empty DataFrame after NaNs.")
