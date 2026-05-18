@@ -21,4 +21,7 @@ exclude = [
   '^https?://0\.0\.0\.0',
   '^https?://example\.(com|org|net)',
   '^mailto:',
+  # GitHub Discussions returns 404 when the feature is disabled on a repo;
+  # we link to it preemptively so contributors find it once enabled.
+  '/discussions/?$',
 ]
