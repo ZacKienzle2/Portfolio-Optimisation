@@ -37,7 +37,9 @@ flowchart LR
     end
     subgraph risk
         portfolio_optimisation_risk["portfolio_optimisation.risk"]
+        portfolio_optimisation_risk_backtesting["portfolio_optimisation.risk.backtesting"]
         portfolio_optimisation_risk_coherent["portfolio_optimisation.risk.coherent"]
+        portfolio_optimisation_risk_contributions["portfolio_optimisation.risk.contributions"]
         portfolio_optimisation_risk_copula["portfolio_optimisation.risk.copula"]
         portfolio_optimisation_risk_metrics["portfolio_optimisation.risk.metrics"]
         portfolio_optimisation_risk_plotting["portfolio_optimisation.risk.plotting"]
@@ -87,7 +89,9 @@ flowchart LR
     portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_infra_logging
     portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_optim_hrp
     portfolio_optimisation_optim_herc --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_backtesting
     portfolio_optimisation_risk --> portfolio_optimisation_risk_coherent
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_contributions
     portfolio_optimisation_risk --> portfolio_optimisation_risk_copula
     portfolio_optimisation_risk --> portfolio_optimisation_risk_metrics
     portfolio_optimisation_risk --> portfolio_optimisation_risk_plotting
