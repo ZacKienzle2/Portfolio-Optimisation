@@ -1,7 +1,7 @@
 """Tests for the portfolio-opt command-line interface.
 
 The ``run`` test exercises the full pipeline offline by resolving the default
-``Initial_Files/market_data.parquet`` snapshot (a tracked fixture), so no
+``data/market_data.parquet`` snapshot (a tracked fixture), so no
 network access is required.
 """
 

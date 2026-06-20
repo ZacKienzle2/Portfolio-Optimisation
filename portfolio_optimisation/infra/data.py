@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 def default_cache_path() -> Path:
     """Return the conventional on-disk snapshot location under the working dir."""
-    return Path.cwd() / "Initial_Files" / "market_data.parquet"
+    return Path.cwd() / "data" / "market_data.parquet"
 
 
 def first_trading_day(frame: pd.DataFrame) -> str:
@@ -138,7 +138,7 @@ def get_data(
         start_date (str): Start date (YYYY-MM-DD).
         console (Console): Rich console for status messages.
         cache_path (Path | None): Snapshot location. Defaults to
-            ``Initial_Files/market_data.parquet`` under the working directory.
+            ``data/market_data.parquet`` under the working directory.
 
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: Cleaned prices and daily returns.

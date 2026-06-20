@@ -49,7 +49,7 @@ class Settings:
     seed: int | None = None
     std_floor: float = 1e-12
     cache_dir: Path = Path("cache")
-    data_cache_path: Path = Path("Initial_Files") / "market_data.parquet"
+    data_cache_path: Path = Path("data") / "market_data.parquet"
     log_level: str = "INFO"
 
     def to_dict(self) -> dict[str, Any]:
