@@ -75,9 +75,7 @@ def min_cdar_weights(
     # Cumulative portfolio return P_t = sum_{s<=t} r_s' w.
     cumulative = cp.cumsum(r_arr @ w)
 
-    problem_constraints = spec.build(
-        cp, w, n_assets=n_assets, expected_returns=r_arr.mean(axis=0)
-    )
+    problem_constraints = spec.build(cp, w, n_assets=n_assets, expected_returns=r_arr.mean(axis=0))
     problem_constraints += [
         u >= (m - cumulative) - zeta,
         m >= cumulative,

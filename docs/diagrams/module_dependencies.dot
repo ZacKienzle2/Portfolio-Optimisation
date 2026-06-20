@@ -33,6 +33,7 @@ digraph modules {
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.stochastic_dominance";
     "portfolio_optimisation.optim.bootstrap" -> "portfolio_optimisation.infra.logging";
     "portfolio_optimisation.optim.bootstrap" -> "portfolio_optimisation.optim.hrp";
+    "portfolio_optimisation.optim.cdar" -> "portfolio_optimisation.optim.constraints";
     "portfolio_optimisation.optim.herc" -> "portfolio_optimisation.optim.hrp";
     "portfolio_optimisation.optim.mean_risk" -> "portfolio_optimisation.optim.constraints";
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.backtesting";

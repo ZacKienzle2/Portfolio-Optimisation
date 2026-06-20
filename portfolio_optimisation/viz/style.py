@@ -63,7 +63,8 @@ def configure_style() -> None:
     Idempotent: safe to call before every figure so styling is consistent
     regardless of import order or notebook cell execution order.
     """
-    mpl.rcParams.update(_RC_PARAMS)
+    for key, value in _RC_PARAMS.items():
+        mpl.rcParams[key] = value
     mpl.rcParams["axes.prop_cycle"] = mpl.cycler(color=list(OKABE_ITO))
 
 
