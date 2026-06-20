@@ -85,6 +85,27 @@ python tools/gen_diagrams.py          # regenerate docs/diagrams/*
 python tools/gen_diagrams.py --check  # verify they match the source
 ```
 
+## Documentation
+
+The `docs/` directory is a [MkDocs](https://www.mkdocs.org/) site (Material
+theme) with guides, architecture diagrams, decision records and an API reference
+generated from the docstrings. It is Markdown source, not a pre-built website.
+
+Preview it locally:
+
+```bash
+uv run --all-extras mkdocs serve   # live reload at http://127.0.0.1:8000
+```
+
+Build the static HTML into `site/`:
+
+```bash
+uv run --all-extras mkdocs build
+```
+
+Continuous integration builds the site on every change (the `Docs` workflow);
+publishing to GitHub Pages can be enabled in the repository settings.
+
 ## Maintainers
 
 See [CODEOWNERS](.github/CODEOWNERS).
