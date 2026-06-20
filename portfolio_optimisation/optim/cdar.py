@@ -1,6 +1,6 @@
 """Conditional Drawdown-at-Risk allocation.
 
-For portfolio weight ``w``, cumulative log-PnL ``P_t = sum_{s <= t} r_s' w``,
+For portfolio weight ``w``, cumulative log-return ``P_t = sum_{s <= t} r_s' w``,
 and running maximum ``M_t = max_{s <= t} P_s``, define the drawdown
 ``D_t = M_t - P_t >= 0``. The alpha-CDaR is the expected drawdown beyond the
 VaR threshold at level alpha. This is a coherent risk measure with the LP
