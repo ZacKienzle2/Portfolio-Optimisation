@@ -2,6 +2,8 @@
 
 ::: portfolio_optimisation.risk.metrics
 
+::: portfolio_optimisation.risk.volatility
+
 ::: portfolio_optimisation.risk.backtesting
 
 ::: portfolio_optimisation.risk.contributions

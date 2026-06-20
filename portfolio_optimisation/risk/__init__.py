@@ -36,6 +36,11 @@ from portfolio_optimisation.risk.sharpe import (
     probabilistic_sharpe_ratio,
     stationary_bootstrap_sharpe_ci,
 )
+from portfolio_optimisation.risk.volatility import (
+    conditional_volatility,
+    fit_garch,
+    garch_var_es,
+)
 
 __all__ = [
     "CopulaRiskAnalyser",
@@ -47,9 +52,12 @@ __all__ = [
     "christoffersen_conditional_coverage_test",
     "christoffersen_independence_test",
     "component_risk_contributions",
+    "conditional_volatility",
     "deflated_sharpe_ratio",
     "entropic_value_at_risk",
     "exponential_spectrum",
+    "fit_garch",
+    "garch_var_es",
     "kupiec_pof_test",
     "marginal_risk_contributions",
     "percentage_risk_contributions",

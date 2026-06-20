@@ -45,6 +45,7 @@ flowchart LR
         portfolio_optimisation_risk_metrics["portfolio_optimisation.risk.metrics"]
         portfolio_optimisation_risk_plotting["portfolio_optimisation.risk.plotting"]
         portfolio_optimisation_risk_sharpe["portfolio_optimisation.risk.sharpe"]
+        portfolio_optimisation_risk_volatility["portfolio_optimisation.risk.volatility"]
     end
     subgraph root
         portfolio_optimisation["portfolio_optimisation"]
@@ -98,6 +99,7 @@ flowchart LR
     portfolio_optimisation_risk --> portfolio_optimisation_risk_metrics
     portfolio_optimisation_risk --> portfolio_optimisation_risk_plotting
     portfolio_optimisation_risk --> portfolio_optimisation_risk_sharpe
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_volatility
     portfolio_optimisation_risk_copula --> portfolio_optimisation_infra_logging
     portfolio_optimisation_sde --> portfolio_optimisation_sde_fitter
     portfolio_optimisation_services --> portfolio_optimisation_services_pipeline
