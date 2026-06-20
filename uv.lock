@@ -722,6 +722,22 @@ wheels = [
 ]
 
 [[package]]
+name = "interrogate"
+version = "1.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "click" },
+    { name = "colorama" },
+    { name = "py" },
+    { name = "tabulate" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8b/22/74f7fcc96280eea46cf2bcbfa1354ac31de0e60a4be6f7966f12cef20893/interrogate-1.7.0.tar.gz", hash = "sha256:a320d6ec644dfd887cc58247a345054fc4d9f981100c45184470068f4b3719b0", size = 159636, upload-time = "2024-04-07T22:30:46.217Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/12/c9/6869a1dcf4aaf309b9543ec070be3ec3adebee7c9bec9af8c230494134b9/interrogate-1.7.0-py3-none-any.whl", hash = "sha256:b13ff4dd8403369670e2efe684066de9fcb868ad9d7f2b4095d8112142dc9d12", size = 46982, upload-time = "2024-04-07T22:30:44.277Z" },
+]
+
+[[package]]
 name = "ipykernel"
 version = "7.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1846,6 +1862,7 @@ perf = [
 dev = [
     { name = "git-cliff" },
     { name = "hypothesis" },
+    { name = "interrogate" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-benchmark" },
@@ -1886,6 +1903,7 @@ provides-extras = ["notebooks", "perf", "optim", "docs"]
 dev = [
     { name = "git-cliff", specifier = ">=2.6" },
     { name = "hypothesis", specifier = ">=6.100" },
+    { name = "interrogate", specifier = ">=1.7" },
     { name = "pyright", specifier = ">=1.1.380" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-benchmark", specifier = ">=4.0" },
@@ -1967,6 +1985,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/cd/05/0a34433a064256a578f1783a10da6df098ceaa4a57bbeaa96a6c0352786b/pure_eval-0.2.3.tar.gz", hash = "sha256:5f4e983f40564c576c7c8635ae88db5956bb2229d7e9237d03b3c0b0190eaf42", size = 19752, upload-time = "2024-07-21T12:58:21.801Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/37/efad0257dc6e593a18957422533ff0f87ede7c9c6ea010a2177d738fb82f/pure_eval-0.2.3-py3-none-any.whl", hash = "sha256:1db8e35b67b3d218d818ae653e27f06c3aa420901fa7b081ca98cbedc874e0d0", size = 11842, upload-time = "2024-07-21T12:58:20.04Z" },
+]
+
+[[package]]
+name = "py"
+version = "1.11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/ff/fec109ceb715d2a6b4c4a85a61af3b40c723a961e8828319fbcb15b868dc/py-1.11.0.tar.gz", hash = "sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719", size = 207796, upload-time = "2021-11-04T17:17:01.377Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f6/f0/10642828a8dfb741e5f3fbaac830550a518a775c7fff6f04a007259b0548/py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378", size = 98708, upload-time = "2021-11-04T17:17:00.152Z" },
 ]
 
 [[package]]
@@ -2605,6 +2632,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/10/b9/fd41f1f6af13a1a1212a06bb377b17762feaa6d656947bf666f76300fc05/statsmodels-0.14.6-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:730f3297b26749b216a06e4327fe0be59b8d05f7d594fb6caff4287b69654589", size = 10324155, upload-time = "2025-12-05T23:12:01.805Z" },
     { url = "https://files.pythonhosted.org/packages/ee/0f/a6900e220abd2c69cd0a07e3ad26c71984be6061415a60e0f17b152ecf08/statsmodels-0.14.6-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:f1c08befa85e93acc992b72a390ddb7bd876190f1360e61d10cf43833463bc9c", size = 10349765, upload-time = "2025-12-05T23:12:18.018Z" },
     { url = "https://files.pythonhosted.org/packages/98/08/b79f0c614f38e566eebbdcff90c0bcacf3c6ba7a5bbb12183c09c29ca400/statsmodels-0.14.6-cp313-cp313-win_amd64.whl", hash = "sha256:8021271a79f35b842c02a1794465a651a9d06ec2080f76ebc3b7adce77d08233", size = 9540043, upload-time = "2025-12-05T23:12:33.887Z" },
+]
+
+[[package]]
+name = "tabulate"
+version = "0.10.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/58/8c37dea7bbf769b20d58e7ace7e5edfe65b849442b00ffcdd56be88697c6/tabulate-0.10.0.tar.gz", hash = "sha256:e2cfde8f79420f6deeffdeda9aaec3b6bc5abce947655d17ac662b126e48a60d", size = 91754, upload-time = "2026-03-04T18:55:34.402Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/55/db07de81b5c630da5cbf5c7df646580ca26dfaefa593667fc6f2fe016d2e/tabulate-0.10.0-py3-none-any.whl", hash = "sha256:f0b0622e567335c8fabaaa659f1b33bcb6ddfe2e496071b743aa113f8774f2d3", size = 39814, upload-time = "2026-03-04T18:55:31.284Z" },
 ]
 
 [[package]]

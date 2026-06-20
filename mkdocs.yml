@@ -64,6 +64,7 @@ nav:
   - Installation: installation.md
   - Usage: usage.md
   - Architecture: architecture.md
+  - Changelog: changelog.md
   - Decision Records:
       - "DDD layering": adr/0001-ddd-layering.md
       - "Repository and Unit of Work": adr/0002-repository-unit-of-work.md
@@ -83,6 +84,7 @@ nav:
       - "Covariance shrinkage": adr/0016-covariance-shrinkage.md
       - "Changelog automation": adr/0017-changelog-automation.md
       - "Documentation publishing": adr/0018-documentation-publishing.md
+      - "Documentation quality gate": adr/0019-documentation-quality-gate.md
   - API Reference:
       - Optimisation: reference/optim.md
       - Risk: reference/risk.md
