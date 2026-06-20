@@ -6,6 +6,7 @@ on:
     paths:
       - "portfolio_optimisation/**"
       - "docs/**"
+      - "tools/gen_diagrams.py"
       - "mkdocs.yml"
       - "pyproject.toml"
       - "uv.lock"
@@ -15,6 +16,7 @@ on:
     paths:
       - "portfolio_optimisation/**"
       - "docs/**"
+      - "tools/gen_diagrams.py"
       - "mkdocs.yml"
       - "pyproject.toml"
       - "uv.lock"
@@ -29,7 +31,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docs:
+  build:
     name: Build documentation
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -51,14 +53,46 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Sync dependencies
-        run: uv sync --frozen --all-extras
+        run: uv sync --frozen --extra docs
+
+      - name: Regenerate architecture diagrams
+        run: uv run python tools/gen_diagrams.py
 
       - name: Build site (strict)
         run: uv run mkdocs build --strict
 
-      - name: Upload site artefact
+      - name: Upload Pages artefact
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: site/
+
+      - name: Upload preview artefact
+        if: github.event_name != 'push'
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
           name: site
           path: site/
           retention-days: 7
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
+        with:
+          egress-policy: audit
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
