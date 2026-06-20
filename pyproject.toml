@@ -85,6 +85,7 @@ dev = [
   "ruff>=0.7",
   "pyright>=1.1.380",
   "git-cliff>=2.6",
+  "interrogate>=1.7",
 ]
 
 [build-system]
@@ -232,3 +233,16 @@ exclude_also = [
 ]
 show_missing = true
 skip_covered = false
+
+[tool.interrogate]
+# Public-API docstring coverage. Nested closures, private helpers, dunder and
+# init methods are intentionally undocumented and excluded from the measure.
+ignore-init-method = true
+ignore-magic = true
+ignore-private = true
+ignore-semiprivate = true
+ignore-nested-functions = true
+ignore-property-decorators = true
+ignore-module = false
+fail-under = 90
+exclude = ["tests", "tools", "docs", "case-comp", "build", ".venv"]

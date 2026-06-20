@@ -80,6 +80,9 @@ jobs:
       - name: Pyright
         run: uv run pyright
 
+      - name: Docstring coverage
+        run: uv run interrogate portfolio_optimisation
+
       - name: Pytest with coverage
         run: uv run pytest -q --cov --cov-report=xml --cov-report=term
 
