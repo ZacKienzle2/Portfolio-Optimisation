@@ -194,10 +194,15 @@ Authors:
 
 ## Release Process
 
-1. Update the changelog.
-2. Bump the version using SemVer based on the commit history.
-3. Tag the release commit with `vMAJOR.MINOR.PATCH`.
-4. Publish the release notes from the changelog.
+The changelog is generated from the Conventional Commit history by
+[git-cliff](https://git-cliff.org/) (configured in `cliff.toml`). Preview the
+unreleased entries at any time with `uv run git-cliff --unreleased`.
+
+1. Bump the version using SemVer based on the commit history.
+2. Tag the release commit with `vMAJOR.MINOR.PATCH`.
+3. Pushing the tag runs the release workflow, which regenerates `CHANGELOG.md`,
+   derives the release notes from the same commits, and publishes the GitHub
+   release with the changelog and SBOMs attached.
 
 ## Developer Certificate of Origin
 
