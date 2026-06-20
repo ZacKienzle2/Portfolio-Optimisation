@@ -80,6 +80,7 @@ nav:
       - "References in the writeup": adr/0014-references-in-the-writeup.md
       - "Mean-risk optimisation": adr/0015-mean-risk-optimisation.md
       - "Covariance shrinkage": adr/0016-covariance-shrinkage.md
+      - "Changelog automation": adr/0017-changelog-automation.md
   - API Reference:
       - Optimisation: reference/optim.md
       - Risk: reference/risk.md
