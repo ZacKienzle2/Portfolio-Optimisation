@@ -85,6 +85,7 @@ nav:
       - "Changelog automation": adr/0017-changelog-automation.md
       - "Documentation publishing": adr/0018-documentation-publishing.md
       - "Documentation quality gate": adr/0019-documentation-quality-gate.md
+      - "Dependency updates and coverage floor": adr/0020-dependency-updates-and-coverage-floor.md
   - API Reference:
       - Optimisation: reference/optim.md
       - Risk: reference/risk.md
