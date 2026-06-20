@@ -67,6 +67,17 @@ nav:
       - "DDD layering": adr/0001-ddd-layering.md
       - "Repository and Unit of Work": adr/0002-repository-unit-of-work.md
       - "Deterministic seeding": adr/0003-deterministic-seeding.md
+      - "Configuration resolution": adr/0004-configuration-resolution.md
+      - "Structured logging": adr/0005-structured-logging.md
+      - "Visualisation style": adr/0006-visualisation-style.md
+      - "Code-derived diagrams": adr/0007-code-derived-diagrams.md
+      - "Covariance estimation": adr/0008-covariance-estimation.md
+      - "Risk measures and backtesting": adr/0009-risk-measures-and-backtesting.md
+      - "SDE simulation schemes": adr/0010-sde-simulation-schemes.md
+      - "Testing strategy": adr/0011-testing-strategy.md
+      - "Dependency management": adr/0012-dependency-management.md
+      - "CI gating and commits": adr/0013-ci-gating-and-commits.md
+      - "References in the writeup": adr/0014-references-in-the-writeup.md
   - API Reference:
       - Optimisation: reference/optim.md
       - Risk: reference/risk.md
