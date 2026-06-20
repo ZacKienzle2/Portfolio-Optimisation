@@ -45,6 +45,11 @@ class YfinanceParquetRepository(MarketDataRepository):
         self.cache_path.parent.mkdir(parents=True, exist_ok=True)
 
     def load_prices(self, tickers: list[str], start_date: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Return aligned prices and returns from the cache or a fresh download.
+
+        Serve the on-disk snapshot when it covers the requested tickers and
+        start date, otherwise download, cache, and clean the data.
+        """
         if self.cache_path.exists():
             cached = pd.read_parquet(self.cache_path, engine="pyarrow")
             if cache_satisfies_request(cached, tickers, start_date):
@@ -85,6 +90,7 @@ class FakeMarketDataRepository(MarketDataRepository):
         tickers: list[str],
         start_date: str,  # noqa: ARG002
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Return prices and returns sliced from the in-memory frame."""
         prices = self._prices[tickers]
         returns = prices.pct_change(fill_method=None).dropna()
         return prices, returns
@@ -116,7 +122,9 @@ class InMemoryUnitOfWork(UnitOfWork):
             self.rollback()
 
     def commit(self) -> None:
+        """Mark the unit of work as committed."""
         self._committed = True
 
     def rollback(self) -> None:
+        """Mark the unit of work as rolled back."""
         self._committed = False

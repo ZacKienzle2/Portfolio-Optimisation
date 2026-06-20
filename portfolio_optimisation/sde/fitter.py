@@ -1,3 +1,5 @@
+"""Maximum-likelihood fitting of GBM and Ornstein-Uhlenbeck parameters per asset."""
+
 import contextlib
 import os
 from multiprocessing import Pool, cpu_count

@@ -1,3 +1,5 @@
+"""Rich-console rendering of the final portfolio report."""
+
 from rich.console import Console
 from rich.table import Table
 

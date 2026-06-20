@@ -1,3 +1,6 @@
+"""Time-series econometric diagnostics for stationarity, normality,
+autocorrelation, heteroskedasticity, ARCH effects and structural breaks."""
+
 from collections.abc import Callable
 from functools import reduce
 from typing import Any

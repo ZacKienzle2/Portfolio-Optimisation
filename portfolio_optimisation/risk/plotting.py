@@ -1,3 +1,5 @@
+"""Plots of the simulated return distribution and its risk thresholds."""
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
