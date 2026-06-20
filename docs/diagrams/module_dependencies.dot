@@ -41,6 +41,7 @@ digraph modules {
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.volatility";
     "portfolio_optimisation.risk.copula" -> "portfolio_optimisation.infra.logging";
     "portfolio_optimisation.sde" -> "portfolio_optimisation.sde.fitter";
+    "portfolio_optimisation.sde" -> "portfolio_optimisation.sde.processes";
     "portfolio_optimisation.services" -> "portfolio_optimisation.services.pipeline";
     "portfolio_optimisation.services.pipeline" -> "portfolio_optimisation.config";
     "portfolio_optimisation.services.pipeline" -> "portfolio_optimisation.domain.repositories";
