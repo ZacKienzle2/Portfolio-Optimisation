@@ -202,6 +202,9 @@ filterwarnings = [
   "ignore:.*scipy.*:DeprecationWarning",
   "ignore:.*statsmodels.*:DeprecationWarning",
   "ignore:.*pandas.*:DeprecationWarning",
+  # Matplotlib emits environmental UserWarnings (font fallback, layout) that
+  # depend on the host and are not defects in our code.
+  "ignore::UserWarning:matplotlib.*",
 ]
 
 [tool.coverage.run]
