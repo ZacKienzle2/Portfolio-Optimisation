@@ -142,7 +142,8 @@ def stationary_bootstrap_sharpe_ci(
     if arr.size < 4:
         raise ValueError("Need at least 4 observations for the bootstrap CI.")
 
-    block_size = max(1, int(optimal_block_length(arr**2).iloc[0, 0]))
+    raw_block = int(optimal_block_length(arr**2).iloc[0, 0])
+    block_size = int(np.clip(raw_block, 1, max(1, arr.size // 2)))
     rng = np.random.default_rng(seed)
     bs = StationaryBootstrap(block_size, arr, seed=rng)
     samples = np.empty(n_resamples, dtype=np.float64)

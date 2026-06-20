@@ -157,11 +157,15 @@ class CopulaRiskAnalyser:
         corr, df = self._estimate_copula_params()
         self.copula = StudentTCopula(corr=corr, df=df, k_dim=self.returns.shape[1])
 
-    def run_simulation(self, n_simulations: int = 10000) -> pd.DataFrame:
+    def run_simulation(
+        self, n_simulations: int = 10000, *, seed: int | None = None
+    ) -> pd.DataFrame:
         """Generate correlated portfolio returns using the fitted copula.
 
         Args:
             n_simulations (int): Number of simulation paths.
+            seed (int | None): Seed forwarded to the copula sampler for
+                reproducible draws. Defaults to None (non-deterministic).
 
         Returns:
             pd.DataFrame: Simulated portfolio returns ('simulated_returns').
@@ -169,7 +173,9 @@ class CopulaRiskAnalyser:
         if self.copula is None:
             raise RuntimeError("Fit the copula first.")
 
-        simulated_uniform: NDArray[np.float64] = self.copula.rvs(n_simulations)
+        simulated_uniform: NDArray[np.float64] = self.copula.rvs(
+            n_simulations, random_state=seed
+        )
         np.clip(simulated_uniform, 1e-9, 1 - 1e-9, out=simulated_uniform)
 
         # Pre-allocate the inverse-CDF matrix once and fill column-wise so the
@@ -298,7 +304,11 @@ class CopulaRiskAnalyser:
 
 
 def run_historical_simulation(
-    returns: pd.DataFrame, weights: pd.Series, n_simulations: int = 10000
+    returns: pd.DataFrame,
+    weights: pd.Series,
+    n_simulations: int = 10000,
+    *,
+    seed: int | None = None,
 ) -> pd.DataFrame:
     """Simulate portfolio returns by resampling historical daily returns.
 
@@ -310,6 +320,8 @@ def run_historical_simulation(
         returns (pd.DataFrame): Historical asset returns.
         weights (pd.Series): Portfolio weights.
         n_simulations (int): Number of simulated days.
+        seed (int | None): Seed for the resampling generator. Pass an int for
+            reproducible draws. Defaults to None (non-deterministic).
 
     Returns:
         pd.DataFrame: Simulated portfolio returns ('simulated_returns').
@@ -324,7 +336,8 @@ def run_historical_simulation(
     if valid_historical_returns.empty:
         return pd.DataFrame({"simulated_returns": []})
 
-    simulated_returns_array = np.random.choice(
+    rng = np.random.default_rng(seed)
+    simulated_returns_array = rng.choice(
         valid_historical_returns.to_numpy(), size=n_simulations, replace=True
     )
     return pd.DataFrame({"simulated_returns": simulated_returns_array})
