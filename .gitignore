@@ -4,6 +4,8 @@
 ### Project-specific ###
 # Bootstrap and simulation artefacts (regenerated on demand).
 /cache/
+# MkDocs build output.
+/site/
 # LaTeX build outputs.
 *.aux
 *.bbl

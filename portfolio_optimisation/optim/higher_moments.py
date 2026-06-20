@@ -137,9 +137,10 @@ def pgp_higher_moment_weights(
 
     Args:
         returns (pd.DataFrame): Asset returns.
-        alpha, beta, gamma, delta (float): Investor preference exponents on
-            mean shortfall, variance excess, negative-skew penalty and
-            kurtosis excess respectively.
+        alpha (float): Preference exponent on the mean-shortfall goal.
+        beta (float): Preference exponent on the variance-excess goal.
+        gamma (float): Preference exponent on the negative-skewness goal.
+        delta (float): Preference exponent on the kurtosis-excess goal.
         max_assets (int): Guard on the universe size. The co-kurtosis tensor
             scales as O(N^4); requests above this raise rather than thrash
             memory. Raise explicitly when a dense large-N tensor is intended.
