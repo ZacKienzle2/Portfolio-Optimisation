@@ -27,6 +27,7 @@ reviewer can audit end to end.
 - Extreme Value Theory tail risk (peaks-over-threshold GPD VaR/ES and the Hill estimator).
 - SDE simulation engines (Euler-Maruyama, Milstein) with GBM, OU, CIR, Merton and Heston models.
 - Robust and resampled (Michaud) optimisation with box-uncertainty mean-variance.
+- Mean-CVaR (Rockafellar-Uryasev LP) and mean-EVaR (exponential-cone) optimisation over a unified constraint framework (box, group/sector, leverage, turnover and return-floor).
 - Property-based tests and a benchmark harness.
 
 ## Now
@@ -41,7 +42,8 @@ In active development.
 
 Planned for the next milestone (H2 2026).
 
-- Mean-CVaR and mean-EVaR optimisation (Rockafellar-Uryasev) and a unified constraint framework.
+- Mean-drawdown (CDaR) optimisation folded into the shared constraint framework.
+- Nonlinear (Ledoit-Wolf 2020) and OAS covariance shrinkage estimators.
 
 ## Later
 
@@ -59,8 +61,8 @@ The thematic backlog of what a frontier version of this project would add.
 ### Allocation and optimisation
 
 - Risk parity and equal-risk-contribution (convex Spinu / Newton formulations).
-- Mean-CVaR, mean-EVaR and mean-drawdown optimisation under a shared constraint API.
-- Cardinality, sector, box, turnover and leverage constraints across every allocator.
+- Mean-drawdown optimisation under the shared constraint API (mean-CVaR and mean-EVaR delivered).
+- Cardinality (mixed-integer) constraints extending the linear constraint framework to every allocator.
 - Critical Line Algorithm and full mean-variance frontier tracing.
 - Black-Litterman with entropy pooling and view-uncertainty calibration (Meucci).
 - Hierarchical risk parity variants (HRP with alternative linkage and distance metrics).

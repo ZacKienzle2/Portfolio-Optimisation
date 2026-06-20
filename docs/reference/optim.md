@@ -18,6 +18,10 @@
 
 ::: portfolio_optimisation.optim.cdar
 
+::: portfolio_optimisation.optim.mean_risk
+
+::: portfolio_optimisation.optim.constraints
+
 ::: portfolio_optimisation.optim.stochastic_dominance
 
 ::: portfolio_optimisation.optim.higher_moments

@@ -28,11 +28,13 @@ flowchart LR
         portfolio_optimisation_optim_black_litterman["portfolio_optimisation.optim.black_litterman"]
         portfolio_optimisation_optim_bootstrap["portfolio_optimisation.optim.bootstrap"]
         portfolio_optimisation_optim_cdar["portfolio_optimisation.optim.cdar"]
+        portfolio_optimisation_optim_constraints["portfolio_optimisation.optim.constraints"]
         portfolio_optimisation_optim_denoise["portfolio_optimisation.optim.denoise"]
         portfolio_optimisation_optim_factor_model["portfolio_optimisation.optim.factor_model"]
         portfolio_optimisation_optim_herc["portfolio_optimisation.optim.herc"]
         portfolio_optimisation_optim_higher_moments["portfolio_optimisation.optim.higher_moments"]
         portfolio_optimisation_optim_hrp["portfolio_optimisation.optim.hrp"]
+        portfolio_optimisation_optim_mean_risk["portfolio_optimisation.optim.mean_risk"]
         portfolio_optimisation_optim_nco["portfolio_optimisation.optim.nco"]
         portfolio_optimisation_optim_risk_parity["portfolio_optimisation.optim.risk_parity"]
         portfolio_optimisation_optim_robust["portfolio_optimisation.optim.robust"]
@@ -86,11 +88,13 @@ flowchart LR
     portfolio_optimisation_optim --> portfolio_optimisation_optim_black_litterman
     portfolio_optimisation_optim --> portfolio_optimisation_optim_bootstrap
     portfolio_optimisation_optim --> portfolio_optimisation_optim_cdar
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_constraints
     portfolio_optimisation_optim --> portfolio_optimisation_optim_denoise
     portfolio_optimisation_optim --> portfolio_optimisation_optim_factor_model
     portfolio_optimisation_optim --> portfolio_optimisation_optim_herc
     portfolio_optimisation_optim --> portfolio_optimisation_optim_higher_moments
     portfolio_optimisation_optim --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_mean_risk
     portfolio_optimisation_optim --> portfolio_optimisation_optim_nco
     portfolio_optimisation_optim --> portfolio_optimisation_optim_risk_parity
     portfolio_optimisation_optim --> portfolio_optimisation_optim_robust
@@ -98,6 +102,7 @@ flowchart LR
     portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_infra_logging
     portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_optim_hrp
     portfolio_optimisation_optim_herc --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_optim_mean_risk --> portfolio_optimisation_optim_constraints
     portfolio_optimisation_risk --> portfolio_optimisation_risk_backtesting
     portfolio_optimisation_risk --> portfolio_optimisation_risk_coherent
     portfolio_optimisation_risk --> portfolio_optimisation_risk_contributions
