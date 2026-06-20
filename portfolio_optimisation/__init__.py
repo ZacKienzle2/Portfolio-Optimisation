@@ -10,4 +10,13 @@ Subpackages:
     infra         Data loaders, reporting, weight utilities.
 """
 
-__version__ = "0.0.0"
+from importlib.metadata import PackageNotFoundError, version
+
+from portfolio_optimisation.config import Settings, load_settings
+
+try:
+    __version__ = version("portfolio-optimisation")
+except PackageNotFoundError:  # pragma: no cover - source tree without install
+    __version__ = "0.0.0"
+
+__all__ = ["Settings", "__version__", "load_settings"]

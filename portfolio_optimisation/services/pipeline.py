@@ -11,7 +11,9 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 import pandas as pd
+from rich.console import Console
 
+from portfolio_optimisation.config import Settings
 from portfolio_optimisation.domain.repositories import (
     UnitOfWork,
 )
@@ -152,4 +154,31 @@ def build_default_pipeline(
         risk_free_rate=risk_free_rate,
         n_simulations=n_simulations,
         seed=seed,
+    )
+
+
+def build_pipeline_from_settings(
+    settings: Settings, *, console: Console | None = None
+) -> PortfolioPipeline:
+    """Wire a production pipeline from a :class:`Settings` instance.
+
+    Args:
+        settings (Settings): Resolved run configuration.
+        console (Console | None): Rich console for data-layer status output.
+
+    Returns:
+        PortfolioPipeline: A pipeline backed by the yfinance+parquet repository
+        whose cache path and run knobs come from ``settings``.
+    """
+    repo = YfinanceParquetRepository(
+        cache_path=settings.data_cache_path, console=console
+    )
+    uow = InMemoryUnitOfWork(repo)
+    return PortfolioPipeline(
+        uow=uow,
+        risk_free_rate=settings.risk_free_rate,
+        n_simulations=settings.n_simulations,
+        var_alpha=settings.var_alpha,
+        var_method=settings.var_method,
+        seed=settings.seed,
     )
