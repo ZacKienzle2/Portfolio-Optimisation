@@ -130,6 +130,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["ARG001", "ARG002"]
 "portfolio_optimisation/**/__init__.py" = ["F401"]
+# Dev tooling builds strings line-by-line for readability; perf is irrelevant.
+"tools/**/*.py" = ["PERF401"]
 
 [tool.ruff.format]
 docstring-code-format = true

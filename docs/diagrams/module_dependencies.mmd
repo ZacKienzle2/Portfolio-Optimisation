@@ -1,0 +1,106 @@
+flowchart LR
+    subgraph cli
+        portfolio_optimisation_cli["portfolio_optimisation.cli"]
+    end
+    subgraph config
+        portfolio_optimisation_config["portfolio_optimisation.config"]
+    end
+    subgraph domain
+        portfolio_optimisation_domain["portfolio_optimisation.domain"]
+        portfolio_optimisation_domain_repositories["portfolio_optimisation.domain.repositories"]
+    end
+    subgraph econometrics
+        portfolio_optimisation_econometrics["portfolio_optimisation.econometrics"]
+        portfolio_optimisation_econometrics_tests["portfolio_optimisation.econometrics.tests"]
+    end
+    subgraph infra
+        portfolio_optimisation_infra["portfolio_optimisation.infra"]
+        portfolio_optimisation_infra_data["portfolio_optimisation.infra.data"]
+        portfolio_optimisation_infra_errors["portfolio_optimisation.infra.errors"]
+        portfolio_optimisation_infra_logging["portfolio_optimisation.infra.logging"]
+        portfolio_optimisation_infra_report["portfolio_optimisation.infra.report"]
+        portfolio_optimisation_infra_repositories["portfolio_optimisation.infra.repositories"]
+        portfolio_optimisation_infra_weights["portfolio_optimisation.infra.weights"]
+    end
+    subgraph optim
+        portfolio_optimisation_optim["portfolio_optimisation.optim"]
+        portfolio_optimisation_optim_black_litterman["portfolio_optimisation.optim.black_litterman"]
+        portfolio_optimisation_optim_bootstrap["portfolio_optimisation.optim.bootstrap"]
+        portfolio_optimisation_optim_cdar["portfolio_optimisation.optim.cdar"]
+        portfolio_optimisation_optim_denoise["portfolio_optimisation.optim.denoise"]
+        portfolio_optimisation_optim_herc["portfolio_optimisation.optim.herc"]
+        portfolio_optimisation_optim_higher_moments["portfolio_optimisation.optim.higher_moments"]
+        portfolio_optimisation_optim_hrp["portfolio_optimisation.optim.hrp"]
+        portfolio_optimisation_optim_nco["portfolio_optimisation.optim.nco"]
+        portfolio_optimisation_optim_stochastic_dominance["portfolio_optimisation.optim.stochastic_dominance"]
+    end
+    subgraph risk
+        portfolio_optimisation_risk["portfolio_optimisation.risk"]
+        portfolio_optimisation_risk_coherent["portfolio_optimisation.risk.coherent"]
+        portfolio_optimisation_risk_copula["portfolio_optimisation.risk.copula"]
+        portfolio_optimisation_risk_metrics["portfolio_optimisation.risk.metrics"]
+        portfolio_optimisation_risk_plotting["portfolio_optimisation.risk.plotting"]
+        portfolio_optimisation_risk_sharpe["portfolio_optimisation.risk.sharpe"]
+    end
+    subgraph root
+        portfolio_optimisation["portfolio_optimisation"]
+    end
+    subgraph sde
+        portfolio_optimisation_sde["portfolio_optimisation.sde"]
+        portfolio_optimisation_sde_fitter["portfolio_optimisation.sde.fitter"]
+    end
+    subgraph services
+        portfolio_optimisation_services["portfolio_optimisation.services"]
+        portfolio_optimisation_services_pipeline["portfolio_optimisation.services.pipeline"]
+    end
+    subgraph viz
+        portfolio_optimisation_viz["portfolio_optimisation.viz"]
+        portfolio_optimisation_viz_bootstrap_plots["portfolio_optimisation.viz.bootstrap_plots"]
+        portfolio_optimisation_viz_portfolio["portfolio_optimisation.viz.portfolio"]
+        portfolio_optimisation_viz_style["portfolio_optimisation.viz.style"]
+    end
+    portfolio_optimisation --> portfolio_optimisation_config
+    portfolio_optimisation_cli --> portfolio_optimisation
+    portfolio_optimisation_cli --> portfolio_optimisation_config
+    portfolio_optimisation_cli --> portfolio_optimisation_infra_logging
+    portfolio_optimisation_cli --> portfolio_optimisation_services
+    portfolio_optimisation_domain --> portfolio_optimisation_domain_repositories
+    portfolio_optimisation_econometrics --> portfolio_optimisation_econometrics_tests
+    portfolio_optimisation_infra --> portfolio_optimisation_infra_data
+    portfolio_optimisation_infra --> portfolio_optimisation_infra_report
+    portfolio_optimisation_infra --> portfolio_optimisation_infra_weights
+    portfolio_optimisation_infra_data --> portfolio_optimisation_infra_errors
+    portfolio_optimisation_infra_repositories --> portfolio_optimisation_domain_repositories
+    portfolio_optimisation_infra_repositories --> portfolio_optimisation_infra_data
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_black_litterman
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_bootstrap
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_cdar
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_denoise
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_herc
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_higher_moments
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_nco
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_stochastic_dominance
+    portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_infra_logging
+    portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_optim_herc --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_coherent
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_copula
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_metrics
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_plotting
+    portfolio_optimisation_risk --> portfolio_optimisation_risk_sharpe
+    portfolio_optimisation_risk_copula --> portfolio_optimisation_infra_logging
+    portfolio_optimisation_sde --> portfolio_optimisation_sde_fitter
+    portfolio_optimisation_services --> portfolio_optimisation_services_pipeline
+    portfolio_optimisation_services_pipeline --> portfolio_optimisation_config
+    portfolio_optimisation_services_pipeline --> portfolio_optimisation_domain_repositories
+    portfolio_optimisation_services_pipeline --> portfolio_optimisation_infra_repositories
+    portfolio_optimisation_services_pipeline --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_services_pipeline --> portfolio_optimisation_risk_copula
+    portfolio_optimisation_services_pipeline --> portfolio_optimisation_risk_metrics
+    portfolio_optimisation_viz --> portfolio_optimisation_viz_bootstrap_plots
+    portfolio_optimisation_viz --> portfolio_optimisation_viz_portfolio
+    portfolio_optimisation_viz --> portfolio_optimisation_viz_style
+    portfolio_optimisation_viz_bootstrap_plots --> portfolio_optimisation_viz_style
+    portfolio_optimisation_viz_portfolio --> portfolio_optimisation_optim_hrp
+    portfolio_optimisation_viz_portfolio --> portfolio_optimisation_viz_style
