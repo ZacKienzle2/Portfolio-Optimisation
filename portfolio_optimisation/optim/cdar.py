@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
+from portfolio_optimisation.optim.constraints import PortfolioConstraints
+
 if TYPE_CHECKING:  # pragma: no cover - typing only
     import cvxpy as cp
 
@@ -41,21 +43,19 @@ def min_cdar_weights(
     returns: pd.DataFrame,
     *,
     alpha: float = 0.05,
-    target_return: float | None = None,
-    long_only: bool = True,
+    constraints: PortfolioConstraints | None = None,
     solver: str | None = None,
 ) -> pd.Series:
-    """Solve the Chekhlov-Uryasev minimum-CDaR LP.
+    """Solve the Chekhlov-Uryasev minimum-CDaR linear programme.
 
     Args:
         returns (pd.DataFrame): Asset returns; rows are dates, columns assets.
-        alpha (float): Tail level in (0, 1). The objective averages drawdowns
-            beyond the ``(1 - alpha)``-quantile of the drawdown distribution.
-        target_return (float | None): Optional lower bound on the in-sample
-            mean portfolio return.
-        long_only (bool): If True, enforce ``w >= 0`` and ``sum w == 1``;
-            otherwise only ``sum w == 1`` (allow shorts).
-        solver: cvxpy solver name. Defaults to None (auto-select; ECOS for LP).
+        alpha (float): Tail level in (0, 1). The objective averages drawdowns in
+            the worst ``alpha`` fraction of the cumulative path.
+        constraints (PortfolioConstraints | None): Feasibility set shared with
+            the other mean-risk allocators. Defaults to a long-only,
+            fully-invested mandate.
+        solver: Optional cvxpy solver name. Defaults to automatic selection.
 
     Returns:
         pd.Series: Optimal weights indexed by ticker.
@@ -63,6 +63,7 @@ def min_cdar_weights(
     if not 0.0 < alpha < 1.0:
         raise ValueError("alpha must lie in (0, 1).")
     cp = _require_cvxpy()
+    spec = constraints if constraints is not None else PortfolioConstraints()
     tickers = list(returns.columns)
     r_arr = returns.to_numpy(dtype=np.float64)
     t_steps, n_assets = r_arr.shape
@@ -74,30 +75,29 @@ def min_cdar_weights(
     # Cumulative portfolio return P_t = sum_{s<=t} r_s' w.
     cumulative = cp.cumsum(r_arr @ w)
 
-    constraints: list[cp.constraints.constraint.Constraint] = []
-    constraints += [u >= (m - cumulative) - zeta]
-    constraints += [m >= cumulative]
-    constraints += [m[1:] >= m[:-1]]
-    constraints += [m[0] >= 0]
-    constraints += [cp.sum(w) == 1]
-    if long_only:
-        constraints += [w >= 0]
-    if target_return is not None:
-        mean_r = r_arr.mean(axis=0)
-        constraints += [mean_r @ w >= target_return]
+    problem_constraints = spec.build(
+        cp, w, n_assets=n_assets, expected_returns=r_arr.mean(axis=0)
+    )
+    problem_constraints += [
+        u >= (m - cumulative) - zeta,
+        m >= cumulative,
+        m[1:] >= m[:-1],
+        m[0] >= 0,
+    ]
 
     objective = cp.Minimize(zeta + cp.sum(u) / (alpha * t_steps))
-    problem = cp.Problem(objective, constraints)
+    problem = cp.Problem(objective, problem_constraints)
     problem.solve(solver=solver)
 
     if problem.status not in {"optimal", "optimal_inaccurate"}:
         raise RuntimeError(f"CDaR LP solver failed: status={problem.status}")
 
     weights = np.asarray(w.value, dtype=np.float64)
-    weights = np.clip(weights, 0.0, None) if long_only else weights
-    total = weights.sum()
-    if total > 0:
-        weights = weights / total
+    if spec.long_only:
+        weights = np.clip(weights, 0.0, None)
+        total = weights.sum()
+        if total > 0:
+            weights = weights / total
     return pd.Series(weights, index=tickers)
 
 
