@@ -79,6 +79,7 @@ nav:
       - "CI gating and commits": adr/0013-ci-gating-and-commits.md
       - "References in the writeup": adr/0014-references-in-the-writeup.md
       - "Mean-risk optimisation": adr/0015-mean-risk-optimisation.md
+      - "Covariance shrinkage": adr/0016-covariance-shrinkage.md
   - API Reference:
       - Optimisation: reference/optim.md
       - Risk: reference/risk.md

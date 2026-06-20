@@ -28,6 +28,7 @@ reviewer can audit end to end.
 - SDE simulation engines (Euler-Maruyama, Milstein) with GBM, OU, CIR, Merton and Heston models.
 - Robust and resampled (Michaud) optimisation with box-uncertainty mean-variance.
 - Mean-CVaR (Rockafellar-Uryasev LP) and mean-EVaR (exponential-cone) optimisation over a unified constraint framework (box, group/sector, leverage, turnover and return-floor).
+- Linear (Ledoit-Wolf), Oracle-Approximating and analytical nonlinear (Ledoit-Wolf 2020) covariance shrinkage estimators.
 - Property-based tests and a benchmark harness.
 
 ## Now
@@ -43,7 +44,7 @@ In active development.
 Planned for the next milestone (H2 2026).
 
 - Mean-drawdown (CDaR) optimisation folded into the shared constraint framework.
-- Nonlinear (Ledoit-Wolf 2020) and OAS covariance shrinkage estimators.
+- Shrinkage and nonlinear-shrinkage covariances wired as selectable inputs to every allocator.
 
 ## Later
 
@@ -85,7 +86,6 @@ The thematic backlog of what a frontier version of this project would add.
 
 ### Estimation and machine learning
 
-- Nonlinear shrinkage (Ledoit-Wolf 2020) and OAS covariance estimators.
 - Cluster-count selection (gap statistic, silhouette) for the hierarchical methods.
 - Combinatorial purged cross-validation and deflated performance metrics.
 - Bayesian estimation (PyMC) and Gaussian-process return models.
