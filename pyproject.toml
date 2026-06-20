@@ -233,6 +233,7 @@ exclude_also = [
 ]
 show_missing = true
 skip_covered = false
+fail_under = 75
 
 [tool.interrogate]
 # Public-API docstring coverage. Nested closures, private helpers, dunder and
