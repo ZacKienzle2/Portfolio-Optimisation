@@ -6,6 +6,8 @@
 
 ::: portfolio_optimisation.optim.nco
 
+::: portfolio_optimisation.optim.risk_parity
+
 ::: portfolio_optimisation.optim.denoise
 
 ::: portfolio_optimisation.optim.black_litterman

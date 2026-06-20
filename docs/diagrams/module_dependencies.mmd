@@ -33,6 +33,7 @@ flowchart LR
         portfolio_optimisation_optim_higher_moments["portfolio_optimisation.optim.higher_moments"]
         portfolio_optimisation_optim_hrp["portfolio_optimisation.optim.hrp"]
         portfolio_optimisation_optim_nco["portfolio_optimisation.optim.nco"]
+        portfolio_optimisation_optim_risk_parity["portfolio_optimisation.optim.risk_parity"]
         portfolio_optimisation_optim_stochastic_dominance["portfolio_optimisation.optim.stochastic_dominance"]
     end
     subgraph risk
@@ -85,6 +86,7 @@ flowchart LR
     portfolio_optimisation_optim --> portfolio_optimisation_optim_higher_moments
     portfolio_optimisation_optim --> portfolio_optimisation_optim_hrp
     portfolio_optimisation_optim --> portfolio_optimisation_optim_nco
+    portfolio_optimisation_optim --> portfolio_optimisation_optim_risk_parity
     portfolio_optimisation_optim --> portfolio_optimisation_optim_stochastic_dominance
     portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_infra_logging
     portfolio_optimisation_optim_bootstrap --> portfolio_optimisation_optim_hrp
