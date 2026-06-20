@@ -60,3 +60,17 @@ def test_min_cdar_target_return_constraint() -> None:
     weights = min_cdar_weights(returns, alpha=0.1, target_return=mu.min())
     assert np.isclose(weights.sum(), 1.0, atol=1e-6)
     assert float(returns.mean().to_numpy() @ weights.to_numpy()) >= mu.min() - 1e-6
+
+
+def test_min_cdar_minimises_worst_alpha_tail() -> None:
+    rng = np.random.default_rng(5)
+    t_steps = 500
+    asset_a = rng.normal(0.0003, 0.010, t_steps)
+    asset_b = rng.normal(0.0002, 0.020, t_steps)
+    returns = pd.DataFrame({"A": asset_a, "B": asset_b})
+    alpha = 0.05
+    grid = np.linspace(0.0, 1.0, 101)
+    grid_cdar = [cdar(pd.Series(wa * asset_a + (1.0 - wa) * asset_b), alpha=alpha) for wa in grid]
+    weights = min_cdar_weights(returns, alpha=alpha)
+    achieved = cdar(returns @ weights, alpha=alpha)
+    assert achieved <= min(grid_cdar) + 1e-3
