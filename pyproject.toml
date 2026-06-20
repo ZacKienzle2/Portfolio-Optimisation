@@ -27,16 +27,16 @@ classifiers = [
 ]
 dependencies = [
   # Core numerical stack.
-  "numpy>=2.1",
-  "scipy>=1.14",
+  "numpy>=2.4.6",
+  "scipy>=1.18.0",
   "pandas>=2.2",
   "pyarrow>=17.0",
   # Plotting.
-  "matplotlib>=3.9",
+  "matplotlib>=3.11.0",
   "seaborn>=0.13",
-  "plotly>=5.24",
+  "plotly>=6.8.0",
   # Portfolio + risk.
-  "scikit-learn>=1.5",
+  "scikit-learn>=1.9.0",
   "pyportfolioopt>=1.5",
   "arch>=7.0",
   # Econometrics + statistics.
@@ -45,7 +45,7 @@ dependencies = [
   # import path remains `pymle`.
   "pymle-diffusion>=0.0.1",
   # Data + reporting.
-  "yfinance>=0.2.40",
+  "yfinance>=1.4.1",
   "rich>=13.8",
 ]
 
@@ -54,7 +54,7 @@ portfolio-opt = "portfolio_optimisation.cli:main"
 
 [project.optional-dependencies]
 notebooks = [
-  "ipykernel>=6.29",
+  "ipykernel>=7.3.0",
   "jupyterlab>=4.2",
   "nbconvert>=7.16",
 ]
@@ -66,7 +66,7 @@ perf = [
 optim = [
   # Convex optimisation: CDaR LP, SSD constraints, Min-CVaR, ERC, PGP.
   # Opt-in to keep default install lean.
-  "cvxpy>=1.5",
+  "cvxpy>=1.9.1",
   "ecos>=2.0",
   "scs>=3.2",
 ]
@@ -78,12 +78,12 @@ docs = [
 
 [dependency-groups]
 dev = [
-  "pytest>=8.3",
+  "pytest>=9.1.1",
   "pytest-cov>=5.0",
   "pytest-benchmark>=4.0",
   "hypothesis>=6.100",
-  "ruff>=0.7",
-  "pyright>=1.1.380",
+  "ruff>=0.15.18",
+  "pyright>=1.1.410",
   "git-cliff>=2.6",
   "interrogate>=1.7",
 ]
