@@ -64,6 +64,7 @@ nav:
   - Installation: installation.md
   - Usage: usage.md
   - Architecture: architecture.md
+  - Glossary: glossary.md
   - Changelog: changelog.md
   - Decision Records:
       - "DDD layering": adr/0001-ddd-layering.md
