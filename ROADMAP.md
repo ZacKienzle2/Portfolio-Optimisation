@@ -23,6 +23,7 @@ reviewer can audit end to end.
 - MkDocs documentation site with API reference and architecture decision records.
 - VaR/ES backtests (Kupiec, Christoffersen, Acerbi-Szekely) and risk-contribution decomposition.
 - GARCH-family conditional-volatility forecasting feeding the VaR/ES backtests.
+- Factor-model covariance (statistical PCA and explicit-factor regression) for all allocators.
 - Property-based tests and a benchmark harness.
 
 ## Now
@@ -37,8 +38,6 @@ In active development.
 
 Planned for the next milestone (H2 2026).
 
-- Backtesting engine: walk-forward rebalancing, transaction costs, turnover and performance attribution.
-- Factor-model covariance (Fama-French and statistical PCA factors) feeding all allocators.
 - Mean-CVaR and mean-EVaR optimisation (Rockafellar-Uryasev) and a unified constraint framework.
 - Extreme Value Theory tail fitting (peaks-over-threshold, generalised Pareto, Hill estimator).
 - Additional SDEs with Euler-Maruyama and Milstein simulation engines (CIR, Vasicek, Heston, Merton jumps).

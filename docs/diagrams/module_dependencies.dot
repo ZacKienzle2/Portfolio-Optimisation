@@ -20,6 +20,7 @@ digraph modules {
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.bootstrap";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.cdar";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.denoise";
+    "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.factor_model";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.herc";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.higher_moments";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.hrp";

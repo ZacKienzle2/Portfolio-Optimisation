@@ -12,6 +12,10 @@ from portfolio_optimisation.optim.denoise import (
     denoise_covariance,
     detone_correlation,
 )
+from portfolio_optimisation.optim.factor_model import (
+    factor_model_covariance,
+    statistical_factor_covariance,
+)
 from portfolio_optimisation.optim.herc import HERCModel, herc_weights
 from portfolio_optimisation.optim.higher_moments import (
     HigherMomentResult,
@@ -42,6 +46,7 @@ __all__ = [
     "denoise_correlation",
     "denoise_covariance",
     "detone_correlation",
+    "factor_model_covariance",
     "herc_weights",
     "implied_equilibrium_returns",
     "min_cdar_weights",
@@ -50,4 +55,5 @@ __all__ = [
     "risk_parity_weights",
     "ssd_constrained_weights",
     "ssd_dominates",
+    "statistical_factor_covariance",
 ]
