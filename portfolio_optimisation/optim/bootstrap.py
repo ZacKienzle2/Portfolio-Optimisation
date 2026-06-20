@@ -1,3 +1,4 @@
+import hashlib
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
@@ -46,10 +47,30 @@ class HRPAnalyser:
         block_lengths = optimal_block_length(returns**2)
         return int(block_lengths.iloc[:, 0].mean())
 
-    def _get_cache_path(self) -> Path:
-        """Generates a unique cache path based on the tickers used."""
-        ticker_hash = abs(hash("".join(sorted(self.returns.columns))))
-        return self.cache_dir / f"bootstrap_{ticker_hash}.parquet"
+    def _get_cache_path(
+        self, reps: int, linkage_methods: list[str], *, paired: bool
+    ) -> Path:
+        """Stable cache path derived from the request.
+
+        Keyed on the sorted ticker set, linkage methods, repetition count,
+        block size, risk-free rate and pairing mode via blake2b. The builtin
+        ``hash()`` is salted per interpreter run (PYTHONHASHSEED), so the
+        previous key was non-deterministic across processes and effectively
+        never hit the cache between sessions; it also ignored every parameter
+        that changes the result.
+        """
+        key = "|".join(
+            [
+                ",".join(sorted(self.returns.columns)),
+                ",".join(sorted(linkage_methods)),
+                str(reps),
+                str(self._block_size),
+                repr(self.risk_free_rate),
+                str(paired),
+            ]
+        )
+        digest = hashlib.blake2b(key.encode("utf-8"), digest_size=16).hexdigest()
+        return self.cache_dir / f"bootstrap_{digest}.parquet"
 
     def run_bootstrap(
         self,
@@ -57,21 +78,32 @@ class HRPAnalyser:
         reps: int = 500,
         verbose: bool = True,
         force_recalculate: bool = False,
+        *,
+        seed: int | None = None,
+        paired: bool = False,
     ):
         """Run the stationary bootstrap analysis for multiple HRP linkage methods.
 
-        Loads results from cache if available and `force_recalculate` is False.
-        Uses multiprocessing to speed up the numerous HRP optimisations.
+        Loads results from cache if available and ``force_recalculate`` is
+        False. Uses multiprocessing to speed up the numerous HRP optimisations.
 
         Args:
-            linkage_methods (Optional[List[str]]): List of linkage methods.
-                                                  Defaults to ['ward', 'single', 'complete', 'average'].
-            reps (int, optional): Number of bootstrap repetitions. Defaults to 500.
-            verbose (bool, optional): Print status messages. Defaults to True.
-            force_recalculate (bool, optional): Ignore cache and run calculation.
-                                               Defaults to False.
+            linkage_methods (list[str] | None): Linkage methods. Defaults to
+                ``["ward", "single", "complete", "average"]``.
+            reps (int): Number of bootstrap repetitions. Defaults to 500.
+            verbose (bool): Print status messages. Defaults to True.
+            force_recalculate (bool): Ignore cache and recompute. Defaults to
+                False.
+            seed (int | None): Seed for the master generator that draws the
+                per-repetition seeds. Pass an int for reproducible runs.
+            paired (bool): If True, every linkage method is evaluated on the
+                same bootstrap resamples (shared per-rep seeds), reducing the
+                variance of cross-method comparisons. Defaults to False.
         """
-        cache_path = self._get_cache_path()
+        if linkage_methods is None:
+            linkage_methods = ["ward", "single", "complete", "average"]
+
+        cache_path = self._get_cache_path(reps, linkage_methods, paired=paired)
         if cache_path.exists() and not force_recalculate:
             if verbose:
                 print("Loading bootstrap results from cache...")
@@ -80,19 +112,26 @@ class HRPAnalyser:
                 print("Bootstrap results loaded.")
             return
 
-        if linkage_methods is None:
-            linkage_methods = ["ward", "single", "complete", "average"]
         if verbose:
             print(f"Running bootstrap with {reps} reps...")
 
         n_cores = max(1, cpu_count() - 1)
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed)
         # One job-list spanning all (seed, method) pairs so a single worker
-        # pool amortises spawn cost across every linkage method.
+        # pool amortises spawn cost across every linkage method. In paired mode
+        # all methods share one set of per-rep seeds so method differences are
+        # measured on identical resamples.
+        shared_seeds: NDArray[np.int64] | None = (
+            rng.integers(0, 2**32 - 1, size=reps, dtype=np.int64) if paired else None
+        )
         jobs: list[tuple[int, str]] = []
         for method in linkage_methods:
-            seeds: NDArray[np.int64] = rng.integers(0, 1_000_000, size=reps, dtype=np.int64)
-            jobs.extend((int(seed), method) for seed in seeds)
+            method_seeds: NDArray[np.int64] = (
+                shared_seeds
+                if shared_seeds is not None
+                else rng.integers(0, 2**32 - 1, size=reps, dtype=np.int64)
+            )
+            jobs.extend((int(seed_value), method) for seed_value in method_seeds)
 
         with Pool(n_cores) as pool:
             results: list[dict[str, float]] = pool.starmap(self._bootstrap_single_method, jobs)
