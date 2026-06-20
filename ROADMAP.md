@@ -22,6 +22,7 @@ reviewer can audit end to end.
 - Code-derived architecture diagrams (Mermaid + Graphviz) with a CI layer-violation guard.
 - MkDocs documentation site with API reference and architecture decision records.
 - VaR/ES backtests (Kupiec, Christoffersen, Acerbi-Szekely) and risk-contribution decomposition.
+- GARCH-family conditional-volatility forecasting feeding the VaR/ES backtests.
 - Property-based tests and a benchmark harness.
 
 ## Now
@@ -29,8 +30,7 @@ reviewer can audit end to end.
 In active development.
 
 - TTL-aware market-data cache refresh policy on top of the validated snapshot.
-- GARCH-family conditional-volatility forecasting feeding the VaR/ES backtests.
-- Risk-parity / equal-risk-contribution allocator built on the new risk-contribution module.
+- Walk-forward backtesting engine with transaction costs and turnover.
 - Expanded methodology pages with full mathematical derivations per method.
 
 ## Next
