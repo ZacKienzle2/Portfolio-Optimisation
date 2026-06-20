@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from portfolio_optimisation.optim import cdar, min_cdar_weights
+from portfolio_optimisation.optim import PortfolioConstraints, cdar, min_cdar_weights
 
 
 def _drifting_returns(seed: int = 17, t: int = 300, n: int = 5) -> pd.DataFrame:
@@ -57,9 +57,18 @@ def test_min_cdar_rejects_invalid_alpha() -> None:
 def test_min_cdar_target_return_constraint() -> None:
     returns = _drifting_returns()
     mu = returns.mean().to_numpy()
-    weights = min_cdar_weights(returns, alpha=0.1, target_return=mu.min())
+    spec = PortfolioConstraints(target_return=float(mu.min()))
+    weights = min_cdar_weights(returns, alpha=0.1, constraints=spec)
     assert np.isclose(weights.sum(), 1.0, atol=1e-6)
-    assert float(returns.mean().to_numpy() @ weights.to_numpy()) >= mu.min() - 1e-6
+    assert float(returns.mean().to_numpy() @ weights.to_numpy()) >= float(mu.min()) - 1e-6
+
+
+def test_min_cdar_respects_box_bounds() -> None:
+    returns = _drifting_returns()
+    spec = PortfolioConstraints(max_weight=0.4)
+    weights = min_cdar_weights(returns, alpha=0.1, constraints=spec)
+    assert (weights <= 0.4 + 1e-6).all()
+    assert np.isclose(weights.sum(), 1.0, atol=1e-6)
 
 
 def test_min_cdar_minimises_worst_alpha_tail() -> None:
