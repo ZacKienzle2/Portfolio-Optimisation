@@ -152,6 +152,7 @@ class HERCModel:
         self.weights: pd.Series = pd.Series(dtype=np.float64)
 
     def optimise(self) -> pd.Series:
+        """Solve the HERC programme and cache the resulting weights."""
         self.weights = herc_weights(
             self.returns,
             cov_matrix=self.cov_matrix,

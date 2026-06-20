@@ -244,5 +244,5 @@ ignore-semiprivate = true
 ignore-nested-functions = true
 ignore-property-decorators = true
 ignore-module = false
-fail-under = 90
+fail-under = 100
 exclude = ["tests", "tools", "docs", "case-comp", "build", ".venv"]
