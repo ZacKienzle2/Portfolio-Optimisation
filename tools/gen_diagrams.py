@@ -46,11 +46,26 @@ ALLOWED: dict[str, set[str]] = {
     "econometrics": {"domain", "config", "infra"},
     "viz": {"domain", "config", "infra", "optim", "risk", "sde", "econometrics"},
     "services": {
-        "domain", "config", "infra", "optim", "risk", "sde", "econometrics", "viz",
+        "domain",
+        "config",
+        "infra",
+        "optim",
+        "risk",
+        "sde",
+        "econometrics",
+        "viz",
     },
     "cli": {
-        "domain", "config", "infra", "optim", "risk", "sde",
-        "econometrics", "viz", "services", "root",
+        "domain",
+        "config",
+        "infra",
+        "optim",
+        "risk",
+        "sde",
+        "econometrics",
+        "viz",
+        "services",
+        "root",
     },
 }
 
@@ -76,11 +91,7 @@ def _imports(path: Path) -> set[str]:
             for alias in node.names:
                 if alias.name.startswith(PACKAGE):
                     found.add(alias.name)
-        elif (
-            isinstance(node, ast.ImportFrom)
-            and node.module
-            and node.module.startswith(PACKAGE)
-        ):
+        elif isinstance(node, ast.ImportFrom) and node.module and node.module.startswith(PACKAGE):
             found.add(node.module)
     return found
 
@@ -148,7 +159,7 @@ def _node_id(module: str) -> str:
 
 
 def _dot_layers(layer_edges: dict[str, set[str]], violations: set[tuple[str, str]]) -> str:
-    lines = ["digraph layers {", "    rankdir=TB;", '    node [shape=box, style=rounded];']
+    lines = ["digraph layers {", "    rankdir=TB;", "    node [shape=box, style=rounded];"]
     for source, targets in sorted(layer_edges.items()):
         for target in sorted(targets):
             colour = ' [color="#D55E00", penwidth=2]' if (source, target) in violations else ""
@@ -158,7 +169,7 @@ def _dot_layers(layer_edges: dict[str, set[str]], violations: set[tuple[str, str
 
 
 def _dot_modules(module_edges: dict[str, set[str]]) -> str:
-    lines = ["digraph modules {", "    rankdir=LR;", '    node [shape=box, fontsize=10];']
+    lines = ["digraph modules {", "    rankdir=LR;", "    node [shape=box, fontsize=10];"]
     for source in sorted(module_edges):
         for target in sorted(module_edges[source]):
             lines.append(f'    "{source}" -> "{target}";')

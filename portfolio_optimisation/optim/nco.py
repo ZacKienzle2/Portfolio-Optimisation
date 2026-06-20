@@ -115,9 +115,7 @@ def nco_weights(
         w_c = _min_var_weights(cov_c)
         final[idx] = w_c
         cluster_returns = returns.iloc[:, idx].to_numpy(dtype=np.float64) @ w_c
-        intra_returns.append(
-            pd.Series(cluster_returns, index=returns.index, name=f"c{int(cid)}")
-        )
+        intra_returns.append(pd.Series(cluster_returns, index=returns.index, name=f"c{int(cid)}"))
 
     reduced = pd.concat(intra_returns, axis=1)
     reduced_cov = _ledoit_wolf_cov(reduced)

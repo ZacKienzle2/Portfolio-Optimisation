@@ -53,7 +53,9 @@ class SharpeStatistics:
     standard_error: float
 
 
-def _sharpe_stats(returns: pd.Series | NDArray[np.float64], risk_free_rate: float) -> SharpeStatistics:
+def _sharpe_stats(
+    returns: pd.Series | NDArray[np.float64], risk_free_rate: float
+) -> SharpeStatistics:
     arr = np.asarray(returns, dtype=np.float64).ravel()
     if arr.size < 2:
         raise ValueError("Need at least 2 observations to compute a Sharpe.")

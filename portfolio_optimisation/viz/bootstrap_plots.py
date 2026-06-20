@@ -137,20 +137,15 @@ def plot_investment_growth(
     growth = pd.DataFrame({"Year": range(1, years + 1)})
     for _, row in medians.iterrows():
         rate = row["exp_return"]
-        growth[row["linkage_method"]] = initial_investment * (
-            (1 + rate) ** growth["Year"]
-        )
-    melted = growth.melt(
-        id_vars=["Year"], var_name="Linkage Method", value_name="Investment Value"
-    )
+        growth[row["linkage_method"]] = initial_investment * ((1 + rate) ** growth["Year"])
+    melted = growth.melt(id_vars=["Year"], var_name="Linkage Method", value_name="Investment Value")
     fig = px.line(
         melted,
         x="Year",
         y="Investment Value",
         color="Linkage Method",
         title=(
-            f"Projected Growth Over {years} Years "
-            f"(Initial Investment: ${initial_investment:,.0f})"
+            f"Projected Growth Over {years} Years (Initial Investment: ${initial_investment:,.0f})"
         ),
     )
     fig.update_layout(

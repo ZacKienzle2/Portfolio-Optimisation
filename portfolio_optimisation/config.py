@@ -89,9 +89,7 @@ def _read_toml_table(path: Path) -> dict[str, Any]:
     return document
 
 
-def load_settings(
-    config_path: str | Path | None = None, /, **overrides: Any
-) -> Settings:
+def load_settings(config_path: str | Path | None = None, /, **overrides: Any) -> Settings:
     """Build :class:`Settings` from file, environment and explicit overrides.
 
     Args:

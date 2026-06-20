@@ -28,9 +28,7 @@ def test_defaults_when_no_sources(tmp_path: Path) -> None:
     assert settings.seed is None
 
 
-def test_env_overrides_default(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_env_overrides_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PORTFOLIO_RISK_FREE_RATE", "0.05")
     monkeypatch.setenv("PORTFOLIO_SEED", "7")
     settings = load_settings(tmp_path / "absent.toml")
@@ -40,25 +38,19 @@ def test_env_overrides_default(
 
 def test_toml_is_read(tmp_path: Path) -> None:
     config = tmp_path / "portfolio.toml"
-    config.write_text(
-        '[tool.portfolio]\nn_simulations = 250\nlinkage_method = "single"\n'
-    )
+    config.write_text('[tool.portfolio]\nn_simulations = 250\nlinkage_method = "single"\n')
     settings = load_settings(config)
     assert settings.n_simulations == 250
     assert settings.linkage_method == "single"
 
 
-def test_explicit_override_beats_env(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_explicit_override_beats_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PORTFOLIO_N_SIMULATIONS", "999")
     settings = load_settings(tmp_path / "absent.toml", n_simulations=42)
     assert settings.n_simulations == 42
 
 
-def test_path_fields_are_paths(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_path_fields_are_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PORTFOLIO_CACHE_DIR", "artefacts")
     settings = load_settings(tmp_path / "absent.toml")
     assert isinstance(settings.cache_dir, Path)

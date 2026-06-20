@@ -99,7 +99,9 @@ def spectral_risk_measure(
     return float(weights @ quantiles)
 
 
-def exponential_spectrum(absolute_risk_aversion: float) -> Callable[[NDArray[np.float64]], NDArray[np.float64]]:
+def exponential_spectrum(
+    absolute_risk_aversion: float,
+) -> Callable[[NDArray[np.float64]], NDArray[np.float64]]:
     """Exponential spectrum ``phi(u) = (1/k) exp(-(1-u)/k)`` for ``k > 0``.
 
     Concentrates weight on the upper tail of the loss distribution; larger

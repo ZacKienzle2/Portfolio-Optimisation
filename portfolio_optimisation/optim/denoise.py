@@ -22,7 +22,9 @@ from numpy.typing import NDArray
 from scipy.optimize import minimize_scalar
 
 
-def _mp_pdf(var: float, q: float, points: int = 1000) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+def _mp_pdf(
+    var: float, q: float, points: int = 1000
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Marchenko-Pastur density evaluated on the support [lam_minus, lam_plus]."""
     lam_minus = var * (1.0 - np.sqrt(1.0 / q)) ** 2
     lam_plus = var * (1.0 + np.sqrt(1.0 / q)) ** 2
@@ -33,7 +35,9 @@ def _mp_pdf(var: float, q: float, points: int = 1000) -> tuple[NDArray[np.float6
     return grid, pdf
 
 
-def _kde_eval(eigenvalues: NDArray[np.float64], grid: NDArray[np.float64], bandwidth: float) -> NDArray[np.float64]:
+def _kde_eval(
+    eigenvalues: NDArray[np.float64], grid: NDArray[np.float64], bandwidth: float
+) -> NDArray[np.float64]:
     """Gaussian KDE of the empirical eigenvalue distribution on ``grid``."""
     eigenvalues = eigenvalues.reshape(-1, 1)
     grid_col = grid.reshape(1, -1)
@@ -157,9 +161,7 @@ def detone_correlation(
     return detoned
 
 
-def denoise_covariance(
-    covariance: pd.DataFrame, q: float, *, detone: bool = False
-) -> pd.DataFrame:
+def denoise_covariance(covariance: pd.DataFrame, q: float, *, detone: bool = False) -> pd.DataFrame:
     """Apply MP denoising (and optional detoning) on the cov via its correlation.
 
     Args:
@@ -185,6 +187,4 @@ def denoise_covariance(
         corr_arr = np.asarray(detone_correlation(corr_arr), dtype=np.float64)
 
     cov_denoised = corr_arr * np.outer(std, std)
-    return pd.DataFrame(
-        cov_denoised, index=covariance.index, columns=covariance.columns
-    )
+    return pd.DataFrame(cov_denoised, index=covariance.index, columns=covariance.columns)

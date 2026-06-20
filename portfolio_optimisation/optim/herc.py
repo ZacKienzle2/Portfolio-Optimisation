@@ -123,12 +123,8 @@ def herc_weights(
             cov_r = cov[np.ix_(idx_r, idx_r)]
             w_l = _inv_var_weights(cov_l)
             w_r = _inv_var_weights(cov_r)
-            sigma_l = _cluster_risk(
-                risk_measure, w_l, cov_l, returns_arr[:, idx_l], cvar_alpha
-            )
-            sigma_r = _cluster_risk(
-                risk_measure, w_r, cov_r, returns_arr[:, idx_r], cvar_alpha
-            )
+            sigma_l = _cluster_risk(risk_measure, w_l, cov_l, returns_arr[:, idx_l], cvar_alpha)
+            sigma_r = _cluster_risk(risk_measure, w_r, cov_r, returns_arr[:, idx_r], cvar_alpha)
             total = sigma_l + sigma_r
             alpha = sigma_r / total if total > 0 else 0.5
             weights[left[0] : left[1]] *= alpha

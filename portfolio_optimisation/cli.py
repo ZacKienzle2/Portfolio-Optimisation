@@ -38,15 +38,9 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("version", help="Print the package version.")
     subparsers.add_parser("config", help="Print the resolved configuration as JSON.")
 
-    run = subparsers.add_parser(
-        "run", help="Run the standard HRP allocation and risk pipeline."
-    )
-    run.add_argument(
-        "--tickers", nargs="+", required=True, help="Asset symbols to include."
-    )
-    run.add_argument(
-        "--start", required=True, help="History start date in YYYY-MM-DD form."
-    )
+    run = subparsers.add_parser("run", help="Run the standard HRP allocation and risk pipeline.")
+    run.add_argument("--tickers", nargs="+", required=True, help="Asset symbols to include.")
+    run.add_argument("--start", required=True, help="History start date in YYYY-MM-DD form.")
     run.add_argument(
         "--no-copula",
         action="store_true",
@@ -100,9 +94,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(settings.to_dict(), indent=2))
         return 0
     if args.command == "run":
-        payload = _run_pipeline(
-            settings, args.tickers, args.start, use_copula=not args.no_copula
-        )
+        payload = _run_pipeline(settings, args.tickers, args.start, use_copula=not args.no_copula)
         text = json.dumps(payload, indent=2, default=str)
         if args.output is not None:
             args.output.write_text(text, encoding="utf-8")

@@ -112,9 +112,7 @@ class PortfolioPipeline:
                     returns, weights, n_simulations=self.n_simulations, seed=self.seed
                 )
 
-            risk = calculate_risk_metrics(
-                simulated, alpha=self.var_alpha, method=self.var_method
-            )
+            risk = calculate_risk_metrics(simulated, alpha=self.var_alpha, method=self.var_method)
             perf = calculate_performance_metrics(
                 portfolio_returns, risk_free_rate=self.risk_free_rate
             )
@@ -170,9 +168,7 @@ def build_pipeline_from_settings(
         PortfolioPipeline: A pipeline backed by the yfinance+parquet repository
         whose cache path and run knobs come from ``settings``.
     """
-    repo = YfinanceParquetRepository(
-        cache_path=settings.data_cache_path, console=console
-    )
+    repo = YfinanceParquetRepository(cache_path=settings.data_cache_path, console=console)
     uow = InMemoryUnitOfWork(repo)
     return PortfolioPipeline(
         uow=uow,

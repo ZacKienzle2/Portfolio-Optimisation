@@ -25,9 +25,7 @@ class MarketDataError(PortfolioError, ValueError):
         start_date (str): The requested ISO start date.
     """
 
-    def __init__(
-        self, tickers: Iterable[str], start_date: str, message: str | None = None
-    ) -> None:
+    def __init__(self, tickers: Iterable[str], start_date: str, message: str | None = None) -> None:
         self.tickers: list[str] = list(tickers)
         self.start_date: str = start_date
         detail = message or "no usable price data returned"

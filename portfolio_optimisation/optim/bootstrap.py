@@ -47,9 +47,7 @@ class HRPAnalyser:
         block_lengths = optimal_block_length(returns**2)
         return int(block_lengths.iloc[:, 0].mean())
 
-    def _get_cache_path(
-        self, reps: int, linkage_methods: list[str], *, paired: bool
-    ) -> Path:
+    def _get_cache_path(self, reps: int, linkage_methods: list[str], *, paired: bool) -> Path:
         """Stable cache path derived from the request.
 
         Keyed on the sorted ticker set, linkage methods, repetition count,

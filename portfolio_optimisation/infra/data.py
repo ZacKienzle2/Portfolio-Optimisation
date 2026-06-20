@@ -36,9 +36,7 @@ def first_trading_day(frame: pd.DataFrame) -> str:
     return str(np.datetime_as_string(frame.index.to_numpy()[0], unit="D"))
 
 
-def download_adj_close(
-    tickers: list[str], start_date: str, *, attempts: int = 3
-) -> pd.DataFrame:
+def download_adj_close(tickers: list[str], start_date: str, *, attempts: int = 3) -> pd.DataFrame:
     """Download adjusted close prices for ``tickers`` from ``start_date``.
 
     The network call is retried with exponential backoff to absorb transient
@@ -60,9 +58,7 @@ def download_adj_close(
             failure is diagnosable. Subclasses ValueError for compatibility.
     """
     downloaded: Any = retry_call(
-        lambda: yf.download(
-            tickers, start=start_date, auto_adjust=False, progress=False
-        ),
+        lambda: yf.download(tickers, start=start_date, auto_adjust=False, progress=False),
         attempts=attempts,
         logger=logger,
     )
@@ -110,9 +106,7 @@ def clean_prices(
     return prices, returns
 
 
-def cache_satisfies_request(
-    cached: pd.DataFrame, tickers: list[str], start_date: str
-) -> bool:
+def cache_satisfies_request(cached: pd.DataFrame, tickers: list[str], start_date: str) -> bool:
     """Return True when ``cached`` covers every requested ticker and the window.
 
     The cache is usable only if it contains all requested tickers and its first
@@ -165,13 +159,9 @@ def get_data(
                 f"assets from {first_trading_day(prices)}.[/green]\n"
             )
             return prices, returns
-        console.print(
-            "[yellow]Cached snapshot does not cover the request; refetching...[/yellow]"
-        )
+        console.print("[yellow]Cached snapshot does not cover the request; refetching...[/yellow]")
 
-    console.print(
-        f"[yellow]Fetching data for {len(tickers)} assets from {start_date}...[/yellow]"
-    )
+    console.print(f"[yellow]Fetching data for {len(tickers)} assets from {start_date}...[/yellow]")
     prices_raw = download_adj_close(tickers, start_date)
     prices_raw.to_parquet(path, engine="pyarrow")
     console.print(f"[green]Saved new data cache to {path}.[/green]")

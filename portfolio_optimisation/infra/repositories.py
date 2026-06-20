@@ -40,38 +40,28 @@ class YfinanceParquetRepository(MarketDataRepository):
         cache_path: Path | None = None,
         console: Console | None = None,
     ) -> None:
-        self.cache_path: Path = (
-            cache_path if cache_path is not None else default_cache_path()
-        )
+        self.cache_path: Path = cache_path if cache_path is not None else default_cache_path()
         self.console: Console = console or Console()
         self.cache_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def load_prices(
-        self, tickers: list[str], start_date: str
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def load_prices(self, tickers: list[str], start_date: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         if self.cache_path.exists():
             cached = pd.read_parquet(self.cache_path, engine="pyarrow")
             if cache_satisfies_request(cached, tickers, start_date):
-                self.console.print(
-                    f"[green]Loading cached data from {self.cache_path}...[/green]"
-                )
+                self.console.print(f"[green]Loading cached data from {self.cache_path}...[/green]")
                 prices, returns = clean_prices(cached, tickers, start_date)
                 self._announce(prices)
                 return prices, returns
             self.console.print(
-                "[yellow]Cached snapshot does not cover the request; "
-                "refetching...[/yellow]"
+                "[yellow]Cached snapshot does not cover the request; refetching...[/yellow]"
             )
 
         self.console.print(
-            f"[yellow]Fetching data for {len(tickers)} assets "
-            f"from {start_date}...[/yellow]"
+            f"[yellow]Fetching data for {len(tickers)} assets from {start_date}...[/yellow]"
         )
         prices_raw = download_adj_close(tickers, start_date)
         prices_raw.to_parquet(self.cache_path, engine="pyarrow")
-        self.console.print(
-            f"[green]Saved new data cache to {self.cache_path}.[/green]"
-        )
+        self.console.print(f"[green]Saved new data cache to {self.cache_path}.[/green]")
         prices, returns = clean_prices(prices_raw, tickers, start_date)
         self._announce(prices)
         return prices, returns
@@ -91,7 +81,9 @@ class FakeMarketDataRepository(MarketDataRepository):
         self._prices: pd.DataFrame = prices
 
     def load_prices(
-        self, tickers: list[str], start_date: str  # noqa: ARG002
+        self,
+        tickers: list[str],
+        start_date: str,  # noqa: ARG002
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         prices = self._prices[tickers]
         returns = prices.pct_change(fill_method=None).dropna()

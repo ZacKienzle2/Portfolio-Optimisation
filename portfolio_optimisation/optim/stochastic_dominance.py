@@ -36,8 +36,7 @@ def _require_cvxpy():
         import cvxpy as cp
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "ssd_constrained_weights requires the [optim] extra: "
-            "`uv sync --extra optim`."
+            "ssd_constrained_weights requires the [optim] extra: `uv sync --extra optim`."
         ) from exc
     return cp
 
@@ -103,9 +102,7 @@ def ssd_constrained_weights(
     return pd.Series(weights, index=tickers)
 
 
-def ssd_dominates(
-    portfolio_returns: pd.Series, benchmark_returns: pd.Series
-) -> bool:
+def ssd_dominates(portfolio_returns: pd.Series, benchmark_returns: pd.Series) -> bool:
     """Empirical test: does ``portfolio_returns`` SSD-dominate the benchmark?
 
     Checks the integrated lower partial moment criterion at every benchmark

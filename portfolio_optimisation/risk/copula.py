@@ -177,9 +177,7 @@ class CopulaRiskAnalyser:
         if self.copula is None:
             raise RuntimeError("Fit the copula first.")
 
-        simulated_uniform: NDArray[np.float64] = self.copula.rvs(
-            n_simulations, random_state=seed
-        )
+        simulated_uniform: NDArray[np.float64] = self.copula.rvs(n_simulations, random_state=seed)
         np.clip(simulated_uniform, 1e-9, 1 - 1e-9, out=simulated_uniform)
 
         # Pre-allocate the inverse-CDF matrix once and fill column-wise so the

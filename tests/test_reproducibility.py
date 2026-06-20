@@ -67,9 +67,7 @@ def test_pipeline_is_seed_deterministic_historical() -> None:
 
     def run() -> dict[str, float]:
         repo = FakeMarketDataRepository(prices)
-        pipeline = PortfolioPipeline(
-            uow=InMemoryUnitOfWork(repo), n_simulations=500, seed=123
-        )
+        pipeline = PortfolioPipeline(uow=InMemoryUnitOfWork(repo), n_simulations=500, seed=123)
         result = pipeline.run(
             tickers=list(prices.columns),
             start_date="2024-01-02",

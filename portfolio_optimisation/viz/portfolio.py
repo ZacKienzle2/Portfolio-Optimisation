@@ -166,9 +166,7 @@ class PortfolioVisualiser:
         return fig, axis
 
 
-def _figure(
-    ax: Axes | None, *, figsize: tuple[float, float] | None = None
-) -> tuple[Figure, Axes]:
+def _figure(ax: Axes | None, *, figsize: tuple[float, float] | None = None) -> tuple[Figure, Axes]:
     """Return ``(fig, ax)``, creating a styled figure when ``ax`` is None."""
     if ax is not None:
         return ax.get_figure(), ax  # type: ignore[return-value]

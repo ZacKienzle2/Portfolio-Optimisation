@@ -103,9 +103,7 @@ def black_litterman_weights(
 
     tickers = list(covariance.columns)
     sigma = covariance.to_numpy(dtype=np.float64)
-    pi = implied_equilibrium_returns(
-        covariance, market_weights, risk_aversion=risk_aversion
-    )
+    pi = implied_equilibrium_returns(covariance, market_weights, risk_aversion=risk_aversion)
     pi_arr = pi.to_numpy(dtype=np.float64)
 
     if views_matrix is None or views_returns is None:
