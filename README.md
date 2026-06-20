@@ -56,12 +56,34 @@ Requires `uv >= 0.5`. Python 3.12 auto-selected via `.python-version`.
 
 ```python
 from portfolio_optimisation.optim import HRPModel
-from portfolio_optimisation.risk import calculateRiskMetrics, CopulaRiskAnalyser
+from portfolio_optimisation.risk import calculate_risk_metrics, CopulaRiskAnalyser
 from portfolio_optimisation.econometrics import Econometrics
 from portfolio_optimisation.sde import SDEFitter
 ```
 
 See `main.ipynb` for an end-to-end worked example.
+
+### Command line
+
+```bash
+portfolio-opt version
+portfolio-opt config
+portfolio-opt run --tickers IYW VGT IYF --start 2018-01-01 --output result.json
+```
+
+Configuration resolves with the precedence explicit flag > `PORTFOLIO_*`
+environment variable > `portfolio.toml` > built-in default. Every Monte Carlo
+path accepts a `seed` for reproducible results.
+
+### Architecture diagrams
+
+Module and DDD-layer dependency graphs are generated from the source and kept in
+sync by CI:
+
+```bash
+python tools/gen_diagrams.py          # regenerate docs/diagrams/*
+python tools/gen_diagrams.py --check  # verify they match the source
+```
 
 ## Maintainers
 
