@@ -26,6 +26,7 @@ digraph modules {
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.hrp";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.nco";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.risk_parity";
+    "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.robust";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.stochastic_dominance";
     "portfolio_optimisation.optim.bootstrap" -> "portfolio_optimisation.infra.logging";
     "portfolio_optimisation.optim.bootstrap" -> "portfolio_optimisation.optim.hrp";
