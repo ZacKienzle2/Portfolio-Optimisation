@@ -106,7 +106,7 @@ def denoise_correlation(
     else:
         shrunk = eigenvalues
 
-    denoised = eigenvectors @ np.diag(shrunk) @ eigenvectors.T
+    denoised = (eigenvectors * shrunk) @ eigenvectors.T
     # Rescale to unit diagonal so we still have a valid correlation.
     diag = np.sqrt(np.diag(denoised))
     diag = np.where(diag < 1e-12, 1.0, diag)
@@ -142,10 +142,10 @@ def detone_correlation(
     if not 0 < n_market_components < n:
         raise ValueError("n_market_components must be in (0, N).")
 
-    market = np.zeros_like(values)
-    for k in range(1, n_market_components + 1):
-        idx = n - k
-        market += eigenvalues[idx] * np.outer(eigenvectors[:, idx], eigenvectors[:, idx])
+    top = slice(n - n_market_components, n)
+    top_vectors = eigenvectors[:, top]
+    top_values = eigenvalues[top]
+    market = (top_vectors * top_values) @ top_vectors.T
 
     detoned = values - market
     diag = np.sqrt(np.diag(detoned))
