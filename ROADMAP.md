@@ -24,6 +24,7 @@ reviewer can audit end to end.
 - VaR/ES backtests (Kupiec, Christoffersen, Acerbi-Szekely) and risk-contribution decomposition.
 - GARCH-family conditional-volatility forecasting feeding the VaR/ES backtests.
 - Factor-model covariance (statistical PCA and explicit-factor regression) for all allocators.
+- Extreme Value Theory tail risk (peaks-over-threshold GPD VaR/ES and the Hill estimator).
 - Property-based tests and a benchmark harness.
 
 ## Now
@@ -39,7 +40,6 @@ In active development.
 Planned for the next milestone (H2 2026).
 
 - Mean-CVaR and mean-EVaR optimisation (Rockafellar-Uryasev) and a unified constraint framework.
-- Extreme Value Theory tail fitting (peaks-over-threshold, generalised Pareto, Hill estimator).
 - Additional SDEs with Euler-Maruyama and Milstein simulation engines (CIR, Vasicek, Heston, Merton jumps).
 
 ## Later

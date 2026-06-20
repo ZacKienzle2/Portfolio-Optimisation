@@ -4,6 +4,8 @@
 
 ::: portfolio_optimisation.risk.volatility
 
+::: portfolio_optimisation.risk.evt
+
 ::: portfolio_optimisation.risk.backtesting
 
 ::: portfolio_optimisation.risk.contributions
