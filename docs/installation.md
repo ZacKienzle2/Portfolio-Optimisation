@@ -34,6 +34,6 @@ uv run portfolio-opt version
 ## Build the documentation
 
 ```bash
-uv run --all-extras mkdocs serve   # live preview at http://127.0.0.1:8000
-uv run --all-extras mkdocs build   # static site under site/
+uv run --extra docs mkdocs serve   # live preview at http://127.0.0.1:8000
+uv run --extra docs mkdocs build   # static site under site/
 ```
