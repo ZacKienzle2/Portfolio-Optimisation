@@ -26,6 +26,10 @@ from portfolio_optimisation.optim.higher_moments import (
 from portfolio_optimisation.optim.hrp import HRPModel
 from portfolio_optimisation.optim.nco import NCOOptimiser, nco_weights
 from portfolio_optimisation.optim.risk_parity import RiskParityModel, risk_parity_weights
+from portfolio_optimisation.optim.robust import (
+    resampled_weights,
+    robust_mean_variance_weights,
+)
 from portfolio_optimisation.optim.stochastic_dominance import (
     ssd_constrained_weights,
     ssd_dominates,
@@ -52,7 +56,9 @@ __all__ = [
     "min_cdar_weights",
     "nco_weights",
     "pgp_higher_moment_weights",
+    "resampled_weights",
     "risk_parity_weights",
+    "robust_mean_variance_weights",
     "ssd_constrained_weights",
     "ssd_dominates",
     "statistical_factor_covariance",

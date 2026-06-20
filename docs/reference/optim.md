@@ -10,6 +10,8 @@
 
 ::: portfolio_optimisation.optim.factor_model
 
+::: portfolio_optimisation.optim.robust
+
 ::: portfolio_optimisation.optim.denoise
 
 ::: portfolio_optimisation.optim.black_litterman

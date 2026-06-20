@@ -26,6 +26,7 @@ reviewer can audit end to end.
 - Factor-model covariance (statistical PCA and explicit-factor regression) for all allocators.
 - Extreme Value Theory tail risk (peaks-over-threshold GPD VaR/ES and the Hill estimator).
 - SDE simulation engines (Euler-Maruyama, Milstein) with GBM, OU, CIR, Merton and Heston models.
+- Robust and resampled (Michaud) optimisation with box-uncertainty mean-variance.
 - Property-based tests and a benchmark harness.
 
 ## Now
@@ -59,7 +60,6 @@ The thematic backlog of what a frontier version of this project would add.
 
 - Risk parity and equal-risk-contribution (convex Spinu / Newton formulations).
 - Mean-CVaR, mean-EVaR and mean-drawdown optimisation under a shared constraint API.
-- Robust optimisation with uncertainty sets; resampled efficient frontier (Michaud).
 - Cardinality, sector, box, turnover and leverage constraints across every allocator.
 - Critical Line Algorithm and full mean-variance frontier tracing.
 - Black-Litterman with entropy pooling and view-uncertainty calibration (Meucci).
