@@ -20,6 +20,10 @@ import yfinance as yf
 from rich.console import Console
 
 from portfolio_optimisation.infra.errors import MarketDataError
+from portfolio_optimisation.infra.logging import get_logger
+from portfolio_optimisation.infra.retry import retry_call
+
+logger = get_logger(__name__)
 
 
 def default_cache_path() -> Path:
@@ -32,12 +36,19 @@ def first_trading_day(frame: pd.DataFrame) -> str:
     return str(np.datetime_as_string(frame.index.to_numpy()[0], unit="D"))
 
 
-def download_adj_close(tickers: list[str], start_date: str) -> pd.DataFrame:
+def download_adj_close(
+    tickers: list[str], start_date: str, *, attempts: int = 3
+) -> pd.DataFrame:
     """Download adjusted close prices for ``tickers`` from ``start_date``.
+
+    The network call is retried with exponential backoff to absorb transient
+    failures; an empty response is treated as a permanent failure and is not
+    retried.
 
     Args:
         tickers (list[str]): Asset symbols.
         start_date (str): ISO start date (YYYY-MM-DD).
+        attempts (int): Maximum download attempts before giving up.
 
     Returns:
         pd.DataFrame: Wide frame of adjusted close prices, one column per
@@ -48,8 +59,12 @@ def download_adj_close(tickers: list[str], start_date: str) -> pd.DataFrame:
             request. Carries the requested tickers and start date so the
             failure is diagnosable. Subclasses ValueError for compatibility.
     """
-    downloaded: Any = yf.download(
-        tickers, start=start_date, auto_adjust=False, progress=False
+    downloaded: Any = retry_call(
+        lambda: yf.download(
+            tickers, start=start_date, auto_adjust=False, progress=False
+        ),
+        attempts=attempts,
+        logger=logger,
     )
     prices_raw: pd.DataFrame | pd.Series | None
     if isinstance(downloaded, pd.DataFrame) and "Adj Close" in downloaded.columns:
@@ -164,6 +179,6 @@ def get_data(
     prices, returns = clean_prices(prices_raw, tickers, start_date)
     console.print(
         f"[green]Analysis ready for {len(prices.columns)} "
-        f"assets from {pd.Timestamp(prices.index[0]).date()}.[/green]\n"
+        f"assets from {first_trading_day(prices)}.[/green]\n"
     )
     return prices, returns
