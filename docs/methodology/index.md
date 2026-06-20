@@ -7,20 +7,26 @@ notation is shared across the pages and is collected below.
 
 ## Shared notation
 
-A universe of \(N\) assets is observed over \(T\) periods. The return matrix is
-\(R \in \mathbb{R}^{T \times N}\) with row \(r_t\) the cross-section at time
-\(t\) and column \(R_{\cdot i}\) the history of asset \(i\). Portfolio weights
-are \(w \in \mathbb{R}^N\); the fully-invested long-only simplex is
-\(\Delta = \{ w : w \ge 0,\ \mathbf{1}^\top w = 1 \}\). The sample mean is
-\(\hat{\mu} = \tfrac{1}{T} \sum_t r_t\) and the sample covariance is
-\(\Sigma \in \mathbb{R}^{N \times N}\). The portfolio return is \(r_t^\top w\)
-and the portfolio loss is \(L_t = -r_t^\top w\). A tail level \(\alpha \in (0,1)\)
-denotes the probability mass in the loss tail, so \(\alpha = 0.05\) is the worst
+A universe of $N$ assets is observed over $T$ periods. The return matrix is
+$R \in \mathbb{R}^{T \times N}$ with row $r_t$ the cross-section at time
+$t$ and column $R_{\cdot i}$ the history of asset $i$. Portfolio weights
+are $w \in \mathbb{R}^N$; the fully-invested long-only simplex is
+$\Delta = \{ w : w \ge 0,\ \mathbf{1}^\top w = 1 \}$. The sample mean is
+$\hat{\mu} = \tfrac{1}{T} \sum_t r_t$ and the sample covariance is
+$\Sigma \in \mathbb{R}^{N \times N}$. The portfolio return is $r_t^\top w$
+and the portfolio loss is $L_t = -r_t^\top w$. A tail level $\alpha \in (0,1)$
+denotes the probability mass in the loss tail, so $\alpha = 0.05$ is the worst
 five percent.
 
 ## Areas
 
 - [Allocation](allocation.md) covers the hierarchical, risk-parity, mean-risk,
   stochastic-dominance, higher-moment, view-based and robust allocators.
-- Risk, estimation, stochastic processes and econometrics follow the same
-  structure and are derived on their own pages.
+- [Risk](risk.md) covers the coherent measures, extreme value theory,
+  conditional volatility, risk contributions and the Value-at-Risk backtests.
+- [Estimation](estimation.md) covers covariance shrinkage, denoising, factor
+  models and copula dependence.
+- [Stochastic processes](stochastic-processes.md) covers the discretisation
+  schemes, the price and volatility models, variance reduction and fitting.
+- [Econometrics](econometrics.md) covers the normality, stationarity,
+  autocorrelation, heteroskedasticity, ARCH and structural-break diagnostics.
