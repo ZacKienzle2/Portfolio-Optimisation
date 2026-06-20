@@ -37,6 +37,11 @@ from portfolio_optimisation.optim.robust import (
     resampled_weights,
     robust_mean_variance_weights,
 )
+from portfolio_optimisation.optim.shrinkage import (
+    linear_shrinkage_covariance,
+    nonlinear_shrinkage_covariance,
+    oas_covariance,
+)
 from portfolio_optimisation.optim.stochastic_dominance import (
     ssd_constrained_weights,
     ssd_dominates,
@@ -62,11 +67,14 @@ __all__ = [
     "factor_model_covariance",
     "herc_weights",
     "implied_equilibrium_returns",
+    "linear_shrinkage_covariance",
     "mean_risk_weights",
     "min_cdar_weights",
     "min_cvar_weights",
     "min_evar_weights",
     "nco_weights",
+    "nonlinear_shrinkage_covariance",
+    "oas_covariance",
     "pgp_higher_moment_weights",
     "resampled_weights",
     "risk_parity_weights",
