@@ -58,6 +58,12 @@ markdown_extensions:
   - pymdownx.snippets:
       base_path: ["."]
       check_paths: true
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: index.md
@@ -65,6 +71,9 @@ nav:
   - Usage: usage.md
   - Architecture: architecture.md
   - Glossary: glossary.md
+  - Methodology:
+      - Overview: methodology/index.md
+      - Allocation: methodology/allocation.md
   - Changelog: changelog.md
   - Decision Records:
       - "DDD layering": adr/0001-ddd-layering.md
