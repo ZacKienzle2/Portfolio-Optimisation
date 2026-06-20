@@ -25,6 +25,13 @@ from portfolio_optimisation.risk.copula import (
     CopulaRiskAnalyser,
     run_historical_simulation,
 )
+from portfolio_optimisation.risk.evt import (
+    GeneralisedParetoFit,
+    evt_expected_shortfall,
+    evt_value_at_risk,
+    fit_peaks_over_threshold,
+    hill_estimator,
+)
 from portfolio_optimisation.risk.metrics import (
     calculate_performance_metrics,
     calculate_risk_metrics,
@@ -45,6 +52,7 @@ from portfolio_optimisation.risk.volatility import (
 __all__ = [
     "CopulaRiskAnalyser",
     "CoverageTestResult",
+    "GeneralisedParetoFit",
     "SharpeStatistics",
     "acerbi_szekely_z2",
     "calculate_performance_metrics",
@@ -55,9 +63,13 @@ __all__ = [
     "conditional_volatility",
     "deflated_sharpe_ratio",
     "entropic_value_at_risk",
+    "evt_expected_shortfall",
+    "evt_value_at_risk",
     "exponential_spectrum",
     "fit_garch",
+    "fit_peaks_over_threshold",
     "garch_var_es",
+    "hill_estimator",
     "kupiec_pof_test",
     "marginal_risk_contributions",
     "percentage_risk_contributions",

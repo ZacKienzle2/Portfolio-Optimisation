@@ -34,6 +34,7 @@ digraph modules {
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.coherent";
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.contributions";
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.copula";
+    "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.evt";
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.metrics";
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.plotting";
     "portfolio_optimisation.risk" -> "portfolio_optimisation.risk.sharpe";
