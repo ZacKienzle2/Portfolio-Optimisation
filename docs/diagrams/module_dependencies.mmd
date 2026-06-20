@@ -55,6 +55,7 @@ flowchart LR
     subgraph sde
         portfolio_optimisation_sde["portfolio_optimisation.sde"]
         portfolio_optimisation_sde_fitter["portfolio_optimisation.sde.fitter"]
+        portfolio_optimisation_sde_processes["portfolio_optimisation.sde.processes"]
     end
     subgraph services
         portfolio_optimisation_services["portfolio_optimisation.services"]
@@ -106,6 +107,7 @@ flowchart LR
     portfolio_optimisation_risk --> portfolio_optimisation_risk_volatility
     portfolio_optimisation_risk_copula --> portfolio_optimisation_infra_logging
     portfolio_optimisation_sde --> portfolio_optimisation_sde_fitter
+    portfolio_optimisation_sde --> portfolio_optimisation_sde_processes
     portfolio_optimisation_services --> portfolio_optimisation_services_pipeline
     portfolio_optimisation_services_pipeline --> portfolio_optimisation_config
     portfolio_optimisation_services_pipeline --> portfolio_optimisation_domain_repositories
