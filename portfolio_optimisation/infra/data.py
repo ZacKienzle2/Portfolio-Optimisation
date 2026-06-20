@@ -19,6 +19,8 @@ import pandas as pd
 import yfinance as yf
 from rich.console import Console
 
+from portfolio_optimisation.infra.errors import MarketDataError
+
 
 def default_cache_path() -> Path:
     """Return the conventional on-disk snapshot location under the working dir."""
@@ -42,9 +44,9 @@ def download_adj_close(tickers: list[str], start_date: str) -> pd.DataFrame:
         ticker.
 
     Raises:
-        ValueError: If yfinance returns no usable price data for the request.
-            The message includes the requested tickers and start date so the
-            failure is diagnosable.
+        MarketDataError: If yfinance returns no usable price data for the
+            request. Carries the requested tickers and start date so the
+            failure is diagnosable. Subclasses ValueError for compatibility.
     """
     downloaded: Any = yf.download(
         tickers, start=start_date, auto_adjust=False, progress=False
@@ -58,10 +60,7 @@ def download_adj_close(tickers: list[str], start_date: str) -> pd.DataFrame:
         prices_raw = None
 
     if prices_raw is None or prices_raw.empty:
-        raise ValueError(
-            f"No price data returned for tickers={sorted(tickers)} "
-            f"from {start_date}."
-        )
+        raise MarketDataError(tickers, start_date)
 
     if isinstance(prices_raw, pd.Series):
         return prices_raw.to_frame(name=tickers[0])
@@ -136,7 +135,7 @@ def get_data(
         tuple[pd.DataFrame, pd.DataFrame]: Cleaned prices and daily returns.
 
     Raises:
-        ValueError: If the download fails or yields empty data.
+        MarketDataError: If the download fails or yields empty data.
     """
     path = cache_path if cache_path is not None else default_cache_path()
     path.parent.mkdir(parents=True, exist_ok=True)
