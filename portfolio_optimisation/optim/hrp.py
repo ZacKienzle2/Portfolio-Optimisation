@@ -91,9 +91,7 @@ class HRPModel:
         return [int(i) for i in sorted_index]
 
     @staticmethod
-    def _cluster_var_numpy(
-        cov_values: NDArray[np.float64], idx: NDArray[np.intp]
-    ) -> float:
+    def _cluster_var_numpy(cov_values: NDArray[np.float64], idx: NDArray[np.intp]) -> float:
         """Inverse-variance portfolio variance for the index-selected sub-matrix.
 
         Numpy-only hot path: takes the dense covariance buffer + an integer

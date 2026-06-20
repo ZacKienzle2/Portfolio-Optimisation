@@ -1,0 +1,23 @@
+{
+  "performance_metrics": {
+    "Annualised Return": 0.1427128761,
+    "Annualised Volatility": 0.1668903308,
+    "Max Drawdown": -0.3493897216,
+    "Sharpe Ratio": 0.7352905078,
+    "Sortino Ratio": 0.8654164049
+  },
+  "risk_metrics": {
+    "CVaR": -0.0254399387,
+    "Empirical VaR": -0.0146883315,
+    "Parametric VaR": -0.016816608,
+    "VaR": -0.0146883315
+  },
+  "weights": {
+    "IYF": 0.1085392065,
+    "IYK": 0.3437328125,
+    "IYR": 0.1148011286,
+    "IYW": 0.1453403009,
+    "VGT": 0.1084926528,
+    "XLU": 0.1790938987
+  }
+}

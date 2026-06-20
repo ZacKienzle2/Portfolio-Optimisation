@@ -1,8 +1,5 @@
 """Hierarchical Equal Risk Contribution allocation.
 
-Raffinot (2017): "Hierarchical Clustering-Based Asset Allocation." Journal
-of Portfolio Management 44(2):89-99.
-
 HERC keeps the HRP correlation-distance dendrogram but replaces the recursive
 inverse-variance bisection with a *top-down Equal Risk Contribution* split at
 each cluster boundary. The ERC split between two child clusters with standard
@@ -13,8 +10,8 @@ deviations sigma_L and sigma_R allocates
 so the resulting cluster contributions ``alpha * sigma_L`` and
 ``(1 - alpha) * sigma_R`` are equal. Within each leaf cluster, weights are
 inverse-variance just like HRP. The risk metric is configurable via the
-``risk_measure`` parameter; the default ``"variance"`` reproduces Raffinot's
-baseline, ``"cvar"`` switches to expected shortfall at level ``alpha=0.05``.
+``risk_measure`` parameter; the default ``"variance"`` uses the baseline
+approach, ``"cvar"`` switches to expected shortfall at level ``alpha=0.05``.
 """
 
 from __future__ import annotations
@@ -123,12 +120,8 @@ def herc_weights(
             cov_r = cov[np.ix_(idx_r, idx_r)]
             w_l = _inv_var_weights(cov_l)
             w_r = _inv_var_weights(cov_r)
-            sigma_l = _cluster_risk(
-                risk_measure, w_l, cov_l, returns_arr[:, idx_l], cvar_alpha
-            )
-            sigma_r = _cluster_risk(
-                risk_measure, w_r, cov_r, returns_arr[:, idx_r], cvar_alpha
-            )
+            sigma_l = _cluster_risk(risk_measure, w_l, cov_l, returns_arr[:, idx_l], cvar_alpha)
+            sigma_r = _cluster_risk(risk_measure, w_r, cov_r, returns_arr[:, idx_r], cvar_alpha)
             total = sigma_l + sigma_r
             alpha = sigma_r / total if total > 0 else 0.5
             weights[left[0] : left[1]] *= alpha

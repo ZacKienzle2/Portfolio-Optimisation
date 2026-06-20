@@ -16,9 +16,7 @@ from portfolio_optimisation.optim import (
 def _returns_and_hrp(seed: int = 21, t: int = 600, n: int = 6):
     rng = np.random.default_rng(seed)
     market = rng.normal(0.0, 0.005, size=t)
-    data = np.column_stack([
-        0.4 * market + rng.normal(0.0, 0.01, size=t) for _ in range(n)
-    ])
+    data = np.column_stack([0.4 * market + rng.normal(0.0, 0.01, size=t) for _ in range(n)])
     returns = pd.DataFrame(data, columns=[f"A{i}" for i in range(n)])
     hrp = HRPModel(returns)
     hrp.optimize(linkage_method="ward")

@@ -1,0 +1,15 @@
+flowchart TD
+    cli --> config
+    cli --> infra
+    cli --> root
+    cli --> services
+    infra --> domain
+    optim --> infra
+    risk --> infra
+    root --> config
+    services --> config
+    services --> domain
+    services --> infra
+    services --> optim
+    services --> risk
+    viz --> optim

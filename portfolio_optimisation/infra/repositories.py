@@ -9,15 +9,20 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import TracebackType
-from typing import Any
 
 import pandas as pd
-import yfinance as yf
 from rich.console import Console
 
 from portfolio_optimisation.domain.repositories import (
     MarketDataRepository,
     UnitOfWork,
+)
+from portfolio_optimisation.infra.data import (
+    cache_satisfies_request,
+    clean_prices,
+    default_cache_path,
+    download_adj_close,
+    first_trading_day,
 )
 
 
@@ -35,64 +40,38 @@ class YfinanceParquetRepository(MarketDataRepository):
         cache_path: Path | None = None,
         console: Console | None = None,
     ) -> None:
-        self.cache_path: Path = (
-            cache_path if cache_path is not None
-            else Path.cwd() / "Initial_Files" / "market_data.parquet"
-        )
+        self.cache_path: Path = cache_path if cache_path is not None else default_cache_path()
         self.console: Console = console or Console()
-        self.cache_path.parent.mkdir(exist_ok=True)
+        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def load_prices(
-        self, tickers: list[str], start_date: str
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        prices_raw: pd.DataFrame | pd.Series | None
+    def load_prices(self, tickers: list[str], start_date: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         if self.cache_path.exists():
+            cached = pd.read_parquet(self.cache_path, engine="pyarrow")
+            if cache_satisfies_request(cached, tickers, start_date):
+                self.console.print(f"[green]Loading cached data from {self.cache_path}...[/green]")
+                prices, returns = clean_prices(cached, tickers, start_date)
+                self._announce(prices)
+                return prices, returns
             self.console.print(
-                f"[green]Loading cached data from {self.cache_path}...[/green]"
+                "[yellow]Cached snapshot does not cover the request; refetching...[/yellow]"
             )
-            prices_raw = pd.read_parquet(self.cache_path, engine="pyarrow")
-        else:
-            self.console.print(
-                f"[yellow]Fetching data for {len(tickers)} assets "
-                f"from {start_date}...[/yellow]"
-            )
-            downloaded: Any = yf.download(
-                tickers, start=start_date, auto_adjust=False, progress=False
-            )
-            if isinstance(downloaded, pd.DataFrame) and "Adj Close" in downloaded.columns:
-                prices_raw = downloaded["Adj Close"]
-            elif isinstance(downloaded, pd.Series):
-                prices_raw = downloaded
-            else:
-                prices_raw = None
-            if prices_raw is None or prices_raw.empty:
-                raise ValueError("Failed to download valid price data.")
-            prices_raw.to_parquet(self.cache_path, engine="pyarrow")
-            self.console.print(
-                f"[green]Saved new data cache to {self.cache_path}.[/green]"
-            )
-
-        if prices_raw is None:
-            raise ValueError("Price data is None after download/load.")
-
-        prices_raw_df: pd.DataFrame = (
-            prices_raw.to_frame(name=tickers[0])
-            if isinstance(prices_raw, pd.Series)
-            else prices_raw
-        )
-
-        first_indices: pd.Series = prices_raw_df.apply(
-            lambda col: col.first_valid_index()
-        )
-        common_start: pd.Timestamp = first_indices.max()
-        prices: pd.DataFrame = prices_raw_df.loc[common_start:].dropna(axis=1)
-        returns: pd.DataFrame = prices.pct_change().dropna()
 
         self.console.print(
-            f"[green]Analysis ready for {len(prices.columns)} "
-            f"assets from {prices.index[0].date()}.[/green]\n"
+            f"[yellow]Fetching data for {len(tickers)} assets from {start_date}...[/yellow]"
         )
+        prices_raw = download_adj_close(tickers, start_date)
+        prices_raw.to_parquet(self.cache_path, engine="pyarrow")
+        self.console.print(f"[green]Saved new data cache to {self.cache_path}.[/green]")
+        prices, returns = clean_prices(prices_raw, tickers, start_date)
+        self._announce(prices)
         return prices, returns
+
+    def _announce(self, prices: pd.DataFrame) -> None:
+        """Report the cleaned universe size and start date to the console."""
+        self.console.print(
+            f"[green]Analysis ready for {len(prices.columns)} "
+            f"assets from {first_trading_day(prices)}.[/green]\n"
+        )
 
 
 class FakeMarketDataRepository(MarketDataRepository):
@@ -102,10 +81,12 @@ class FakeMarketDataRepository(MarketDataRepository):
         self._prices: pd.DataFrame = prices
 
     def load_prices(
-        self, tickers: list[str], start_date: str  # noqa: ARG002
+        self,
+        tickers: list[str],
+        start_date: str,  # noqa: ARG002
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         prices = self._prices[tickers]
-        returns = prices.pct_change().dropna()
+        returns = prices.pct_change(fill_method=None).dropna()
         return prices, returns
 
 

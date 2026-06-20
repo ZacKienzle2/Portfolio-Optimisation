@@ -1,9 +1,5 @@
 """Polynomial Goal Programming over the first four portfolio moments.
 
-Lai, T.-Y. (1991).
-    "Portfolio Selection with Skewness: A Multiple-Objective Approach."
-    Review of Quantitative Finance and Accounting 1(3):293-305.
-
 The portfolio's first four central moments at weight ``w`` are
 
     mu(w)    = w' mu_vec,
@@ -56,18 +52,27 @@ def coskewness_tensor(returns: pd.DataFrame) -> NDArray[np.float64]:
     """Empirical co-skewness M3 of shape (N, N*N).
 
     ``M3[i, j*N + k] = (1/T) sum_t (r_t,i - mu_i)(r_t,j - mu_j)(r_t,k - mu_k)``.
+    The contraction is expressed via ``np.einsum`` with optimisation so the
+    triple product is summed without materialising the (T, N, N) intermediate.
     """
     centred = (returns - returns.mean()).to_numpy(dtype=np.float64)
     t, n = centred.shape
-    return (centred.T @ (centred[:, :, None] * centred[:, None, :]).reshape(t, n * n)) / t
+    m3 = np.einsum("ti,tj,tk->ijk", centred, centred, centred, optimize=True)
+    return m3.reshape(n, n * n) / t
 
 
 def cokurtosis_tensor(returns: pd.DataFrame) -> NDArray[np.float64]:
-    """Empirical co-kurtosis M4 of shape (N, N^3)."""
+    """Empirical co-kurtosis M4 of shape (N, N^3).
+
+    Note:
+        The dense tensor holds N^4 entries, so memory and work grow as
+        O(N^4). For large universes prefer a factor-model approximation over
+        the full empirical tensor.
+    """
     centred = (returns - returns.mean()).to_numpy(dtype=np.float64)
     t, n = centred.shape
-    outer = (centred[:, :, None, None] * centred[:, None, :, None] * centred[:, None, None, :])
-    return (centred.T @ outer.reshape(t, n * n * n)) / t
+    m4 = np.einsum("ti,tj,tk,tl->ijkl", centred, centred, centred, centred, optimize=True)
+    return m4.reshape(n, n * n * n) / t
 
 
 def _portfolio_moments(
@@ -122,25 +127,39 @@ def pgp_higher_moment_weights(
     beta: float = 1.0,
     gamma: float = 1.0,
     delta: float = 1.0,
+    max_assets: int = 40,
 ) -> HigherMomentResult:
-    """Solve the Lai (1991) PGP four-moment portfolio.
+    """Solve the PGP four-moment portfolio.
 
     Args:
         returns (pd.DataFrame): Asset returns.
-        alpha, beta, gamma, delta (float): Investor preference exponents on
-            mean shortfall, variance excess, negative-skew penalty and
-            kurtosis excess respectively.
+        alpha (float): Preference exponent on the mean-shortfall goal.
+        beta (float): Preference exponent on the variance-excess goal.
+        gamma (float): Preference exponent on the negative-skewness goal.
+        delta (float): Preference exponent on the kurtosis-excess goal.
+        max_assets (int): Guard on the universe size. The co-kurtosis tensor
+            scales as O(N^4); requests above this raise rather than thrash
+            memory. Raise explicitly when a dense large-N tensor is intended.
 
     Returns:
         HigherMomentResult: Posterior weights plus the realised and
         individually-optimal moments used as goal references.
+
+    Raises:
+        ValueError: If the asset count exceeds ``max_assets``.
     """
     tickers = list(returns.columns)
+    n_assets = len(tickers)
+    if n_assets > max_assets:
+        raise ValueError(
+            f"Dense co-kurtosis tensor scales as O(N^4); {n_assets} assets "
+            f"exceeds max_assets={max_assets}. Raise max_assets explicitly or "
+            "use a factor-model approximation."
+        )
     mu = returns.mean().to_numpy(dtype=np.float64)
     sigma = returns.cov().to_numpy(dtype=np.float64)
     m3 = coskewness_tensor(returns)
     m4 = cokurtosis_tensor(returns)
-    n_assets = len(tickers)
 
     def mean_obj(w: NDArray[np.float64]) -> float:
         return float(w @ mu)

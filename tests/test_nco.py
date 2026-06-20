@@ -50,9 +50,7 @@ def test_nco_optimiser_caches_weights() -> None:
 
 def test_nco_accepts_denoised_covariance() -> None:
     returns = _block_returns()
-    cov = denoise_covariance(
-        returns.cov(), q=returns.shape[0] / returns.shape[1], detone=False
-    )
+    cov = denoise_covariance(returns.cov(), q=returns.shape[0] / returns.shape[1], detone=False)
     weights = nco_weights(returns, cov_matrix=cov, n_clusters=3)
     assert np.isclose(weights.sum(), 1.0, atol=1e-9)
     assert (weights >= -1e-12).all()

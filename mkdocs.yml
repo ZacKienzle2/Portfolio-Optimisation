@@ -1,0 +1,77 @@
+site_name: Portfolio Optimisation
+site_description: >-
+  Quant infrastructure for portfolio construction, risk modelling and
+  time-series diagnostics.
+repo_url: https://github.com/ZacKienzle2/Portfolio-Optimisation
+repo_name: ZacKienzle2/Portfolio-Optimisation
+copyright: MIT License
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_signature_annotations: true
+            separate_signature: true
+            merge_init_into_class: true
+            show_source: true
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Usage: usage.md
+  - Architecture: architecture.md
+  - Decision Records:
+      - "DDD layering": adr/0001-ddd-layering.md
+      - "Repository and Unit of Work": adr/0002-repository-unit-of-work.md
+      - "Deterministic seeding": adr/0003-deterministic-seeding.md
+  - API Reference:
+      - Optimisation: reference/optim.md
+      - Risk: reference/risk.md
+      - Stochastic processes: reference/sde.md
+      - Econometrics: reference/econometrics.md
+      - Domain and services: reference/domain.md
+      - Infrastructure: reference/infra.md
+      - Configuration and CLI: reference/config.md
