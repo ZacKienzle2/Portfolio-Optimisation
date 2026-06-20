@@ -14,6 +14,8 @@
 
 ::: portfolio_optimisation.optim.denoise
 
+::: portfolio_optimisation.optim.shrinkage
+
 ::: portfolio_optimisation.optim.black_litterman
 
 ::: portfolio_optimisation.optim.cdar
