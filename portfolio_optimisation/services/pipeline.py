@@ -59,12 +59,15 @@ class PortfolioPipeline:
         n_simulations: int = 10_000,
         var_alpha: float = 0.05,
         var_method: Literal["empirical", "parametric"] = "empirical",
+        *,
+        seed: int | None = None,
     ) -> None:
         self.uow: UnitOfWork = uow
         self.risk_free_rate: float = risk_free_rate
         self.n_simulations: int = n_simulations
         self.var_alpha: float = var_alpha
         self.var_method: Literal["empirical", "parametric"] = var_method
+        self.seed: int | None = seed
 
     def run(
         self,
@@ -99,10 +102,12 @@ class PortfolioPipeline:
                 analyser = CopulaRiskAnalyser(returns, weights)
                 analyser.fit_marginal_distributions()
                 analyser.fit_copula()
-                simulated = analyser.run_simulation(n_simulations=self.n_simulations)
+                simulated = analyser.run_simulation(
+                    n_simulations=self.n_simulations, seed=self.seed
+                )
             else:
                 simulated = run_historical_simulation(
-                    returns, weights, n_simulations=self.n_simulations
+                    returns, weights, n_simulations=self.n_simulations, seed=self.seed
                 )
 
             risk = calculate_risk_metrics(
@@ -128,6 +133,7 @@ class PortfolioPipeline:
                 "n_simulations": self.n_simulations,
                 "var_alpha": self.var_alpha,
                 "var_method": self.var_method,
+                "seed": self.seed,
             },
         )
 
@@ -135,6 +141,8 @@ class PortfolioPipeline:
 def build_default_pipeline(
     risk_free_rate: float = 0.02,
     n_simulations: int = 10_000,
+    *,
+    seed: int | None = None,
 ) -> PortfolioPipeline:
     """Wire a pipeline backed by the production yfinance+parquet repository."""
     repo = YfinanceParquetRepository()
@@ -143,4 +151,5 @@ def build_default_pipeline(
         uow=uow,
         risk_free_rate=risk_free_rate,
         n_simulations=n_simulations,
+        seed=seed,
     )
