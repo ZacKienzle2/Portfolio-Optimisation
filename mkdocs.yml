@@ -74,6 +74,7 @@ nav:
   - Methodology:
       - Overview: methodology/index.md
       - Allocation: methodology/allocation.md
+      - Risk: methodology/risk.md
   - Changelog: changelog.md
   - Decision Records:
       - "DDD layering": adr/0001-ddd-layering.md

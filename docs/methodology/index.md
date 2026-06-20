@@ -22,5 +22,7 @@ five percent.
 
 - [Allocation](allocation.md) covers the hierarchical, risk-parity, mean-risk,
   stochastic-dominance, higher-moment, view-based and robust allocators.
-- Risk, estimation, stochastic processes and econometrics follow the same
-  structure and are derived on their own pages.
+- [Risk](risk.md) covers the coherent measures, extreme value theory,
+  conditional volatility, risk contributions and the Value-at-Risk backtests.
+- Estimation, stochastic processes and econometrics follow the same structure
+  and are derived on their own pages.
