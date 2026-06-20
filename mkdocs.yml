@@ -2,6 +2,7 @@ site_name: Portfolio Optimisation
 site_description: >-
   Quant infrastructure for portfolio construction, risk modelling and
   time-series diagnostics.
+site_url: https://zackienzle2.github.io/Portfolio-Optimisation/
 repo_url: https://github.com/ZacKienzle2/Portfolio-Optimisation
 repo_name: ZacKienzle2/Portfolio-Optimisation
 copyright: MIT License
@@ -81,6 +82,7 @@ nav:
       - "Mean-risk optimisation": adr/0015-mean-risk-optimisation.md
       - "Covariance shrinkage": adr/0016-covariance-shrinkage.md
       - "Changelog automation": adr/0017-changelog-automation.md
+      - "Documentation publishing": adr/0018-documentation-publishing.md
   - API Reference:
       - Optimisation: reference/optim.md
       - Risk: reference/risk.md
