@@ -74,6 +74,10 @@ nav:
   - Methodology:
       - Overview: methodology/index.md
       - Allocation: methodology/allocation.md
+      - Risk: methodology/risk.md
+      - Estimation: methodology/estimation.md
+      - Stochastic processes: methodology/stochastic-processes.md
+      - Econometrics: methodology/econometrics.md
   - Changelog: changelog.md
   - Decision Records:
       - "DDD layering": adr/0001-ddd-layering.md
