@@ -56,6 +56,8 @@ class UnitOfWork(Protocol):
         tb: TracebackType | None,
     ) -> None: ...
 
-    def commit(self) -> None: ...
+    def commit(self) -> None:
+        """Persist the changes accumulated in this unit of work."""
 
-    def rollback(self) -> None: ...
+    def rollback(self) -> None:
+        """Discard the changes accumulated in this unit of work."""

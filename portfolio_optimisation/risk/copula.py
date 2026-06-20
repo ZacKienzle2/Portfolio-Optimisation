@@ -1,3 +1,5 @@
+"""Copula-based simulation of joint return scenarios for portfolio risk."""
+
 from typing import Any
 
 import matplotlib.pyplot as plt

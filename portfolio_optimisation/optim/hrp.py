@@ -1,3 +1,5 @@
+"""Hierarchical Risk Parity allocation."""
+
 from typing import Any
 
 import numpy as np

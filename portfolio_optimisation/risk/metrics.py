@@ -1,3 +1,5 @@
+"""Portfolio risk and performance metric calculations."""
+
 from typing import Literal
 
 import numpy as np

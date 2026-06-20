@@ -1,3 +1,6 @@
+"""Weight-construction helpers for inverse-variance weighting and discrete
+share allocation."""
+
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray

@@ -1,3 +1,5 @@
+"""Bootstrap robustness analysis for hierarchical risk parity allocations."""
+
 import hashlib
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
