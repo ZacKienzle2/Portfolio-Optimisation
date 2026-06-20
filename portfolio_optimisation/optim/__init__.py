@@ -7,6 +7,7 @@ from portfolio_optimisation.optim.black_litterman import (
 )
 from portfolio_optimisation.optim.bootstrap import HRPAnalyser
 from portfolio_optimisation.optim.cdar import cdar, min_cdar_weights
+from portfolio_optimisation.optim.constraints import PortfolioConstraints
 from portfolio_optimisation.optim.denoise import (
     denoise_correlation,
     denoise_covariance,
@@ -24,6 +25,12 @@ from portfolio_optimisation.optim.higher_moments import (
     pgp_higher_moment_weights,
 )
 from portfolio_optimisation.optim.hrp import HRPModel
+from portfolio_optimisation.optim.mean_risk import (
+    MeanRiskModel,
+    mean_risk_weights,
+    min_cvar_weights,
+    min_evar_weights,
+)
 from portfolio_optimisation.optim.nco import NCOOptimiser, nco_weights
 from portfolio_optimisation.optim.risk_parity import RiskParityModel, risk_parity_weights
 from portfolio_optimisation.optim.robust import (
@@ -41,7 +48,9 @@ __all__ = [
     "HRPAnalyser",
     "HRPModel",
     "HigherMomentResult",
+    "MeanRiskModel",
     "NCOOptimiser",
+    "PortfolioConstraints",
     "RiskParityModel",
     "black_litterman_weights",
     "cdar",
@@ -53,7 +62,10 @@ __all__ = [
     "factor_model_covariance",
     "herc_weights",
     "implied_equilibrium_returns",
+    "mean_risk_weights",
     "min_cdar_weights",
+    "min_cvar_weights",
+    "min_evar_weights",
     "nco_weights",
     "pgp_higher_moment_weights",
     "resampled_weights",
