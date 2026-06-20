@@ -12,6 +12,8 @@ digraph modules {
     "portfolio_optimisation.infra" -> "portfolio_optimisation.infra.report";
     "portfolio_optimisation.infra" -> "portfolio_optimisation.infra.weights";
     "portfolio_optimisation.infra.data" -> "portfolio_optimisation.infra.errors";
+    "portfolio_optimisation.infra.data" -> "portfolio_optimisation.infra.logging";
+    "portfolio_optimisation.infra.data" -> "portfolio_optimisation.infra.retry";
     "portfolio_optimisation.infra.repositories" -> "portfolio_optimisation.domain.repositories";
     "portfolio_optimisation.infra.repositories" -> "portfolio_optimisation.infra.data";
     "portfolio_optimisation.optim" -> "portfolio_optimisation.optim.black_litterman";

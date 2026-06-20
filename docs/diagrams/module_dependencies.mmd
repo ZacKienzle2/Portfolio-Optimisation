@@ -20,6 +20,7 @@ flowchart LR
         portfolio_optimisation_infra_logging["portfolio_optimisation.infra.logging"]
         portfolio_optimisation_infra_report["portfolio_optimisation.infra.report"]
         portfolio_optimisation_infra_repositories["portfolio_optimisation.infra.repositories"]
+        portfolio_optimisation_infra_retry["portfolio_optimisation.infra.retry"]
         portfolio_optimisation_infra_weights["portfolio_optimisation.infra.weights"]
     end
     subgraph optim
@@ -70,6 +71,8 @@ flowchart LR
     portfolio_optimisation_infra --> portfolio_optimisation_infra_report
     portfolio_optimisation_infra --> portfolio_optimisation_infra_weights
     portfolio_optimisation_infra_data --> portfolio_optimisation_infra_errors
+    portfolio_optimisation_infra_data --> portfolio_optimisation_infra_logging
+    portfolio_optimisation_infra_data --> portfolio_optimisation_infra_retry
     portfolio_optimisation_infra_repositories --> portfolio_optimisation_domain_repositories
     portfolio_optimisation_infra_repositories --> portfolio_optimisation_infra_data
     portfolio_optimisation_optim --> portfolio_optimisation_optim_black_litterman
