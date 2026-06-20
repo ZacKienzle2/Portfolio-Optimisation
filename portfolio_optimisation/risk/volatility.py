@@ -41,7 +41,7 @@ def fit_garch(
     o: int = 0,
     dist: Distribution = "t",
 ):
-    """Fit a GARCH-family model to a return series.
+    """Fit a GARCH-family model to a return series and return the arch result.
 
     Args:
         returns (pd.Series | NDArray[float64]): Return series.
@@ -51,9 +51,6 @@ def fit_garch(
         q (int): Number of lagged variance (GARCH) terms.
         o (int): Number of asymmetry terms (forced to at least 1 for ``"GJR"``).
         dist (Distribution): Innovation distribution, ``"normal"`` or ``"t"``.
-
-    Returns:
-        The fitted ``arch`` results object.
     """
     scaled = np.asarray(returns, dtype=np.float64).ravel() * _SCALE
     if vol == "EGARCH":
@@ -79,9 +76,11 @@ def conditional_volatility(
 ) -> pd.Series:
     """Return the filtered conditional volatility in the original return units.
 
+    The ``vol``, ``p``, ``q``, ``o`` and ``dist`` arguments are passed through to
+    :func:`fit_garch`.
+
     Args:
         returns (pd.Series | NDArray[float64]): Return series.
-        vol, p, q, o, dist: Passed through to :func:`fit_garch`.
 
     Returns:
         pd.Series: Per-period conditional volatility, indexed like ``returns``.
@@ -119,12 +118,13 @@ def garch_var_es(
 
     The forecasts combine the fitted constant mean with the filtered
     conditional volatility scaled by the standardised quantile and tail mean of
-    the innovation distribution, both in return space (negative for losses).
+    the innovation distribution, both in return space (negative for losses). The
+    ``vol``, ``p``, ``q``, ``o`` and ``dist`` arguments are passed through to
+    :func:`fit_garch`.
 
     Args:
         returns (pd.Series | NDArray[float64]): Return series.
         alpha (float): Tail level in (0, 1).
-        vol, p, q, o, dist: Passed through to :func:`fit_garch`.
 
     Returns:
         tuple[NDArray[float64], NDArray[float64]]: VaR and ES arrays aligned to
