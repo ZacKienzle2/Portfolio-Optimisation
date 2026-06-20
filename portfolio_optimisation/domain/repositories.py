@@ -21,9 +21,7 @@ class MarketDataRepository(Protocol):
     a SQL backend, or a unit-test fake. Consumers see only this Protocol.
     """
 
-    def load_prices(
-        self, tickers: list[str], start_date: str
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def load_prices(self, tickers: list[str], start_date: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Return (prices, returns) aligned to a common start date.
 
         Args:

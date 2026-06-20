@@ -11,7 +11,9 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 import pandas as pd
+from rich.console import Console
 
+from portfolio_optimisation.config import Settings
 from portfolio_optimisation.domain.repositories import (
     UnitOfWork,
 )
@@ -59,12 +61,15 @@ class PortfolioPipeline:
         n_simulations: int = 10_000,
         var_alpha: float = 0.05,
         var_method: Literal["empirical", "parametric"] = "empirical",
+        *,
+        seed: int | None = None,
     ) -> None:
         self.uow: UnitOfWork = uow
         self.risk_free_rate: float = risk_free_rate
         self.n_simulations: int = n_simulations
         self.var_alpha: float = var_alpha
         self.var_method: Literal["empirical", "parametric"] = var_method
+        self.seed: int | None = seed
 
     def run(
         self,
@@ -99,15 +104,15 @@ class PortfolioPipeline:
                 analyser = CopulaRiskAnalyser(returns, weights)
                 analyser.fit_marginal_distributions()
                 analyser.fit_copula()
-                simulated = analyser.run_simulation(n_simulations=self.n_simulations)
+                simulated = analyser.run_simulation(
+                    n_simulations=self.n_simulations, seed=self.seed
+                )
             else:
                 simulated = run_historical_simulation(
-                    returns, weights, n_simulations=self.n_simulations
+                    returns, weights, n_simulations=self.n_simulations, seed=self.seed
                 )
 
-            risk = calculate_risk_metrics(
-                simulated, alpha=self.var_alpha, method=self.var_method
-            )
+            risk = calculate_risk_metrics(simulated, alpha=self.var_alpha, method=self.var_method)
             perf = calculate_performance_metrics(
                 portfolio_returns, risk_free_rate=self.risk_free_rate
             )
@@ -128,6 +133,7 @@ class PortfolioPipeline:
                 "n_simulations": self.n_simulations,
                 "var_alpha": self.var_alpha,
                 "var_method": self.var_method,
+                "seed": self.seed,
             },
         )
 
@@ -135,6 +141,8 @@ class PortfolioPipeline:
 def build_default_pipeline(
     risk_free_rate: float = 0.02,
     n_simulations: int = 10_000,
+    *,
+    seed: int | None = None,
 ) -> PortfolioPipeline:
     """Wire a pipeline backed by the production yfinance+parquet repository."""
     repo = YfinanceParquetRepository()
@@ -143,4 +151,30 @@ def build_default_pipeline(
         uow=uow,
         risk_free_rate=risk_free_rate,
         n_simulations=n_simulations,
+        seed=seed,
+    )
+
+
+def build_pipeline_from_settings(
+    settings: Settings, *, console: Console | None = None
+) -> PortfolioPipeline:
+    """Wire a production pipeline from a :class:`Settings` instance.
+
+    Args:
+        settings (Settings): Resolved run configuration.
+        console (Console | None): Rich console for data-layer status output.
+
+    Returns:
+        PortfolioPipeline: A pipeline backed by the yfinance+parquet repository
+        whose cache path and run knobs come from ``settings``.
+    """
+    repo = YfinanceParquetRepository(cache_path=settings.data_cache_path, console=console)
+    uow = InMemoryUnitOfWork(repo)
+    return PortfolioPipeline(
+        uow=uow,
+        risk_free_rate=settings.risk_free_rate,
+        n_simulations=settings.n_simulations,
+        var_alpha=settings.var_alpha,
+        var_method=settings.var_method,
+        seed=settings.seed,
     )

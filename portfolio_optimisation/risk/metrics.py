@@ -97,10 +97,12 @@ def calculate_performance_metrics(
         else 0.0
     )
 
-    cumulative_returns: pd.Series = (1 + portfolio_returns).cumprod()
-    peak: pd.Series = cumulative_returns.expanding(min_periods=1).max()
-    drawdown: pd.Series = (cumulative_returns - peak) / peak
-    max_drawdown: float = float(drawdown.min()) if not drawdown.empty else 0.0
+    cumulative_returns: NDArray[np.float64] = (
+        (1.0 + portfolio_returns).cumprod().to_numpy(dtype=np.float64)
+    )
+    peak: NDArray[np.float64] = np.maximum.accumulate(cumulative_returns)
+    drawdown: NDArray[np.float64] = (cumulative_returns - peak) / peak
+    max_drawdown: float = float(drawdown.min()) if drawdown.size > 0 else 0.0
 
     sharpe_ratio: float = (
         (annualised_return - risk_free_rate) / annualised_volatility

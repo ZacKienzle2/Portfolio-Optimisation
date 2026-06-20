@@ -1,17 +1,18 @@
+import hashlib
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 from arch.bootstrap import StationaryBootstrap, optimal_block_length
 from numpy.typing import NDArray
-from plotly.subplots import make_subplots
 from pypfopt import expected_returns
 from sklearn.covariance import ledoit_wolf
 
+from portfolio_optimisation.infra.logging import get_logger
 from portfolio_optimisation.optim.hrp import HRPModel
+
+logger = get_logger(__name__)
 
 
 class HRPAnalyser:
@@ -46,10 +47,28 @@ class HRPAnalyser:
         block_lengths = optimal_block_length(returns**2)
         return int(block_lengths.iloc[:, 0].mean())
 
-    def _get_cache_path(self) -> Path:
-        """Generates a unique cache path based on the tickers used."""
-        ticker_hash = abs(hash("".join(sorted(self.returns.columns))))
-        return self.cache_dir / f"bootstrap_{ticker_hash}.parquet"
+    def _get_cache_path(self, reps: int, linkage_methods: list[str], *, paired: bool) -> Path:
+        """Stable cache path derived from the request.
+
+        Keyed on the sorted ticker set, linkage methods, repetition count,
+        block size, risk-free rate and pairing mode via blake2b. The builtin
+        ``hash()`` is salted per interpreter run (PYTHONHASHSEED), so the
+        previous key was non-deterministic across processes and effectively
+        never hit the cache between sessions; it also ignored every parameter
+        that changes the result.
+        """
+        key = "|".join(
+            [
+                ",".join(sorted(self.returns.columns)),
+                ",".join(sorted(linkage_methods)),
+                str(reps),
+                str(self._block_size),
+                repr(self.risk_free_rate),
+                str(paired),
+            ]
+        )
+        digest = hashlib.blake2b(key.encode("utf-8"), digest_size=16).hexdigest()
+        return self.cache_dir / f"bootstrap_{digest}.parquet"
 
     def run_bootstrap(
         self,
@@ -57,42 +76,60 @@ class HRPAnalyser:
         reps: int = 500,
         verbose: bool = True,
         force_recalculate: bool = False,
+        *,
+        seed: int | None = None,
+        paired: bool = False,
     ):
         """Run the stationary bootstrap analysis for multiple HRP linkage methods.
 
-        Loads results from cache if available and `force_recalculate` is False.
-        Uses multiprocessing to speed up the numerous HRP optimisations.
+        Loads results from cache if available and ``force_recalculate`` is
+        False. Uses multiprocessing to speed up the numerous HRP optimisations.
 
         Args:
-            linkage_methods (Optional[List[str]]): List of linkage methods.
-                                                  Defaults to ['ward', 'single', 'complete', 'average'].
-            reps (int, optional): Number of bootstrap repetitions. Defaults to 500.
-            verbose (bool, optional): Print status messages. Defaults to True.
-            force_recalculate (bool, optional): Ignore cache and run calculation.
-                                               Defaults to False.
+            linkage_methods (list[str] | None): Linkage methods. Defaults to
+                ``["ward", "single", "complete", "average"]``.
+            reps (int): Number of bootstrap repetitions. Defaults to 500.
+            verbose (bool): Emit status logs at INFO level. Defaults to True.
+            force_recalculate (bool): Ignore cache and recompute. Defaults to
+                False.
+            seed (int | None): Seed for the master generator that draws the
+                per-repetition seeds. Pass an int for reproducible runs.
+            paired (bool): If True, every linkage method is evaluated on the
+                same bootstrap resamples (shared per-rep seeds), reducing the
+                variance of cross-method comparisons. Defaults to False.
         """
-        cache_path = self._get_cache_path()
-        if cache_path.exists() and not force_recalculate:
-            if verbose:
-                print("Loading bootstrap results from cache...")
-            self.bootstrap_results = pd.read_parquet(cache_path)
-            if verbose:
-                print("Bootstrap results loaded.")
-            return
-
         if linkage_methods is None:
             linkage_methods = ["ward", "single", "complete", "average"]
+
+        cache_path = self._get_cache_path(reps, linkage_methods, paired=paired)
+        if cache_path.exists() and not force_recalculate:
+            if verbose:
+                logger.info("Loading bootstrap results from cache...")
+            self.bootstrap_results = pd.read_parquet(cache_path)
+            if verbose:
+                logger.info("Bootstrap results loaded.")
+            return
+
         if verbose:
-            print(f"Running bootstrap with {reps} reps...")
+            logger.info("Running bootstrap with %d reps...", reps)
 
         n_cores = max(1, cpu_count() - 1)
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed)
         # One job-list spanning all (seed, method) pairs so a single worker
-        # pool amortises spawn cost across every linkage method.
+        # pool amortises spawn cost across every linkage method. In paired mode
+        # all methods share one set of per-rep seeds so method differences are
+        # measured on identical resamples.
+        shared_seeds: NDArray[np.int64] | None = (
+            rng.integers(0, 2**32 - 1, size=reps, dtype=np.int64) if paired else None
+        )
         jobs: list[tuple[int, str]] = []
         for method in linkage_methods:
-            seeds: NDArray[np.int64] = rng.integers(0, 1_000_000, size=reps, dtype=np.int64)
-            jobs.extend((int(seed), method) for seed in seeds)
+            method_seeds: NDArray[np.int64] = (
+                shared_seeds
+                if shared_seeds is not None
+                else rng.integers(0, 2**32 - 1, size=reps, dtype=np.int64)
+            )
+            jobs.extend((int(seed_value), method) for seed_value in method_seeds)
 
         with Pool(n_cores) as pool:
             results: list[dict[str, float]] = pool.starmap(self._bootstrap_single_method, jobs)
@@ -104,7 +141,7 @@ class HRPAnalyser:
 
         self.bootstrap_results.to_parquet(cache_path)
         if verbose:
-            print("Bootstrap complete and results saved to cache.")
+            logger.info("Bootstrap complete and results saved to cache.")
 
     def _bootstrap_single_method(self, seed: int, linkage_method: str) -> dict[str, float]:
         """Performs a single HRP optimisation on a bootstrapped sample."""
@@ -149,153 +186,3 @@ class HRPAnalyser:
         hrp.cov_matrix = s_matrix
         hrp.optimize(linkage_method=linkage)
         return hrp.clean_weights()
-
-    def plot_asset_prices(self, prices: pd.DataFrame) -> None:
-        """Plot the historical prices for each asset using Plotly subplots."""
-        tickers = prices.columns
-        num_tickers = len(tickers)
-        n_rows = (num_tickers + 1) // 2
-        fig = make_subplots(rows=n_rows, cols=2, subplot_titles=tickers)
-        for i, ticker in enumerate(tickers):
-            fig.add_trace(
-                go.Scatter(x=prices.index, y=prices[ticker], name=ticker),
-                row=i // 2 + 1,
-                col=i % 2 + 1,
-            )
-        fig.update_layout(height=250 * n_rows, title_text="Daily Prices", showlegend=False)
-        fig.show()
-
-    def plot_performance_distributions(self, metric: str = "sharpe_ratio") -> None:
-        """Plot the distribution of a specified performance metric by linkage method."""
-        if self.bootstrap_results is None:
-            raise RuntimeError("Run bootstrap analysis first.")
-
-        metric_title = metric.replace("_", " ").title()
-        median_values = (
-            self.bootstrap_results.groupby("linkage_method")[metric].median().reset_index()
-        )
-        fig = px.violin(
-            self.bootstrap_results,
-            x="linkage_method",
-            y=metric,
-            color="linkage_method",
-            title=f"Bootstrapped {metric_title}s of HRP Portfolios",
-            labels={"linkage_method": "Linkage Method", metric: metric_title},
-        )
-        for _, row in median_values.iterrows():
-            value = row[metric]
-            formatted_value = (
-                f"{value * 100:.2f}%"
-                if "return" in metric or "volatility" in metric
-                else f"{value:.2f}"
-            )
-            fig.add_annotation(
-                x=row["linkage_method"],
-                y=value,
-                text=f"Median:<br>{formatted_value}",
-                showarrow=True,
-                arrowhead=2,
-                ax=0,
-                ay=-40,
-            )
-        fig.update_layout(
-            xaxis_title="Linkage Method",
-            yaxis_title=metric_title,
-            legend_title="Linkage Method",
-            legend={
-                "orientation": "h",
-                "yanchor": "bottom",
-                "y": 1.02,
-                "xanchor": "center",
-                "x": 0.5,
-            },
-        )
-        fig.show()
-
-    def plot_risk_return_profiles(self) -> None:
-        """Plot the risk-return scatter profiles grouped by linkage method."""
-        if self.bootstrap_results is None:
-            raise RuntimeError("Run bootstrap analysis first.")
-
-        methods = sorted(self.bootstrap_results["linkage_method"].unique())
-        n_cols = 2
-        n_rows = (len(methods) + 1) // n_cols
-        fig = make_subplots(
-            rows=n_rows,
-            cols=n_cols,
-            subplot_titles=methods,
-            x_title="Annualised Volatility (Risk)",
-            y_title="Annualised Expected Return",
-        )
-        sh_min = self.bootstrap_results["sharpe_ratio"].min()
-        sh_max = self.bootstrap_results["sharpe_ratio"].max()
-
-        for i, method in enumerate(methods):
-            row_idx, col_idx = i // n_cols + 1, i % n_cols + 1
-            df_subset = self.bootstrap_results[self.bootstrap_results["linkage_method"] == method]
-            fig.add_trace(
-                go.Scatter(
-                    x=df_subset["volatility"],
-                    y=df_subset["exp_return"],
-                    mode="markers",
-                    name=method,
-                    hovertext=df_subset["sharpe_ratio"].round(2),
-                    marker={
-                        "color": df_subset["sharpe_ratio"],
-                        "cmin": sh_min,
-                        "cmax": sh_max,
-                        "colorscale": "Viridis",
-                        "showscale": (i == 0),
-                        "colorbar": {"title": "Sharpe Ratio"} if i == 0 else None,
-                    },
-                ),
-                row=row_idx,
-                col=col_idx,
-            )
-        fig.update_layout(
-            title="Risk-Return Profile by Linkage Method",
-            showlegend=False,
-            height=400 * n_rows,
-        )
-        fig.show()
-
-    def plot_investment_growth(self, initial_investment: float, years: int) -> None:
-        """Project investment growth using median expected return per HRP method."""
-        if self.bootstrap_results is None:
-            raise RuntimeError("Run bootstrap analysis first.")
-
-        median_returns = (
-            self.bootstrap_results.groupby("linkage_method")["exp_return"].median().reset_index()
-        )
-        growth_data = pd.DataFrame({"Year": range(1, years + 1)})
-
-        for _, row in median_returns.iterrows():
-            rate = row["exp_return"]
-            method = row["linkage_method"]
-            growth_data[method] = initial_investment * ((1 + rate) ** growth_data["Year"])
-
-        growth_data_melted = growth_data.melt(
-            id_vars=["Year"], var_name="Linkage Method", value_name="Investment Value"
-        )
-
-        fig = px.line(
-            growth_data_melted,
-            x="Year",
-            y="Investment Value",
-            color="Linkage Method",
-            title=(
-                f"Projected Growth Over {years} Years "
-                f"(Initial Investment: ${initial_investment:,.0f})"
-            ),
-        )
-        fig.update_layout(
-            yaxis_title="Investment Value ($)",
-            legend={
-                "orientation": "h",
-                "yanchor": "bottom",
-                "y": 1.02,
-                "xanchor": "center",
-                "x": 0.5,
-            },
-        )
-        fig.show()

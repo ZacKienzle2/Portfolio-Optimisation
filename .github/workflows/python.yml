@@ -85,9 +85,9 @@ jobs:
 
       - name: Upload coverage
         if: matrix.python == '3.12'
-        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e75ec5c95e6 # v4
+        uses: codecov/codecov-action@04b047e8bb82a0c002c8312c1c880fbc6a999d45 # v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           fail_ci_if_error: false
 

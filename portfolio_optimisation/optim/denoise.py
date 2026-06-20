@@ -1,13 +1,7 @@
 """Random Matrix Theory denoising and detoning of sample correlation matrices.
 
-References:
-    Marchenko, V.A., Pastur, L.A. (1967). Distribution of eigenvalues for some
-        sets of random matrices. Math USSR-Sbornik 1:457-483.
-    Lopez de Prado, M. (2020). Machine Learning for Asset Managers.
-        Cambridge Elements in Quantitative Finance.
-
-The Marchenko-Pastur (MP) theorem characterises the eigenvalue distribution of
-the sample correlation of T iid N(0, 1) observations on N variables. Sample
+The Marchenko-Pastur theorem characterises the eigenvalue distribution of the
+sample correlation of T iid N(0, 1) observations on N variables. Sample
 eigenvalues that fall inside the MP support are statistically indistinguishable
 from noise; replacing them with their mean while leaving signal eigenvalues
 untouched yields a denoised correlation. Detoning additionally subtracts the
@@ -22,7 +16,9 @@ from numpy.typing import NDArray
 from scipy.optimize import minimize_scalar
 
 
-def _mp_pdf(var: float, q: float, points: int = 1000) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+def _mp_pdf(
+    var: float, q: float, points: int = 1000
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Marchenko-Pastur density evaluated on the support [lam_minus, lam_plus]."""
     lam_minus = var * (1.0 - np.sqrt(1.0 / q)) ** 2
     lam_plus = var * (1.0 + np.sqrt(1.0 / q)) ** 2
@@ -33,7 +29,9 @@ def _mp_pdf(var: float, q: float, points: int = 1000) -> tuple[NDArray[np.float6
     return grid, pdf
 
 
-def _kde_eval(eigenvalues: NDArray[np.float64], grid: NDArray[np.float64], bandwidth: float) -> NDArray[np.float64]:
+def _kde_eval(
+    eigenvalues: NDArray[np.float64], grid: NDArray[np.float64], bandwidth: float
+) -> NDArray[np.float64]:
     """Gaussian KDE of the empirical eigenvalue distribution on ``grid``."""
     eigenvalues = eigenvalues.reshape(-1, 1)
     grid_col = grid.reshape(1, -1)
@@ -106,7 +104,7 @@ def denoise_correlation(
     else:
         shrunk = eigenvalues
 
-    denoised = eigenvectors @ np.diag(shrunk) @ eigenvectors.T
+    denoised = (eigenvectors * shrunk) @ eigenvectors.T
     # Rescale to unit diagonal so we still have a valid correlation.
     diag = np.sqrt(np.diag(denoised))
     diag = np.where(diag < 1e-12, 1.0, diag)
@@ -142,10 +140,10 @@ def detone_correlation(
     if not 0 < n_market_components < n:
         raise ValueError("n_market_components must be in (0, N).")
 
-    market = np.zeros_like(values)
-    for k in range(1, n_market_components + 1):
-        idx = n - k
-        market += eigenvalues[idx] * np.outer(eigenvectors[:, idx], eigenvectors[:, idx])
+    top = slice(n - n_market_components, n)
+    top_vectors = eigenvectors[:, top]
+    top_values = eigenvalues[top]
+    market = (top_vectors * top_values) @ top_vectors.T
 
     detoned = values - market
     diag = np.sqrt(np.diag(detoned))
@@ -157,9 +155,7 @@ def detone_correlation(
     return detoned
 
 
-def denoise_covariance(
-    covariance: pd.DataFrame, q: float, *, detone: bool = False
-) -> pd.DataFrame:
+def denoise_covariance(covariance: pd.DataFrame, q: float, *, detone: bool = False) -> pd.DataFrame:
     """Apply MP denoising (and optional detoning) on the cov via its correlation.
 
     Args:
@@ -185,6 +181,4 @@ def denoise_covariance(
         corr_arr = np.asarray(detone_correlation(corr_arr), dtype=np.float64)
 
     cov_denoised = corr_arr * np.outer(std, std)
-    return pd.DataFrame(
-        cov_denoised, index=covariance.index, columns=covariance.columns
-    )
+    return pd.DataFrame(cov_denoised, index=covariance.index, columns=covariance.columns)

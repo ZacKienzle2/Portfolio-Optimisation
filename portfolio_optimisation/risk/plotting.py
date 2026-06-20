@@ -51,7 +51,7 @@ def plot_simulation_results(
         label="Simulated Returns",
         alpha=0.7,
         color="skyblue",
-        kde=False,
+        kde=True,
     )
     ax_hist.axvline(
         var_value,

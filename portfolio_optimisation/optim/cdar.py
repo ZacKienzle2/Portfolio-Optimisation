@@ -1,14 +1,10 @@
 """Conditional Drawdown-at-Risk allocation.
 
-Chekhlov, A., Uryasev, S., Zabarankin, M. (2005).
-    "Drawdown Measure in Portfolio Optimization." International Journal of
-    Theoretical and Applied Finance 8(1):13-58.
-
-For portfolio weight ``w``, cumulative log-PnL ``P_t = sum_{s <= t} r_s' w``,
+For portfolio weight ``w``, cumulative log-return ``P_t = sum_{s <= t} r_s' w``,
 and running maximum ``M_t = max_{s <= t} P_s``, define the drawdown
 ``D_t = M_t - P_t >= 0``. The alpha-CDaR is the expected drawdown beyond the
-VaR threshold at level alpha. Chekhlov-Uryasev show it is a coherent risk
-measure with the LP formulation:
+VaR threshold at level alpha. This is a coherent risk measure with the LP
+formulation:
 
     min  zeta + 1 / ((1-alpha) T) * sum_t u_t
     s.t. u_t >= D_t - zeta,        u_t >= 0
