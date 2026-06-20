@@ -80,6 +80,8 @@ docs = [
 dev = [
   "pytest>=8.3",
   "pytest-cov>=5.0",
+  "pytest-benchmark>=4.0",
+  "hypothesis>=6.100",
   "ruff>=0.7",
   "pyright>=1.1.380",
 ]
@@ -200,6 +202,9 @@ addopts = [
   "--strict-config",
   "--showlocals",
   "--tb=short",
+  # Benchmarks run once (untimed) in the default suite to validate they work;
+  # use --benchmark-enable --benchmark-only for real timing runs.
+  "--benchmark-disable",
 ]
 filterwarnings = [
   "error",
