@@ -6,7 +6,7 @@ and running maximum ``M_t = max_{s <= t} P_s``, define the drawdown
 VaR threshold at level alpha. This is a coherent risk measure with the LP
 formulation:
 
-    min  zeta + 1 / ((1-alpha) T) * sum_t u_t
+    min  zeta + 1 / (alpha T) * sum_t u_t
     s.t. u_t >= D_t - zeta,        u_t >= 0
          D_t >= M_t - P_t,         M_t >= P_s for all s <= t.
 
@@ -86,7 +86,7 @@ def min_cdar_weights(
         mean_r = r_arr.mean(axis=0)
         constraints += [mean_r @ w >= target_return]
 
-    objective = cp.Minimize(zeta + cp.sum(u) / ((1.0 - alpha) * t_steps))
+    objective = cp.Minimize(zeta + cp.sum(u) / (alpha * t_steps))
     problem = cp.Problem(objective, constraints)
     problem.solve(solver=solver)
 
