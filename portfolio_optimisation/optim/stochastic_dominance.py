@@ -1,18 +1,14 @@
 """Second-order Stochastic Dominance (SSD) constrained portfolio optimisation.
 
-Dentcheva, D., Ruszczynski, A. (2003).
-    "Optimization with stochastic dominance constraints." SIAM Journal on
-    Optimization 14(2):548-566.
-
 A portfolio random variable ``X`` second-order stochastically dominates a
 benchmark ``Y`` if and only if
 
     E[max(eta - X, 0)] <= E[max(eta - Y, 0)]    for all eta in R.
 
-On a discrete return panel with T scenarios, Dentcheva-Ruszczynski show that
-the continuum of constraints collapses to constraints evaluated at the
-benchmark realisations: ``eta_i = Y_i, i = 1, ..., T``. The SSD-constrained
-expected-return maximisation becomes the LP
+On a discrete return panel with T scenarios, the continuum of constraints
+collapses to constraints evaluated at the benchmark realisations:
+``eta_i = Y_i, i = 1, ..., T``. The SSD-constrained expected-return
+maximisation becomes the LP
 
     max  mu' w
     s.t. (1/T) sum_t u_{t,i} <= s_i(Y)            for i = 1, ..., T

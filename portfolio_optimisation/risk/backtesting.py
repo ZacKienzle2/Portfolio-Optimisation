@@ -3,26 +3,19 @@
 Implements the standard coverage tests used to validate a risk model against
 realised returns:
 
-* :func:`kupiec_pof_test` - Kupiec (1995) proportion-of-failures likelihood
-  ratio for unconditional coverage.
-* :func:`christoffersen_independence_test` - Christoffersen (1998) Markov test
-  that violations are serially independent.
+* :func:`kupiec_pof_test` - Proportion-of-failures likelihood ratio for
+  unconditional coverage.
+* :func:`christoffersen_independence_test` - Markov test that violations are
+  serially independent.
 * :func:`christoffersen_conditional_coverage_test` - the joint test combining
   correct coverage and independence.
-* :func:`acerbi_szekely_z2` - Acerbi-Szekely (2014) Test 2 statistic for the
-  adequacy of an Expected Shortfall forecast.
+* :func:`acerbi_szekely_z2` - Test 2 statistic for the adequacy of an Expected
+  Shortfall forecast.
 
 Conventions: ``returns`` are realised returns and ``var_forecasts`` /
 ``es_forecasts`` are stated in the same (return) space, so both forecasts are
 negative for a long position and a violation occurs when
 ``returns < var_forecasts``.
-
-References:
-    Kupiec, P. (1995). Techniques for verifying the accuracy of risk
-        measurement models. Journal of Derivatives 3(2):73-84.
-    Christoffersen, P. (1998). Evaluating interval forecasts. International
-        Economic Review 39(4):841-862.
-    Acerbi, C., Szekely, B. (2014). Backtesting Expected Shortfall. Risk.
 """
 
 from __future__ import annotations

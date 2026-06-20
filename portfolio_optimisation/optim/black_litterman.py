@@ -1,12 +1,5 @@
 """Black-Litterman Bayesian asset allocation with user-supplied views.
 
-Black, F., Litterman, R. (1992).
-    "Global Portfolio Optimization." Financial Analysts Journal 48(5):28-43.
-He, G., Litterman, R. (1999).
-    "The Intuition Behind Black-Litterman Model Portfolios." Goldman Sachs.
-Idzorek, T. (2004).
-    "A step-by-step guide to the Black-Litterman model."
-
 The model treats the equilibrium-implied excess returns ``Pi`` as a prior on
 expected returns and updates it with subjective views. Letting ``w_market`` be
 the equilibrium weights (here, the HRP allocation by default) and ``delta`` the

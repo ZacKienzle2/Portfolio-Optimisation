@@ -2,17 +2,17 @@
 
 Implements:
 
-* :func:`entropic_value_at_risk` (EVaR). Ahmadi-Javid 2012. Coherent and
-  computationally tractable: ``EVaR_alpha(L) = inf_{z>0} z^-1 log(M_L(z)/alpha)``
-  with ``M_L`` the moment-generating function of the loss random variable.
-  We minimise over ``z > 0`` against the empirical MGF.
+* :func:`entropic_value_at_risk` (EVaR). Coherent and computationally
+  tractable: ``EVaR_alpha(L) = inf_{z>0} z^-1 log(M_L(z)/alpha)`` with ``M_L``
+  the moment-generating function of the loss random variable. We minimise over
+  ``z > 0`` against the empirical MGF.
 
-* :func:`spectral_risk_measure`. Acerbi 2002. Returns
-  ``M_phi(L) = int_0^1 phi(p) F_L^-1(p) dp`` for an admissible weight function
-  ``phi: [0,1] -> R_+`` that is non-decreasing and integrates to 1.
+* :func:`spectral_risk_measure`. Returns ``M_phi(L) = int_0^1 phi(p) F_L^-1(p) dp``
+  for an admissible weight function ``phi: [0,1] -> R_+`` that is
+  non-decreasing and integrates to 1.
 
-* :func:`wang_transform_risk`. Wang 2000. Distortion risk
-  ``int_0^1 F_L^-1(u) dg(u)`` with ``g(u) = Phi(Phi^-1(u) + lambda)``.
+* :func:`wang_transform_risk`. Distortion risk ``int_0^1 F_L^-1(u) dg(u)``
+  with ``g(u) = Phi(Phi^-1(u) + lambda)``.
 
 All three accept a 1D loss array (positive = loss) or a returns Series (in
 which case losses are ``-returns``). They are coherent: monotone, sub-additive,

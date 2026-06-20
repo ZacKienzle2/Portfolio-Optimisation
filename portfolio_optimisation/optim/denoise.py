@@ -1,13 +1,7 @@
 """Random Matrix Theory denoising and detoning of sample correlation matrices.
 
-References:
-    Marchenko, V.A., Pastur, L.A. (1967). Distribution of eigenvalues for some
-        sets of random matrices. Math USSR-Sbornik 1:457-483.
-    Lopez de Prado, M. (2020). Machine Learning for Asset Managers.
-        Cambridge Elements in Quantitative Finance.
-
-The Marchenko-Pastur (MP) theorem characterises the eigenvalue distribution of
-the sample correlation of T iid N(0, 1) observations on N variables. Sample
+The Marchenko-Pastur theorem characterises the eigenvalue distribution of the
+sample correlation of T iid N(0, 1) observations on N variables. Sample
 eigenvalues that fall inside the MP support are statistically indistinguishable
 from noise; replacing them with their mean while leaving signal eigenvalues
 untouched yields a denoised correlation. Detoning additionally subtracts the

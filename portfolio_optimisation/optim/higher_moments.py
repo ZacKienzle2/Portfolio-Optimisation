@@ -1,9 +1,5 @@
 """Polynomial Goal Programming over the first four portfolio moments.
 
-Lai, T.-Y. (1991).
-    "Portfolio Selection with Skewness: A Multiple-Objective Approach."
-    Review of Quantitative Finance and Accounting 1(3):293-305.
-
 The portfolio's first four central moments at weight ``w`` are
 
     mu(w)    = w' mu_vec,
@@ -133,7 +129,7 @@ def pgp_higher_moment_weights(
     delta: float = 1.0,
     max_assets: int = 40,
 ) -> HigherMomentResult:
-    """Solve the Lai (1991) PGP four-moment portfolio.
+    """Solve the PGP four-moment portfolio.
 
     Args:
         returns (pd.DataFrame): Asset returns.

@@ -1,16 +1,9 @@
 """Probabilistic Sharpe Ratio, Deflated Sharpe Ratio and bootstrap CIs.
 
-Bailey, D., Lopez de Prado, M. (2014).
-    "The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest
-    Overfitting and Non-Normality." Journal of Portfolio Management 40(5):94-107.
-Politis, D., Romano, J. (1994).
-    "The stationary bootstrap." Journal of the American Statistical
-    Association 89(428):1303-1313.
-
 The classical Sharpe ratio assumes IID normal returns; both assumptions are
 violated by financial data. The Probabilistic Sharpe Ratio (PSR) returns the
 probability that the true Sharpe exceeds a benchmark, correcting for skewness
-and kurtosis via Bailey-Lopez de Prado's higher-moment-aware standard error:
+and kurtosis via a higher-moment-aware standard error:
 
     sigma_SR = sqrt((1 - gamma_3 SR_hat + ((gamma_4 - 1) / 4) SR_hat^2) / (T - 1))
     PSR(SR*) = Phi((SR_hat - SR*) / sigma_SR).
@@ -24,8 +17,8 @@ The Deflated Sharpe Ratio additionally accounts for selection bias when
 
 with ``gamma_em`` the Euler-Mascheroni constant.
 
-Politis-Romano stationary bootstrap CIs preserve temporal dependence in the
-returns. The optimal block length is taken from ``arch.bootstrap``.
+Stationary bootstrap CIs preserve temporal dependence in the returns. The
+optimal block length is taken from ``arch.bootstrap``.
 """
 
 from __future__ import annotations

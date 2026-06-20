@@ -1,8 +1,5 @@
 """Hierarchical Equal Risk Contribution allocation.
 
-Raffinot (2017): "Hierarchical Clustering-Based Asset Allocation." Journal
-of Portfolio Management 44(2):89-99.
-
 HERC keeps the HRP correlation-distance dendrogram but replaces the recursive
 inverse-variance bisection with a *top-down Equal Risk Contribution* split at
 each cluster boundary. The ERC split between two child clusters with standard
@@ -13,8 +10,8 @@ deviations sigma_L and sigma_R allocates
 so the resulting cluster contributions ``alpha * sigma_L`` and
 ``(1 - alpha) * sigma_R`` are equal. Within each leaf cluster, weights are
 inverse-variance just like HRP. The risk metric is configurable via the
-``risk_measure`` parameter; the default ``"variance"`` reproduces Raffinot's
-baseline, ``"cvar"`` switches to expected shortfall at level ``alpha=0.05``.
+``risk_measure`` parameter; the default ``"variance"`` uses the baseline
+approach, ``"cvar"`` switches to expected shortfall at level ``alpha=0.05``.
 """
 
 from __future__ import annotations

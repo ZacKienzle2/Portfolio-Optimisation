@@ -1,9 +1,9 @@
 """Nested Clustered Optimisation.
 
-Lopez de Prado (2016, 2020): instead of running Markowitz mean-variance on the
-full universe (which collapses under estimation error), partition the universe
-into hierarchical clusters, run intra-cluster MVO on each leaf, aggregate the
-cluster returns, then run a final inter-cluster MVO on the cluster portfolios.
+Instead of running Markowitz mean-variance on the full universe (which collapses
+under estimation error), partition the universe into hierarchical clusters, run
+intra-cluster MVO on each leaf, aggregate the cluster returns, then run a final
+inter-cluster MVO on the cluster portfolios.
 
 Algorithm (NCO):
     1.  Hierarchical clustering of the correlation distance d_ij = sqrt((1-r_ij)/2).
