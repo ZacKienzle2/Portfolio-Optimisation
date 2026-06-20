@@ -12,7 +12,10 @@ from plotly.subplots import make_subplots
 from pypfopt import expected_returns
 from sklearn.covariance import ledoit_wolf
 
+from portfolio_optimisation.infra.logging import get_logger
 from portfolio_optimisation.optim.hrp import HRPModel
+
+logger = get_logger(__name__)
 
 
 class HRPAnalyser:
@@ -91,7 +94,7 @@ class HRPAnalyser:
             linkage_methods (list[str] | None): Linkage methods. Defaults to
                 ``["ward", "single", "complete", "average"]``.
             reps (int): Number of bootstrap repetitions. Defaults to 500.
-            verbose (bool): Print status messages. Defaults to True.
+            verbose (bool): Emit status logs at INFO level. Defaults to True.
             force_recalculate (bool): Ignore cache and recompute. Defaults to
                 False.
             seed (int | None): Seed for the master generator that draws the
@@ -106,14 +109,14 @@ class HRPAnalyser:
         cache_path = self._get_cache_path(reps, linkage_methods, paired=paired)
         if cache_path.exists() and not force_recalculate:
             if verbose:
-                print("Loading bootstrap results from cache...")
+                logger.info("Loading bootstrap results from cache...")
             self.bootstrap_results = pd.read_parquet(cache_path)
             if verbose:
-                print("Bootstrap results loaded.")
+                logger.info("Bootstrap results loaded.")
             return
 
         if verbose:
-            print(f"Running bootstrap with {reps} reps...")
+            logger.info("Running bootstrap with %d reps...", reps)
 
         n_cores = max(1, cpu_count() - 1)
         rng = np.random.default_rng(seed)
@@ -143,7 +146,7 @@ class HRPAnalyser:
 
         self.bootstrap_results.to_parquet(cache_path)
         if verbose:
-            print("Bootstrap complete and results saved to cache.")
+            logger.info("Bootstrap complete and results saved to cache.")
 
     def _bootstrap_single_method(self, seed: int, linkage_method: str) -> dict[str, float]:
         """Performs a single HRP optimisation on a bootstrapped sample."""

@@ -10,6 +10,10 @@ from scipy import stats
 from scipy.optimize import OptimizeResult, minimize
 from statsmodels.distributions.copula.api import StudentTCopula
 
+from portfolio_optimisation.infra.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 class CopulaRiskAnalyser:
     """Performs multivariate risk simulation using a Student's t-copula.
@@ -52,14 +56,14 @@ class CopulaRiskAnalyser:
         for ticker in self.returns.columns:
             series_data = self.returns[ticker].dropna()
             if len(series_data) < 10:
-                print(f"Warning: Insufficient data for {ticker} marginal fit.")
+                logger.warning(f"Insufficient data for {ticker} marginal fit.")
                 self.fit_marginals_[ticker] = {"dist": None, "params": None}
                 continue
             try:
                 params: tuple[Any, ...] = dist.fit(series_data.to_numpy())
                 self.fit_marginals_[ticker] = {"dist": dist, "params": params}
             except Exception as e:
-                print(f"Warning: Failed marginal fit for {ticker}: {e}")
+                logger.warning(f"Failed marginal fit for {ticker}: {e}")
                 self.fit_marginals_[ticker] = {"dist": None, "params": None}
 
     def _estimate_copula_params(self) -> tuple[NDArray[np.float64], float]:
@@ -87,7 +91,7 @@ class CopulaRiskAnalyser:
                 penalty = 0.01 * (df_param - 10) ** 2 if df_param > 25 or df_param < 3 else 0
                 return -np.sum(np.log(pdf_values)) + penalty
             except Exception as e:
-                print(f"Warning: Error in likelihood calc for df={df_param}: {e}")
+                logger.warning(f"Error in likelihood calc for df={df_param}: {e}")
                 return np.inf
 
         result: OptimizeResult = minimize(
@@ -97,7 +101,7 @@ class CopulaRiskAnalyser:
             method="L-BFGS-B",
         )
         if not result.success:
-            print(f"Warning: Copula df optimization issue: {result.message}")
+            logger.warning(f"Copula df optimization issue: {result.message}")
 
         estimated_df: float = float(result.x[0])
         return corr, estimated_df
@@ -136,9 +140,9 @@ class CopulaRiskAnalyser:
                         uniform_data[ticker] = dist.cdf(series_data, *params)
                         valid_tickers.append(ticker)
                     except Exception as e:
-                        print(f"Warning: CDF transformation failed for {ticker}: {e}")
+                        logger.warning(f"CDF transformation failed for {ticker}: {e}")
             else:
-                print(f"Warning: Skipping {ticker} (no valid marginal fit).")
+                logger.warning(f"Skipping {ticker} (no valid marginal fit).")
 
         if not valid_tickers:
             raise RuntimeError("No valid marginals; cannot fit copula.")
@@ -199,13 +203,13 @@ class CopulaRiskAnalyser:
                     ppf_matrix[:, i] = dist.ppf(simulated_uniform[:, i], *params)
                     valid_mask[i] = True
                 except Exception as e:
-                    print(f"Warning: PPF failed for {ticker}: {e}")
+                    logger.warning(f"PPF failed for {ticker}: {e}")
                     ppf_matrix[:, i] = np.nan
             else:
                 ppf_matrix[:, i] = np.nan
 
         if not valid_mask.any():
-            print("Warning: Simulation yielded empty DataFrame after NaNs.")
+            logger.warning("Simulation yielded empty DataFrame after NaNs.")
             return pd.DataFrame({"simulated_returns": []})
 
         valid_tickers = [t for t, ok in zip(tickers, valid_mask, strict=True) if ok]
@@ -214,7 +218,7 @@ class CopulaRiskAnalyser:
         ).dropna()
 
         if simulated_returns_df.empty:
-            print("Warning: Simulation yielded empty DataFrame after NaNs.")
+            logger.warning("Simulation yielded empty DataFrame after NaNs.")
             return pd.DataFrame({"simulated_returns": []})
 
         aligned_weights = self.weights.reindex(simulated_returns_df.columns).fillna(0.0)
@@ -225,7 +229,7 @@ class CopulaRiskAnalyser:
     def plot_marginal_fits(self):
         """Plot fitted marginal distributions against historical data."""
         if self.returns.empty or not self.fit_marginals_:
-            print("Return data or marginal fits missing for plotting.")
+            logger.warning("Return data or marginal fits missing for plotting.")
             return
 
         n_assets = len(self.returns.columns)
@@ -271,7 +275,7 @@ class CopulaRiskAnalyser:
                     pdf_values = dist.pdf(x_range, *params)
                     ax.plot(x_range, pdf_values, "r-", lw=2, label="Fitted PDF")
                 except Exception as e:
-                    print(f"Warning: PDF plot failed for {ticker}: {e}")
+                    logger.warning(f"PDF plot failed for {ticker}: {e}")
                     ax.plot([], [], "r-", lw=2, label="Fit Error")
             else:
                 ax.plot([], [], "r--", label="Fit Failed")
@@ -289,7 +293,7 @@ class CopulaRiskAnalyser:
     def plot_copula_dependence(self):
         """Visualise pairwise dependence structure in uniform (copula) space."""
         if self.uniform_returns is None or self.uniform_returns.empty:
-            print("Uniform returns unavailable/empty; cannot plot dependence.")
+            logger.warning("Uniform returns unavailable/empty; cannot plot dependence.")
             return
 
         g: Any = sns.pairplot(
