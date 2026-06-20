@@ -73,7 +73,7 @@ optim = [
 docs = [
   # Documentation site built from docstrings and architecture diagrams.
   "mkdocs-material>=9.5",
-  "mkdocstrings[python]>=0.26",
+  "mkdocstrings[python]>=1.0.4",
 ]
 
 [dependency-groups]

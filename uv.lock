@@ -1879,7 +1879,7 @@ requires-dist = [
     { name = "jupyterlab", marker = "extra == 'notebooks'", specifier = ">=4.2" },
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5" },
-    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.26" },
+    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=1.0.4" },
     { name = "nbconvert", marker = "extra == 'notebooks'", specifier = ">=7.16" },
     { name = "numba", marker = "extra == 'perf'", specifier = ">=0.60" },
     { name = "numexpr", marker = "extra == 'perf'", specifier = ">=2.10" },
