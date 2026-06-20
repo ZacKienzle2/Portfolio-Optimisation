@@ -14,6 +14,7 @@ arch, sklearn, pypfopt and pymle.
 ## Scope
 
 ### Allocation
+
 - Hierarchical Risk Parity (HRP) with Ledoit-Wolf shrinkage and
   stationary-bootstrap robustness checks
 - Nested Clustered Optimisation (NCO) and Hierarchical Equal Risk
@@ -26,6 +27,7 @@ arch, sklearn, pypfopt and pymle.
   empirical co-skewness M3 and co-kurtosis M4 tensors
 
 ### Risk
+
 - Value-at-Risk and Conditional VaR (empirical and parametric)
 - Entropic VaR (coherent, Chernoff-bound formulation)
 - Spectral risk via exponential or power admissible spectra
@@ -36,11 +38,13 @@ arch, sklearn, pypfopt and pymle.
   Politis-Romano stationary-bootstrap CIs on the Sharpe ratio
 
 ### Econometrics + processes
+
 - Test battery: Jarque-Bera, ADF, Ljung-Box, Breusch-Pagan, ARCH-LM, CUSUM
 - Maximum-likelihood SDE fitting: Geometric Brownian Motion,
   Ornstein-Uhlenbeck
 
 ### Visualisation
+
 - Plotly and matplotlib for efficient frontier, weights, dendrogram,
   correlation heatmap
 
