@@ -55,7 +55,7 @@ portfolio-opt = "portfolio_optimisation.cli:main"
 [project.optional-dependencies]
 notebooks = [
   "ipykernel>=6.29",
-  "jupyterlab>=4.2",
+  "jupyterlab>=4.6.2",
   "nbconvert>=7.16",
 ]
 perf = [
