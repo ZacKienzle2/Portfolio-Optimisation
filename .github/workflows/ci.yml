@@ -47,6 +47,35 @@ jobs:
             --from-ref origin/${{ github.base_ref }} --to-ref HEAD
             --show-diff-on-failure
 
+  gitleaks:
+    name: Scan for leaked secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          # The scan walks history, which needs all of it.
+          fetch-depth: 0
+
+      # The pre-commit hook runs `gitleaks git --pre-commit --staged`, which is
+      # the right scan while committing and finds nothing on a runner, where
+      # nothing is staged. This scans the repository itself, so the check that
+      # can fail the build is still here after the lint jobs collapsed into the
+      # hooks. The official action replaces an install of ten lines that
+      # carried a pinned version and a sha256 no updater could reach inside a
+      # run block. It needs a licence key for organisation accounts only.
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   link-check:
     name: Check Markdown links
     runs-on: ubuntu-latest
@@ -75,6 +104,7 @@ jobs:
     timeout-minutes: 2
     needs:
       - pre-commit
+      - gitleaks
       - link-check
     if: always()
     steps:
