@@ -1,6 +1,6 @@
 # Roadmap
 
-This document tracks high-level direction. For granular work see the [issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues) and [project boards](https://github.com/ZacKienzle2/Portfolio-Optimisation/projects).
+This document tracks high-level direction. For granular work see the [issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues) and [project boards](https://github.com/users/ZacKienzle2/projects).
 
 The roadmap is intentionally aspirational. Items are not commitments. Priorities shift as the project learns from users and contributors. Dates are quarters of the calendar year.
 
