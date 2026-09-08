@@ -11,6 +11,9 @@ thm = "thm"
 [files]
 extend-exclude = [
   ".git/",
+  # Generated from the upstream gitignore templates, whose Visual Studio and
+  # Paket entries are their spelling rather than this project's.
+  ".gitignore",
   "node_modules/",
   "dist/",
   "build/",
