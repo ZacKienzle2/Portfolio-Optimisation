@@ -1,3 +1,13 @@
+# Derived from the workflow GitHub publishes at
+# actions/starter-workflows/code-scanning/scorecard.yml, with two deliberate
+# departures from it. Every action is pinned to a digest rather than a tag,
+# which is what Scorecard's own Pinned-Dependencies check asks for and what
+# Dependabot then moves. And the weekly cron is gone: a scan on every push to
+# the default branch and on every pull request already covers what changes,
+# and a schedule spends minutes on a tree nobody touched.
+#
+# `gh api repos/actions/starter-workflows/contents/code-scanning/scorecard.yml`
+# prints the current upstream to compare against.
 name: OpenSSF Scorecard
 
 on:
