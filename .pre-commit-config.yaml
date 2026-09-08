@@ -50,7 +50,6 @@ repos:
     rev: v0.13.0
     hooks:
       - id: markdownlint-cli2
-        args: ["--config", ".markdownlint.yaml"]
 
   # The upstream Go project rather than the Python wrapper, which lags it: the
   # wrapper's newest release is 3.11.1 while the checker is at 4.0.1, and the
