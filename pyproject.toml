@@ -147,6 +147,12 @@ docstring-code-format = true
 docstring-code-line-length = 80
 
 [tool.pyright]
+# pyright falls back to the shell's default interpreter when no environment is
+# configured, so every uv-managed dependency reads as an unresolved import.
+# venvPath and venv are relative, so they are the same for every developer on
+# the project; the caution in pyright's docs is about absolute paths.
+venvPath = "."
+venv = ".venv"
 include = ["portfolio_optimisation", "tests"]
 exclude = ["case-comp", "docs", "**/__pycache__", ".venv"]
 pythonVersion = "3.12"
