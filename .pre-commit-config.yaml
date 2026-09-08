@@ -52,8 +52,13 @@ repos:
       - id: markdownlint-cli2
         args: ["--config", ".markdownlint.yaml"]
 
-  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 3.0.3
+  # The upstream Go project rather than the Python wrapper, which lags it: the
+  # wrapper's newest release is 3.11.1 while the checker is at 4.0.1, and the
+  # three versions disagree about this tree by thousands of findings, 6584
+  # lines at 3.0.3 against 2261 at 3.11.1 and none from the 4.0.1 the workflow
+  # installed. One implementation at one version reports one answer.
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker
+    rev: v4.0.1
     hooks:
       - id: editorconfig-checker
 
@@ -62,10 +67,16 @@ repos:
     hooks:
       - id: shellcheck
 
+  # Overriding args drops the upstream --write-changes, which the published
+  # hook sets by default. The hook is a spell checker with no notion of
+  # syntax, and left to rewrite files it edited a latexmk clean-extension list
+  # and a set of notebook identifiers. Reporting a suspected typo is useful.
+  # Applying the correction unattended is not.
   - repo: https://github.com/crate-ci/typos
-    rev: v1.24.6
+    rev: v1.50.1
     hooks:
       - id: typos
+        args: ["--force-exclude"]
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.4
