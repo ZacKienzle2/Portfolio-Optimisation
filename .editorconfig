@@ -7,7 +7,6 @@ indent_style = space
 indent_size = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
-max_line_length = 120
 
 [*.md]
 # CommonMark sets list-continuation indentation, so the width inherited
@@ -15,14 +14,23 @@ max_line_length = 120
 # inherited pair.
 indent_size = unset
 trim_trailing_whitespace = false
-max_line_length = off
 
-[*.{yml,yaml,json,toml}]
-# A pinned action is a forty-character digest plus the tag it stands for, and
-# the reference carrying it does not fit a line limit meant for prose or code.
-# "unset" is the specification's own way to undo an inherited pair.
-max_line_length = unset
+# CITATION.cff is YAML by the Citation File Format specification, and
+# clang-format, clang-tidy and clangd keep their configuration in YAML files
+# named without an extension, which prettier formats as YAML by name.
+[*.{yml,yaml,json,toml,cff}]
 indent_size = 2
+
+[.clang-*]
+indent_size = 2
+
+# max_line_length is set only where a formatter reads it. prettier takes its
+# print width from here for these languages; ruff, clang-format and
+# cmake-format carry their own widths; and a linter reading a width under [*]
+# reported generated .gitignore headers, data files and a Doxyfile that no
+# formatter will ever wrap.
+[*.{js,cjs,mjs,ts,tsx,jsx,css,scss,html}]
+max_line_length = 120
 
 [Makefile]
 indent_style = tab
@@ -30,11 +38,29 @@ indent_style = tab
 [*.{js,cjs,mjs,ts,tsx,jsx}]
 indent_size = 2
 
-[*.{c,cc,cpp,cxx,h,hh,hpp,hxx,cu,cuh}]
-indent_size = 4
+[*.{css,scss,html}]
+indent_size = 2
 
+# clang-format owns the layout of these and aligns continuation lines to the
+# construct rather than to a multiple of the indent, and cmake-format does the
+# same for CMake. editorconfig-checker reads indent_size as a rule, so the
+# formatter's own output failed it on 29 lines of one tree. "unset" leaves
+# the width to the formatter and keeps the rest of the section.
+[*.{c,cc,cpp,cxx,h,hh,hpp,hxx,cu,cuh}]
+indent_size = unset
+
+[{CMakeLists.txt,*.cmake}]
+indent_size = unset
+
+# nbformat writes a notebook at one space, and nbstripout writes it back the
+# same way, so the width is the format's, not an author's.
+[*.ipynb]
+indent_size = unset
+
+# ruff format owns Python layout and leaves a docstring's own alignment as
+# written, which editorconfig-checker would otherwise read as a wrong indent.
 [*.py]
-indent_size = 4
+indent_size = unset
 
 [*.rs]
 indent_size = 4
