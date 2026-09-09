@@ -1,14 +1,17 @@
-# git-cliff configuration. Generates CHANGELOG.md from Conventional Commits.
-# Regenerate locally with: uv run git-cliff -o CHANGELOG.md
+# git-cliff configuration. Conventional Commits 1.0.0 grouping. CHANGELOG.md is
+# regenerated from this configuration by the release workflow on every release
+# tag; do not edit it by hand.
 
 [changelog]
 header = """
 # Changelog
 
-All notable changes to this project are documented in this file.
+All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
+Entries are generated from [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+by [git-cliff](https://git-cliff.org).
 
 """
 body = """
@@ -18,41 +21,61 @@ body = """
 ## [Unreleased]
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
-### {{ group | striptags | trim | upper_first }}
+### {{ group | upper_first }}
 {% for commit in commits %}
-- {{ commit.message | split(pat=": ") | last | upper_first }}\
-{% if commit.breaking %} (**breaking**){% endif %}\
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | upper_first }}\
+  {% if commit.breaking %} [**breaking**]{% endif %}\
+  {% if commit.id %} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/ZacKienzle2/Portfolio-Optimisation/commit/{{ commit.id }})){% endif %}
 {% endfor %}
+{% endfor %}\n
+"""
+footer = """
+[Unreleased]: https://github.com/ZacKienzle2/Portfolio-Optimisation/compare/{% if releases | length > 0 %}{{ releases[0].version }}...HEAD{% else %}HEAD{% endif %}
+{% for release in releases -%}
+  {% if release.previous.version -%}
+    [{{ release.version | trim_start_matches(pat="v") }}]: \
+      https://github.com/ZacKienzle2/Portfolio-Optimisation/compare/{{ release.previous.version }}...{{ release.version }}
+  {% endif -%}
 {% endfor %}
 """
-footer = ""
-trim = false
-postprocessors = [
-  { pattern = '\(#([0-9]+)\)', replace = "([#${1}](https://github.com/ZacKienzle2/Portfolio-Optimisation/pull/${1}))" },
-  { pattern = '\n{3,}', replace = "\n\n" },
-  { pattern = '\n+\z', replace = "" },
-]
+trim = true
 
 [git]
 conventional_commits = true
-filter_unconventional = true
+filter_unconventional = false
 split_commits = false
 protect_breaking_commits = true
-filter_commits = true
-tag_pattern = "v[0-9]*"
-sort_commits = "oldest"
+filter_commits = false
+tag_pattern = "v[0-9].*"
+skip_tags = ""
+ignore_tags = ""
+topo_order = false
+sort_commits = "newest"
+
 commit_parsers = [
-  { message = "^feat", group = "<!-- 0 -->Added" },
-  { message = "^fix", group = "<!-- 1 -->Fixed" },
-  { message = "^perf", group = "<!-- 2 -->Changed" },
-  { message = "^refactor", group = "<!-- 2 -->Changed" },
-  { message = "^revert", group = "<!-- 2 -->Changed" },
-  { message = "^docs", group = "<!-- 3 -->Documentation" },
-  { body = ".*security", group = "<!-- 4 -->Security" },
-  { message = "^style", skip = true },
-  { message = "^test", skip = true },
-  { message = "^chore", skip = true },
-  { message = "^ci", skip = true },
-  { message = "^build", skip = true },
-  { message = "^.*", skip = true },
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^perf", group = "Performance" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^style", group = "Changed" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^test", group = "Tests" },
+  { message = "^build", group = "Build" },
+  { message = "^ci", group = "CI" },
+  { message = "^chore", group = "Maintenance" },
+  { message = "^revert", group = "Reverts" },
+  { message = "^security", group = "Security" },
+  { body = ".*[Ss]ecurity", group = "Security" },
+  { body = ".*[Bb]reaking.*", group = "Breaking Changes" },
+  { message = "^.*", group = "Other" },
+]
+
+commit_preprocessors = [
+  # Strip Refs / Closes / Fixes footers from the rendered subject; they remain
+  # in the git history and would clutter the changelog body.
+  { pattern = "\\s*\\((?:Refs|Closes|Fixes) #\\d+\\)$", replace = "" },
+]
+
+link_parsers = [
+  { pattern = "#(\\d+)", href = "https://github.com/ZacKienzle2/Portfolio-Optimisation/issues/$1" },
 ]

@@ -1,10 +1,12 @@
 # Written by copier. Do not edit by hand: `copier update` rewrites it, and a
 # hand-edited answer is the drift this template exists to remove.
-_commit: 63f3985
+_commit: 4b58040
 _src_path: https://github.com/ZacKienzle2/repo-template.git
+github_repository: ZacKienzle2/Portfolio-Optimisation
 has_cpp: false
 has_generated_changelog: true
 has_latex: true
+has_node: false
 has_notebooks: true
 has_python: true
 latex_root: main.tex
