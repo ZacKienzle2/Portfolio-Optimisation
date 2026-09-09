@@ -117,13 +117,13 @@
 % Bibliography file path is provided by the document root via \BibFile and
 % loaded with \addbibresource there, keeping the preamble project-agnostic.
 \hypersetup{
-    colorlinks=true,
-    linkcolor=darkblue,
-    citecolor=darkblue,
-    filecolor=darkblue,
-    urlcolor=darkblue,
-    breaklinks=true,
-    pdfborder={0 0 0}
+  colorlinks=true,
+  linkcolor=darkblue,
+  citecolor=darkblue,
+  filecolor=darkblue,
+  urlcolor=darkblue,
+  breaklinks=true,
+  pdfborder={0 0 0}
 }
 \setlist[itemize]{leftmargin=*, nosep, noitemsep}
 \setlist[enumerate]{leftmargin=*, nosep, noitemsep, label=(\arabic*)}
@@ -134,10 +134,10 @@
 \usepackage{fancyhdr}
 \setlength{\headheight}{15pt}
 \newcommand{\cornerpagenum}{%
-    \begin{tikzpicture}[baseline=(n.base)]
-        \node(n)[inner sep=4pt,font=\small\bfseries] {\thepage};
-        \draw[airforceblue,thin] (n.north east) -- (n.north west) -- (n.south west);
-    \end{tikzpicture}%
+  \begin{tikzpicture}[baseline=(n.base)]
+    \node(n)[inner sep=4pt,font=\small\bfseries] {\thepage};
+    \draw[airforceblue,thin] (n.north east) -- (n.north west) -- (n.south west);
+  \end{tikzpicture}%
 }
 \pagestyle{fancy}
 \fancyhf{}
@@ -182,8 +182,8 @@
 % similar upstream definitions do not shadow these textual idioms.
 
 \providecommand{\latincmd}[2]{%
-    \expandafter\let\csname #1\endcsname\relax
-    \expandafter\newcommand\csname #1\endcsname{#2}%
+  \expandafter\let\csname #1\endcsname\relax
+  \expandafter\newcommand\csname #1\endcsname{#2}%
 }
 \latincmd{via}{\textit{via}}
 \latincmd{ie}{\textit{i.e.}}
@@ -339,7 +339,8 @@
 % ***************************************************
 \newcommand{\Ber}{\mathsf{Ber}}        \let\ber\Ber
 \newcommand{\Bin}{\mathsf{Bin}}        \let\bin\Bin
-\newcommand{\NegBin}{\mathsf{NegBin}}  \let\negbin\NegBin \let\nbin\NegBin \let\Nbin\NegBin
+\newcommand{\NegBin}{\mathsf{NegBin}}  \let\negbin\NegBin
+\let\nbin\NegBin \let\Nbin\NegBin
 \newcommand{\Geo}{\mathsf{Geom}}       \let\geo\Geo       \let\Geom\Geo
 \newcommand{\Poi}{\mathsf{Poi}}        \let\poi\Poi       \let\Po\Poi
 \newcommand{\Expdist}{\mathsf{Exp}}    \let\ex\Expdist
@@ -371,26 +372,34 @@
 \newcommand{\dataset}[1]{\texttt{#1}}
 \newcommand{\package}[1]{\texttt{\textcolor{packcol}{#1}}}
 \newcommand{\method}[1]{\texttt{\textcolor{methcol}{#1}}}
-\newcommand{\query}[1]{\marginpar{\vspace*{5pt}\fbox{\parbox{0.9\marginparwidth}{\scriptsize\sffamily\raggedright\textcolor{red}{\textbf{AQ:}} #1}}}}
-\newcommand{\mnote}[2]{\marginnote{\setlength{\parskip}{2pt}\raggedright\textcolor{airforceblue}{\textbf{#1}}\\[2pt]\color{black!85} #2}[0cm]}
+\newcommand{\query}[1]{\marginpar{\vspace*{5pt}\fbox{\parbox{0.9\marginparwidth}{\scriptsize\sffamily\raggedright\textcolor{red}{\textbf{AQ:}}
+#1}}}}
+\newcommand{\mnote}[2]{\marginnote{\setlength{\parskip}{2pt}\raggedright\textcolor{airforceblue}{\textbf{#1}}\\[2pt]\color{black!85}
+#2}[0cm]}
 \newcommand{\dc}[3][]{\lettrine[lines=2,findent=0.5em,nindent=0em,#1]{#2}{#3}}
 
 % ***************************************************
 % tcolorbox theorem boxes
 % ***************************************************
 \tcbset{
-    academicbox/.style={
-        enhanced,colframe=black!35!black,coltitle=white,fonttitle=\bfseries,
-        colbacktitle=black!35!black,boxed title style={sharp corners=north,rounded corners=south},
-        boxrule=0.6mm,drop fuzzy shadow,separator sign={:},
-        before skip=12pt,after skip=12pt
-    }
+  academicbox/.style={
+    enhanced,colframe=black!35!black,coltitle=white,fonttitle=\bfseries,
+    colbacktitle=black!35!black,boxed title style={sharp
+    corners=north,rounded corners=south},
+    boxrule=0.6mm,drop fuzzy shadow,separator sign={:},
+    before skip=12pt,after skip=12pt
+  }
 }
-\newtcbtheorem[auto counter,number within=section]{thm}{Theorem}{academicbox,colback=thmcolor,fontupper=\itshape}{thm}
-\newtcbtheorem[auto counter,number within=section]{cor}{Corollary}{academicbox,colback=corcolor,fontupper=\itshape}{cor}
-\newtcbtheorem[auto counter,number within=section]{lem}{Lemma}{academicbox,colback=thmcolor!70!white,fontupper=\itshape}{lem}
-\newtcbtheorem[auto counter,number within=section]{prop}{Proposition}{academicbox,colback=thmcolor!50!white,fontupper=\itshape}{prop}
-\newtcbtheorem[auto counter,number within=section]{defn}{Definition}{academicbox,colback=defncolor,colframe=airforceblue,colbacktitle=airforceblue,fontupper=\upshape}{defn}
+\newtcbtheorem[auto counter,number
+within=section]{thm}{Theorem}{academicbox,colback=thmcolor,fontupper=\itshape}{thm}
+\newtcbtheorem[auto counter,number
+within=section]{cor}{Corollary}{academicbox,colback=corcolor,fontupper=\itshape}{cor}
+\newtcbtheorem[auto counter,number
+within=section]{lem}{Lemma}{academicbox,colback=thmcolor!70!white,fontupper=\itshape}{lem}
+\newtcbtheorem[auto counter,number
+within=section]{prop}{Proposition}{academicbox,colback=thmcolor!50!white,fontupper=\itshape}{prop}
+\newtcbtheorem[auto counter,number
+within=section]{defn}{Definition}{academicbox,colback=defncolor,colframe=airforceblue,colbacktitle=airforceblue,fontupper=\upshape}{defn}
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section]
@@ -404,54 +413,57 @@
 % Alert boxes
 % ***************************************************
 \newtcolorbox{xattention}{
-    enhanced,breakable,colback=warncolor,colframe=black!35!black,
-    drop shadow,arc=5mm,sharp corners=uphill,
-    boxed title style={empty},
-    overlay={\node[anchor=west,xshift=-10mm] at (frame.west) {\Huge\ding{43}};}
+  enhanced,breakable,colback=warncolor,colframe=black!35!black,
+  drop shadow,arc=5mm,sharp corners=uphill,
+  boxed title style={empty},
+  overlay={\node[anchor=west,xshift=-10mm] at (frame.west) {\Huge\ding{43}};}
 }
 \newtcolorbox{xtip}{
-    enhanced,breakable,colback=tipcolor,colframe=black!35!black,
-    drop shadow,arc=5mm,sharp corners=uphill,
-    boxed title style={empty},
-    overlay={\node[anchor=west,xshift=-10mm] at (frame.west) {\Huge\ding{45}};}
+  enhanced,breakable,colback=tipcolor,colframe=black!35!black,
+  drop shadow,arc=5mm,sharp corners=uphill,
+  boxed title style={empty},
+  overlay={\node[anchor=west,xshift=-10mm] at (frame.west) {\Huge\ding{45}};}
 }
 
 % ***************************************************
 % Python code listings
 % ***************************************************
 \lstdefinestyle{pythonstyle}{
-    language=Python,
-    basicstyle=\footnotesize\ttfamily,
-    numbers=left,
-    numberstyle=\tiny\color{blue},
-    stepnumber=1,
-    numbersep=7pt,
-    backgroundcolor=\color{cream},
-    rulecolor=\color{black},
-    tabsize=2,
-    breaklines=true,
-    keywordstyle=\color{codekey},
-    commentstyle=\color{codecomment},
-    stringstyle=\color{codestring},
-    upquote=true,
-    morekeywords={np,random,seed,sqrt,randn,linspace,r_,cumsum,exp,cumprod,reshape,axis}
+  language=Python,
+  basicstyle=\footnotesize\ttfamily,
+  numbers=left,
+  numberstyle=\tiny\color{blue},
+  stepnumber=1,
+  numbersep=7pt,
+  backgroundcolor=\color{cream},
+  rulecolor=\color{black},
+  tabsize=2,
+  breaklines=true,
+  keywordstyle=\color{codekey},
+  commentstyle=\color{codecomment},
+  stringstyle=\color{codestring},
+  upquote=true,
+  morekeywords={np,random,seed,sqrt,randn,linspace,r_,cumsum,exp,cumprod,reshape,axis}
 }
 \newtcblisting{Pcode}[1]{
-    breakable,listing only,colback=cream,colframe=red!5!black,
-    colbacktitle=black,enhanced,attach boxed title to top center={xshift=-3cm,yshift=-2mm},
-    arc=0mm,title={{\ttfamily\large #1}},
-    listing options={style=pythonstyle}
+  breakable,listing only,colback=cream,colframe=red!5!black,
+  colbacktitle=black,enhanced,attach boxed title to top
+  center={xshift=-3cm,yshift=-2mm},
+  arc=0mm,title={{\ttfamily\large #1}},
+  listing options={style=pythonstyle}
 }
 \newtcblisting{PC}{
-    breakable,listing only,colback=cream,enhanced,sharpish corners,boxrule=1pt,
-    listing options={style=pythonstyle,numbers=none,xleftmargin=-10pt,aboveskip=-4pt,belowskip=-6pt}
+  breakable,listing only,colback=cream,enhanced,sharpish corners,boxrule=1pt,
+  listing
+  options={style=pythonstyle,numbers=none,xleftmargin=-10pt,aboveskip=-4pt,belowskip=-6pt}
 }
 \newtcblisting{PC1}[2]{
-    breakable,listing only,colback=cream,enhanced,
-    attach boxed title to top left={yshift=-0.5mm},
-    title={\href{#1}{\ttfamily #2}},
-    sharpish corners,boxrule=1pt,
-    listing options={style=pythonstyle,numbers=none,xleftmargin=-10pt,aboveskip=-4pt,belowskip=-6pt}
+  breakable,listing only,colback=cream,enhanced,
+  attach boxed title to top left={yshift=-0.5mm},
+  title={\href{#1}{\ttfamily #2}},
+  sharpish corners,boxrule=1pt,
+  listing
+  options={style=pythonstyle,numbers=none,xleftmargin=-10pt,aboveskip=-4pt,belowskip=-6pt}
 }
 \lstnewenvironment{Pin}{\lstset{backgroundcolor=\color{incol},belowskip=0pt,xleftmargin=3pt,xrightmargin=3pt,frame=single,framerule=0pt,basicstyle=\footnotesize\ttfamily,columns=fixed}}{}
 \lstnewenvironment{Pout}{\lstset{backgroundcolor=\color{outcol},aboveskip=-2pt,xleftmargin=4pt,xrightmargin=4pt,frame=single,upquote,framerule=1pt,basicstyle=\footnotesize\ttfamily,columns=fixed}}{}
