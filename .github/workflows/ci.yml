@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -40,25 +40,12 @@ jobs:
       # The official action installs pre-commit and caches the hook
       # environments on the configuration's hash, which is the recipe the
       # pre-commit documentation gives for continuous integration.
-      #
-      # A pull request diffs against its base. A push to main has no base
-      # branch, and the push payload's `before` is the tip main had before the
-      # push, so the same documented flag pair takes the other documented
-      # reference.
-      #
-      # no-commit-to-branch guards a clone against committing to main directly.
-      # On a runner the checkout is main because a commit already reached it,
-      # so the hook would fail every push. SKIP is the variable pre-commit
-      # documents for leaving a hook out of one run, and the hook keeps
-      # guarding every clone.
       - name: Run pre-commit
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
-        env:
-          SKIP: no-commit-to-branch
         with:
           extra_args: >-
-            --from-ref ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
-            --to-ref HEAD --show-diff-on-failure
+            --from-ref ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
+            github.event.before }} --to-ref HEAD --show-diff-on-failure
 
   gitleaks:
     name: Scan for leaked secrets
@@ -66,7 +53,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -95,7 +82,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -105,7 +92,7 @@ jobs:
           persist-credentials: false
 
       - name: Link checker
-        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2
+        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
         with:
           args: --no-progress --verbose --max-concurrency 4 './**/*.md'
           fail: true
