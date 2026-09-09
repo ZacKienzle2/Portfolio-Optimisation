@@ -213,6 +213,9 @@ addopts = [
 filterwarnings = [
   "error",
   # Upstream libraries warn liberally; downgrade to non-fatal in tests.
+  # statsmodels' copulas still pass random_state to scipy 1.18, which warns
+  # that the keyword is now rng; the call is theirs, not ours.
+  "ignore:the 'random_state' keyword is deprecated:FutureWarning",
   "ignore::DeprecationWarning:pkg_resources.*",
   "ignore::PendingDeprecationWarning",
   "ignore:.*scipy.*:DeprecationWarning",
