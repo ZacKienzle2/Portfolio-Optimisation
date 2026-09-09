@@ -44,15 +44,16 @@ the implementation uses this form rather than the Euler step.
 ## Mean-reverting processes
 
 The Ornstein-Uhlenbeck process $dX_t = \kappa(\theta - X_t)\, dt +
-\sigma\, dW_t$ is Gaussian with an exact transition, mean
+\sigma\, dW_t$
+is Gaussian with an exact transition, mean
 $\theta + (X_t - \theta) e^{-\kappa \Delta t}$ and variance
 $\tfrac{\sigma^2}{2\kappa}(1 - e^{-2\kappa \Delta t})$, which the simulator
 samples directly. The Cox-Ingersoll-Ross process
-$dX_t = \kappa(\theta - X_t)\, dt + \sigma \sqrt{X_t}\, dW_t$ stays
-non-negative when the Feller condition $2 \kappa \theta \ge \sigma^2$ holds. A
-plain Euler step can go negative through the square root, so the implementation
-applies full truncation, evaluating the diffusion at $\max(X_t, 0)$, which
-keeps the path well defined.
+$dX_t = \kappa(\theta - X_t)\, dt + \sigma \sqrt{X_t}\, dW_t$ stays non-negative
+when the Feller condition $2 \kappa \theta \ge \sigma^2$ holds. A plain Euler
+step can go negative through the square root, so the implementation applies full
+truncation, evaluating the diffusion at $\max(X_t, 0)$, which keeps the path
+well defined.
 
 ## Jumps and stochastic volatility
 
@@ -67,16 +68,16 @@ dS_t = \mu S_t\, dt + \sqrt{v_t}\, S_t\, dW_t^S, \qquad
 dv_t = \kappa(\theta - v_t)\, dt + \xi \sqrt{v_t}\, dW_t^v,
 $$
 
-with correlated drivers $\mathrm{corr}(dW^S, dW^v) = \rho$. The variance path
-is simulated with the same full-truncation guard as the Cox-Ingersoll-Ross
-process, and the correlated normals are drawn from the Cholesky factor of the
-two-by-two correlation.
+with correlated drivers $\mathrm{corr}(dW^S, dW^v) = \rho$. The variance path is
+simulated with the same full-truncation guard as the Cox-Ingersoll-Ross process,
+and the correlated normals are drawn from the Cholesky factor of the two-by-two
+correlation.
 
 ## Variance reduction
 
 Antithetic variates halve the simulation variance at no extra cost for the
-symmetric drivers. For each normal draw $Z$ the mirror $-Z$ is also used, so
-the estimator averages $f(Z)$ and $f(-Z)$. When $f$ is monotone the two are
+symmetric drivers. For each normal draw $Z$ the mirror $-Z$ is also used, so the
+estimator averages $f(Z)$ and $f(-Z)$. When $f$ is monotone the two are
 negatively correlated, which lowers the variance of their mean below that of two
 independent draws. Every path is seeded explicitly so the simulation is
 reproducible.

@@ -1,8 +1,12 @@
 # Roadmap
 
-This document tracks high-level direction. For granular work see the [issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues) and [project boards](https://github.com/users/ZacKienzle2/projects).
+This document tracks high-level direction. For granular work see the
+[issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues)
+and [project boards](https://github.com/users/ZacKienzle2/projects).
 
-The roadmap is intentionally aspirational. Items are not commitments. Priorities shift as the project learns from users and contributors. Dates are quarters of the calendar year.
+The roadmap is intentionally aspirational. Items are not commitments. Priorities
+shift as the project learns from users and contributors. Dates are quarters of
+the calendar year.
 
 ## Vision
 
@@ -13,22 +17,36 @@ reviewer can audit end to end.
 
 ## Recently delivered (Q2 2026)
 
-- Request-validated market-data cache (no stale snapshots) and a deduplicated, retrying data layer.
-- Deterministic seeding across every Monte Carlo path with reproducibility and golden-master tests.
-- `einsum` co-moment tensors with an O(N^4) universe guard; vectorised RMT eigen-reconstruction.
+- Request-validated market-data cache (no stale snapshots) and a deduplicated,
+  retrying data layer.
+- Deterministic seeding across every Monte Carlo path with reproducibility and
+  golden-master tests.
+- `einsum` co-moment tensors with an O(N^4) universe guard; vectorised RMT
+  eigen-reconstruction.
 - Typed `Settings` (env / TOML / defaults), structured logging, typed errors.
 - `portfolio-opt` command-line interface.
-- Cohesive, colour-blind-safe figure-style system; plotting decoupled from the optimisation layer.
-- Code-derived architecture diagrams (Mermaid + Graphviz) with a CI layer-violation guard.
-- MkDocs documentation site with API reference and architecture decision records.
-- VaR/ES backtests (Kupiec, Christoffersen, Acerbi-Szekely) and risk-contribution decomposition.
+- Cohesive, colour-blind-safe figure-style system; plotting decoupled from the
+  optimisation layer.
+- Code-derived architecture diagrams (Mermaid + Graphviz) with a CI
+  layer-violation guard.
+- MkDocs documentation site with API reference and architecture decision
+  records.
+- VaR/ES backtests (Kupiec, Christoffersen, Acerbi-Szekely) and
+  risk-contribution decomposition.
 - GARCH-family conditional-volatility forecasting feeding the VaR/ES backtests.
-- Factor-model covariance (statistical PCA and explicit-factor regression) for all allocators.
-- Extreme Value Theory tail risk (peaks-over-threshold GPD VaR/ES and the Hill estimator).
-- SDE simulation engines (Euler-Maruyama, Milstein) with GBM, OU, CIR, Merton and Heston models.
-- Robust and resampled (Michaud) optimisation with box-uncertainty mean-variance.
-- Mean-CVaR (Rockafellar-Uryasev LP) and mean-EVaR (exponential-cone) optimisation over a unified constraint framework (box, group/sector, leverage, turnover and return-floor).
-- Linear (Ledoit-Wolf), Oracle-Approximating and analytical nonlinear (Ledoit-Wolf 2020) covariance shrinkage estimators.
+- Factor-model covariance (statistical PCA and explicit-factor regression) for
+  all allocators.
+- Extreme Value Theory tail risk (peaks-over-threshold GPD VaR/ES and the Hill
+  estimator).
+- SDE simulation engines (Euler-Maruyama, Milstein) with GBM, OU, CIR, Merton
+  and Heston models.
+- Robust and resampled (Michaud) optimisation with box-uncertainty
+  mean-variance.
+- Mean-CVaR (Rockafellar-Uryasev LP) and mean-EVaR (exponential-cone)
+  optimisation over a unified constraint framework (box, group/sector, leverage,
+  turnover and return-floor).
+- Linear (Ledoit-Wolf), Oracle-Approximating and analytical nonlinear
+  (Ledoit-Wolf 2020) covariance shrinkage estimators.
 - Property-based tests and a benchmark harness.
 
 ## Now
@@ -44,7 +62,8 @@ In active development.
 Planned for the next milestone (H2 2026).
 
 - Mean-drawdown (CDaR) optimisation folded into the shared constraint framework.
-- Shrinkage and nonlinear-shrinkage covariances wired as selectable inputs to every allocator.
+- Shrinkage and nonlinear-shrinkage covariances wired as selectable inputs to
+  every allocator.
 
 ## Later
 
@@ -62,51 +81,65 @@ The thematic backlog of what a frontier version of this project would add.
 ### Allocation and optimisation
 
 - Risk parity and equal-risk-contribution (convex Spinu / Newton formulations).
-- Mean-drawdown optimisation under the shared constraint API (mean-CVaR and mean-EVaR delivered).
-- Cardinality (mixed-integer) constraints extending the linear constraint framework to every allocator.
+- Mean-drawdown optimisation under the shared constraint API (mean-CVaR and
+  mean-EVaR delivered).
+- Cardinality (mixed-integer) constraints extending the linear constraint
+  framework to every allocator.
 - Critical Line Algorithm and full mean-variance frontier tracing.
-- Black-Litterman with entropy pooling and view-uncertainty calibration (Meucci).
-- Hierarchical risk parity variants (HRP with alternative linkage and distance metrics).
+- Black-Litterman with entropy pooling and view-uncertainty calibration
+  (Meucci).
+- Hierarchical risk parity variants (HRP with alternative linkage and distance
+  metrics).
 
 ### Risk modelling
 
-- Conditional volatility models: GARCH, EGARCH, GJR-GARCH; DCC-GARCH for dynamic correlation.
-- Extreme Value Theory: peaks-over-threshold, generalised Pareto tails, Hill estimator.
-- Drawdown analytics: Calmar, Ulcer index, pain index, MAR ratio, time-under-water.
+- Conditional volatility models: GARCH, EGARCH, GJR-GARCH; DCC-GARCH for dynamic
+  correlation.
+- Extreme Value Theory: peaks-over-threshold, generalised Pareto tails, Hill
+  estimator.
+- Drawdown analytics: Calmar, Ulcer index, pain index, MAR ratio,
+  time-under-water.
 - Component and incremental VaR / CVaR alongside the volatility decomposition.
-- Wider copula families (Clayton, Gumbel, Frank, vine copulas) with goodness-of-fit tests.
+- Wider copula families (Clayton, Gumbel, Frank, vine copulas) with
+  goodness-of-fit tests.
 - Spectral and distortion risk budgeting.
 
 ### Stochastic processes and simulation
 
 - SDE library: CIR, Vasicek, CKLS, Heston, Merton and Kou jump-diffusions.
-- Euler-Maruyama, Milstein and exact / almost-exact (Broadie-Kaya, Andersen QE) schemes.
-- Variance reduction: antithetic variates, control variates, quasi-Monte-Carlo (Sobol).
+- Euler-Maruyama, Milstein and exact / almost-exact (Broadie-Kaya, Andersen QE)
+  schemes.
+- Variance reduction: antithetic variates, control variates, quasi-Monte-Carlo
+  (Sobol).
 - Regime-switching (Hamilton / hidden Markov) and Kalman-filtered latent states.
 
 ### Estimation and machine learning
 
-- Cluster-count selection (gap statistic, silhouette) for the hierarchical methods.
+- Cluster-count selection (gap statistic, silhouette) for the hierarchical
+  methods.
 - Combinatorial purged cross-validation and deflated performance metrics.
 - Bayesian estimation (PyMC) and Gaussian-process return models.
 
 ### Backtesting and validation
 
 - Walk-forward and combinatorial backtests with transaction-cost models.
-- Multiple-testing controls: White's reality check, Hansen's SPA, deflated Sharpe across strategies.
+- Multiple-testing controls: White's reality check, Hansen's SPA, deflated
+  Sharpe across strategies.
 - Mutation testing and a coverage threshold gate in continuous integration.
 - Numerical-accuracy tests against closed-form analytic benchmarks.
 
 ### Performance and high-performance computing
 
-- Numba kernels for the copula and Monte-Carlo inner loops behind the `perf` extra.
+- Numba kernels for the copula and Monte-Carlo inner loops behind the `perf`
+  extra.
 - Optional compiled (Cython / pybind11) and CUDA simulation backends.
 - Parallel and vectorised backtest execution; Polars data path.
 - Performance-regression tracking in continuous integration.
 
 ### Data and infrastructure
 
-- Multiple data-source adapters behind the repository protocol; point-in-time, survivorship-bias-free data.
+- Multiple data-source adapters behind the repository protocol; point-in-time,
+  survivorship-bias-free data.
 - Partitioned on-disk store and asynchronous data acquisition.
 - Experiment registry: config hashing, run provenance and artefact tracking.
 - Container and dev-container images for reproducible environments.
@@ -114,7 +147,8 @@ The thematic backlog of what a frontier version of this project would add.
 ### Documentation and academic rigour
 
 - Per-method methodology notes with derivations, assumptions and references.
-- Worked case studies and benchmark comparisons against PyPortfolioOpt and Riskfolio.
+- Worked case studies and benchmark comparisons against PyPortfolioOpt and
+  Riskfolio.
 - A rendered, executed gallery of the worked example in the documentation site.
 
 ## Out of Scope
@@ -128,6 +162,8 @@ Explicitly not on the roadmap. Open an issue to challenge if you disagree.
 ## How to Influence the Roadmap
 
 - Comment on items above with use cases.
-- File feature requests using the [feature template](.github/ISSUE_TEMPLATE/feature_request.yml).
-- Join discussions in [GitHub Discussions](https://github.com/ZacKienzle2/Portfolio-Optimisation/discussions).
+- File feature requests using the
+  [feature template](.github/ISSUE_TEMPLATE/feature_request.yml).
+- Join discussions in
+  [GitHub Discussions](https://github.com/ZacKienzle2/Portfolio-Optimisation/discussions).
 - Submit a pull request demonstrating the idea.
