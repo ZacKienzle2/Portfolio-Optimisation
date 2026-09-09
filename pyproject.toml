@@ -53,11 +53,7 @@ dependencies = [
 portfolio-opt = "portfolio_optimisation.cli:main"
 
 [project.optional-dependencies]
-notebooks = [
-  "ipykernel>=6.29",
-  "jupyterlab>=4.2",
-  "nbconvert>=7.16",
-]
+notebooks = ["ipykernel>=6.29", "jupyterlab>=4.2", "nbconvert>=7.16"]
 perf = [
   # Hot-loop accelerators; opt-in to avoid pulling LLVM at import time.
   "numba>=0.60",
@@ -106,26 +102,26 @@ required-version = ">=0.5"
 
 [tool.ruff.lint]
 select = [
-  "E",   # pycodestyle errors
-  "W",   # pycodestyle warnings
-  "F",   # pyflakes
-  "I",   # isort
-  "N",   # pep8-naming
-  "UP",  # pyupgrade
-  "B",   # flake8-bugbear
-  "A",   # flake8-builtins
-  "C4",  # flake8-comprehensions
-  "SIM", # flake8-simplify
-  "ARG", # flake8-unused-arguments
-  "PIE", # flake8-pie
-  "PT",  # flake8-pytest-style
-  "RUF", # ruff-specific
-  "PLE", # pylint errors
-  "PLW", # pylint warnings
-  "TRY", # tryceratops
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "N",    # pep8-naming
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "A",    # flake8-builtins
+  "C4",   # flake8-comprehensions
+  "SIM",  # flake8-simplify
+  "ARG",  # flake8-unused-arguments
+  "PIE",  # flake8-pie
+  "PT",   # flake8-pytest-style
+  "RUF",  # ruff-specific
+  "PLE",  # pylint errors
+  "PLW",  # pylint warnings
+  "TRY",  # tryceratops
   "PERF",
   "FURB",
-  "ERA", # eradicate (no commented-out code)
+  "ERA",  # eradicate (no commented-out code)
 ]
 ignore = [
   "E501",   # line length governed by formatter

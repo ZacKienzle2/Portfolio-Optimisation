@@ -17,9 +17,7 @@ check-file = false
 
 [default]
 # Theorem environment names the preamble defines.
-extend-ignore-identifiers-re = [
-  "^(thm|cor|lem|prop|defn)$",
-]
+extend-ignore-identifiers-re = ["^(thm|cor|lem|prop|defn)$"]
 
 [default.extend-words]
 # matplotlib.artist.setp, which typos reads as a misspelling of step.

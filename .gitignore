@@ -1,6 +1,6 @@
 # Assembled by copier from github/gitignore; the source files are in the
-# template repository, not here. A path of this repository's own goes after
-# this block.
+# template repository, not here. A path of this repository's own is the
+# gitignore_own answer in .copier-answers.yml, rendered at the end.
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -555,7 +555,7 @@ TSWLatexianTemp*
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
 
-# Portfolio-Optimisation's own: bootstrap and simulation artefacts, and the
-# figures and reports the notebook writes, all regenerated on demand.
+# This repository's own, the gitignore_own answer in .copier-answers.yml.
 /cache/
 /outputs/
+/docs/module_dependencies.svg
