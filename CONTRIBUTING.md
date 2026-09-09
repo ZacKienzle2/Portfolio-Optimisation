@@ -1,6 +1,7 @@
 # Contributing
 
-Contributions accepted: bug reports, feature requests, documentation, tests, and code. All contributors must follow the workflow below.
+Contributions accepted: bug reports, feature requests, documentation, tests, and
+code. All contributors must follow the workflow below.
 
 ## Table of Contents
 
@@ -25,7 +26,8 @@ Contributions accepted: bug reports, feature requests, documentation, tests, and
 
 ## Code of Conduct
 
-Governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Report violations privately to the maintainers via the channel in [SECURITY.md](SECURITY.md).
+Governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Report violations
+privately to the maintainers via the channel in [SECURITY.md](SECURITY.md).
 
 ## Ground Rules
 
@@ -41,7 +43,8 @@ Governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Report violations privatel
 
 - Git 2.30 or newer
 - A configured signing key for commits (GPG or SSH)
-- Project-specific toolchain (documented in the README once the stack is finalised)
+- Project-specific toolchain (documented in the README once the stack is
+  finalised)
 
 ### Local Setup
 
@@ -59,7 +62,9 @@ Install dependencies. Run the test suite.
 
 Before submitting:
 
-- Check the [issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues) for duplicates.
+- Check the
+  [issue tracker](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues)
+  for duplicates.
 - Reproduce against the latest `main`.
 - Collect reproduction info.
 
@@ -121,7 +126,9 @@ Never force-push to `main` or any shared branch.
 
 ## Commit Message Convention
 
-This project follows [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). ASCII only. No emoji, smart quotes, or em dashes.
+This project follows
+[Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).
+ASCII only. No emoji, smart quotes, or em dashes.
 
 Format:
 
@@ -133,15 +140,18 @@ Format:
 [footer(s)]
 ```
 
-Allowed types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
+Allowed types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`,
+`chore`, `style`, `revert`.
 
 Rules:
 
 - Subject: imperative, lowercase, no trailing period, 72 characters or fewer.
 - Blank line between subject, body, and footers.
-- Body: wrap at 72 characters. Explain motivation and contrast with prior behaviour. Do not restate the diff.
+- Body: wrap at 72 characters. Explain motivation and contrast with prior
+  behaviour. Do not restate the diff.
 - One logical change per commit. `fix` only for real defects.
-- Breaking changes: append `!` after the type or include a `BREAKING CHANGE:` footer.
+- Breaking changes: append `!` after the type or include a `BREAKING CHANGE:`
+  footer.
 
 Example:
 
@@ -158,15 +168,19 @@ Refs #142
 
 - Match the style of the surrounding code.
 - Run formatters and linters before committing.
-- Self-evident code. Avoid inline comments. Document public APIs with the project's chosen docstring style.
-- Production-ready code on the first pass. No commented-out blocks, no debug prints, no TODOs without a referenced issue.
+- Self-evident code. Avoid inline comments. Document public APIs with the
+  project's chosen docstring style.
+- Production-ready code on the first pass. No commented-out blocks, no debug
+  prints, no TODOs without a referenced issue.
 - ASCII only in committed text, code, and commit messages.
 
 ## Testing
 
 - Every behavioural change ships with tests.
-- Bug fixes include a regression test that fails before the fix and passes after.
-- Keep tests deterministic. Avoid sleeps, network calls, and clock dependencies in unit tests.
+- Bug fixes include a regression test that fails before the fix and passes
+  after.
+- Keep tests deterministic. Avoid sleeps, network calls, and clock dependencies
+  in unit tests.
 - Mirror the source tree in the test tree.
 
 ## Documentation
@@ -218,7 +232,8 @@ Appends:
 Signed-off-by: Your Name <your.email@example.com>
 ```
 
-Per-commit assertion that you wrote the patch or have the right to submit it under the project's licence.
+Per-commit assertion that you wrote the patch or have the right to submit it
+under the project's licence.
 
 ## License
 

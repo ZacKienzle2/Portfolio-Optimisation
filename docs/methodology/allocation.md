@@ -19,7 +19,8 @@ diagonal, which makes the recursive split below behave like a sequence of
 independent sub-problems.
 
 **Recursive bisection.** Split each cluster $C$ into halves $C_1, C_2$. For a
-cluster, the inverse-variance weights $v_i = \sigma_i^{-2} / \sum_{j \in C}
+cluster, the inverse-variance weights
+$v_i = \sigma_i^{-2} / \sum_{j \in C}
 \sigma_j^{-2}$ give the cluster variance
 $\tilde{V}(C) = v^\top \Sigma_C\, v$. Allocate between the two halves by the
 inverse of their variances,
@@ -38,9 +39,9 @@ to singletons yields weights on the simplex without a single matrix inversion.
 ## Hierarchical equal risk contribution
 
 The hierarchical equal risk contribution allocator keeps the tree of the
-previous method but replaces the inverse-variance split with an equal-risk
-split under a chosen risk measure $\mathcal{R}$, either variance or
-Conditional Value-at-Risk. For a node with children $C_1, C_2$ the split is
+previous method but replaces the inverse-variance split with an equal-risk split
+under a chosen risk measure $\mathcal{R}$, either variance or Conditional
+Value-at-Risk. For a node with children $C_1, C_2$ the split is
 
 $$
 \alpha_{\text{split}}
@@ -64,17 +65,17 @@ $$
 $$
 
 solve the minimum-variance problem on $\Sigma^{\text{red}}$ for the inter-
-cluster weights $\omega$, and combine as
-$w_i = \omega_k\, w^{(k)}_i$ for asset $i$ in cluster $k$. Because each
-sub-problem inverts a smaller and better-conditioned matrix, the estimation
-error in $\Sigma$ is amplified far less than in the full inversion.
+cluster weights $\omega$, and combine as $w_i = \omega_k\, w^{(k)}_i$ for asset
+$i$ in cluster $k$. Because each sub-problem inverts a smaller and
+better-conditioned matrix, the estimation error in $\Sigma$ is amplified far
+less than in the full inversion.
 
 ## Risk parity
 
 A risk-parity portfolio equalises the contribution of each asset to total
 volatility. With portfolio volatility $\sigma(w) = \sqrt{w^\top \Sigma w}$,
-Euler's theorem on the homogeneous-degree-one function $\sigma$ gives the
-exact decomposition
+Euler's theorem on the homogeneous-degree-one function $\sigma$ gives the exact
+decomposition
 
 $$
 \sigma(w) = \sum_i w_i \frac{\partial \sigma}{\partial w_i}
@@ -93,9 +94,9 @@ $$
 \min_{y > 0}\ \tfrac{1}{2} y^\top \Sigma y - \sum_i b_i \ln y_i .
 $$
 
-The objective is strictly convex, since $\Sigma$ is positive definite and
-$-\ln$ is convex, so the stationary point is the unique global minimum. Setting
-the gradient to zero,
+The objective is strictly convex, since $\Sigma$ is positive definite and $-\ln$
+is convex, so the stationary point is the unique global minimum. Setting the
+gradient to zero,
 
 $$
 \Sigma y - b \oslash y = 0
@@ -112,12 +113,12 @@ solution independent of the solver.
 
 ## Mean-variance baseline
 
-The mean-variance frontier solves
-$\min_w \tfrac{1}{2} w^\top \Sigma w$ subject to $\hat{\mu}^\top w \ge \mu_0$
-and $\mathbf{1}^\top w = 1$. The Lagrangian is quadratic and the solution is
-affine in $\mu_0$, which traces the frontier. The dependence on
-$\Sigma^{-1} \hat{\mu}$ is what makes the weights sensitive to estimation
-error and motivates the shrinkage, robust and hierarchical alternatives.
+The mean-variance frontier solves $\min_w \tfrac{1}{2} w^\top \Sigma w$ subject
+to $\hat{\mu}^\top w \ge \mu_0$ and $\mathbf{1}^\top w = 1$. The Lagrangian is
+quadratic and the solution is affine in $\mu_0$, which traces the frontier. The
+dependence on $\Sigma^{-1} \hat{\mu}$ is what makes the weights sensitive to
+estimation error and motivates the shrinkage, robust and hierarchical
+alternatives.
 
 ## Mean-CVaR
 
@@ -141,9 +142,9 @@ $$
 u_t \ge -r_t^\top w - \zeta,\ \ u_t \ge 0,
 $$
 
-with $w$ in the shared constraint set. The objective and constraints are
-linear, so this is a linear programme and the solution is a global optimum. The
-divisor is $\alpha T$, the mass of the tail being averaged.
+with $w$ in the shared constraint set. The objective and constraints are linear,
+so this is a linear programme and the solution is a global optimum. The divisor
+is $\alpha T$, the mass of the tail being averaged.
 
 ## Mean-EVaR
 
@@ -157,10 +158,10 @@ $$
 \frac{1}{T} \sum_{t=1}^{T} e^{L_t / z} \right).
 $$
 
-The joint problem over $w$ and $z$ is convex and admits an
-exponential-cone form. Introduce $t$ and per-sample $u_t$ with the
-perspective constraints $u_t \ge z\, e^{(L_t - t)/z}$, the exponential cone, and
-$\sum_t u_t \le z$. Then
+The joint problem over $w$ and $z$ is convex and admits an exponential-cone
+form. Introduce $t$ and per-sample $u_t$ with the perspective constraints
+$u_t \ge z\, e^{(L_t - t)/z}$, the exponential cone, and $\sum_t u_t \le z$.
+Then
 
 $$
 \sum_t e^{(L_t - t)/z} \le 1
@@ -169,11 +170,11 @@ t \ge z \ln \sum_t e^{L_t / z},
 $$
 
 so minimising $t - z \ln(\alpha T)$ reproduces
-$z \ln\!\big( (\alpha T)^{-1} \sum_t e^{L_t/z} \big)$, the empirical
-Entropic Value-at-Risk. Because the measure is positively homogeneous in the
-loss, scaling the per-sample losses by a constant rescales the objective without
-moving the optimal $w$, which the implementation exploits to condition the
-cone solver.
+$z \ln\!\big( (\alpha T)^{-1} \sum_t e^{L_t/z} \big)$, the empirical Entropic
+Value-at-Risk. Because the measure is positively homogeneous in the loss,
+scaling the per-sample losses by a constant rescales the objective without
+moving the optimal $w$, which the implementation exploits to condition the cone
+solver.
 
 ## Conditional drawdown at risk
 
@@ -197,8 +198,8 @@ other mean-risk allocators.
 
 ## Second-order stochastic dominance
 
-A portfolio return $X$ second-order stochastically dominates a benchmark
-$Y$ when $\mathbb{E}[U(X)] \ge \mathbb{E}[U(Y)]$ for every increasing concave
+A portfolio return $X$ second-order stochastically dominates a benchmark $Y$
+when $\mathbb{E}[U(X)] \ge \mathbb{E}[U(Y)]$ for every increasing concave
 utility $U$. Equivalently, for every threshold $\eta$,
 
 $$
@@ -206,8 +207,8 @@ $$
 $$
 
 On a discrete panel the continuum of thresholds collapses to the benchmark
-realisations $\eta_i = Y_i$. Maximising the expected return subject to
-dominance is the linear programme
+realisations $\eta_i = Y_i$. Maximising the expected return subject to dominance
+is the linear programme
 
 $$
 \max_{w}\ \hat{\mu}^\top w
@@ -218,8 +219,8 @@ u_{t,i} \ge 0,
 $$
 
 where $s_i(Y) = \tfrac{1}{T} \sum_t (\eta_i - Y_t)^+$ is the benchmark lower
-partial moment at $\eta_i$. The dominance constraints are linear in $w$, so
-the problem stays a linear programme.
+partial moment at $\eta_i$. The dominance constraints are linear in $w$, so the
+problem stays a linear programme.
 
 ## Polynomial goal programming over four moments
 
@@ -233,14 +234,13 @@ M_4 = \mathbb{E}\big[(r - \mu)(r - \mu)^\top \otimes (r - \mu)^\top \otimes
 (r - \mu)^\top\big],
 $$
 
-estimated by the sample averages of the outer products, which the
-implementation forms with `einsum`. The portfolio moments are the contractions
+estimated by the sample averages of the outer products, which the implementation
+forms with `einsum`. The portfolio moments are the contractions
 $s(w) = w^\top \hat{\mu}$, $v(w) = w^\top \Sigma w$,
 $\text{sk}(w) = w^\top M_3 (w \otimes w)$ and
-$\text{ku}(w) = w^\top M_4 (w \otimes w \otimes w)$. Polynomial goal
-programming maximises mean and skewness while minimising variance and kurtosis
-by minimising the weighted relative deviations from each moment's aspiration
-level $g$,
+$\text{ku}(w) = w^\top M_4 (w \otimes w \otimes w)$. Polynomial goal programming
+maximises mean and skewness while minimising variance and kurtosis by minimising
+the weighted relative deviations from each moment's aspiration level $g$,
 
 $$
 \min_{w \in \Delta}\
@@ -273,15 +273,15 @@ $$
 
 a precision-weighted average of prior and views, with the posterior parameter
 covariance $\big[ (\tau \Sigma)^{-1} + P^\top \Omega^{-1} P \big]^{-1}$ added to
-$\Sigma$ for the posterior return covariance. Feeding $\mu_{\text{BL}}$ into
-the mean-variance step replaces noisy sample means with a shrunk, view-adjusted
+$\Sigma$ for the posterior return covariance. Feeding $\mu_{\text{BL}}$ into the
+mean-variance step replaces noisy sample means with a shrunk, view-adjusted
 estimate.
 
 ## Resampled efficiency
 
 Sample estimates are noisy, so a single optimisation overfits one draw. Michaud
-resampling averages over the sampling distribution. For $b = 1, \dots, B$,
-draw a bootstrap or parametric resample of the returns, estimate
+resampling averages over the sampling distribution. For $b = 1, \dots, B$, draw
+a bootstrap or parametric resample of the returns, estimate
 $(\hat{\mu}^{(b)}, \Sigma^{(b)})$, and solve the chosen optimisation to get
 $w^{(b)}$. The resampled portfolio is the average
 
@@ -295,10 +295,10 @@ reduces turnover relative to the single-shot solution.
 
 ## Robust mean-variance
 
-Robust optimisation guards against estimation error in $\hat{\mu}$ by
-optimising the worst case over an uncertainty set. With a box set
-$\mathcal{U} = \{ \mu : |\mu_i - \hat{\mu}_i| \le \delta_i \}$, the inner
-worst case has a closed form,
+Robust optimisation guards against estimation error in $\hat{\mu}$ by optimising
+the worst case over an uncertainty set. With a box set
+$\mathcal{U} = \{ \mu : |\mu_i - \hat{\mu}_i| \le \delta_i \}$, the inner worst
+case has a closed form,
 
 $$
 \min_{\mu \in \mathcal{U}} \mu^\top w

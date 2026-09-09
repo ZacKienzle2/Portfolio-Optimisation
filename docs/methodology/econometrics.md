@@ -1,9 +1,9 @@
 # Econometrics
 
-Derivations for the diagnostic battery in
-`portfolio_optimisation.econometrics`. The shared notation is defined on the
-[methodology index](index.md). Each test is applied per asset to the return
-series $\{ y_t \}_{t=1}^{T}$ and reports a statistic with its p-value.
+Derivations for the diagnostic battery in `portfolio_optimisation.econometrics`.
+The shared notation is defined on the [methodology index](index.md). Each test
+is applied per asset to the return series $\{ y_t \}_{t=1}^{T}$ and reports a
+statistic with its p-value.
 
 ## Normality
 
@@ -30,8 +30,8 @@ $$
 $$
 
 and tests $H_0 : \gamma = 0$, a unit root and hence non-stationarity, against
-$\gamma < 0$. The lag order $p$ absorbs short-run autocorrelation and is
-chosen by the Akaike criterion. Under the null the statistic
+$\gamma < 0$. The lag order $p$ absorbs short-run autocorrelation and is chosen
+by the Akaike criterion. Under the null the statistic
 $\hat{\gamma} / \operatorname{se}(\hat{\gamma})$ does not follow a normal but
 the Dickey-Fuller distribution, whose left-tail critical values are used.
 
@@ -44,15 +44,15 @@ $$
 Q = T (T + 2) \sum_{k=1}^{h} \frac{\hat{\rho}_k^2}{T - k},
 $$
 
-which is $\chi^2_h$ when the series is white noise. The $(T+2)/(T-k)$
-weighting corrects the small-sample bias of the raw Box-Pierce sum. Rejection
-indicates predictable linear structure in the returns.
+which is $\chi^2_h$ when the series is white noise. The $(T+2)/(T-k)$ weighting
+corrects the small-sample bias of the raw Box-Pierce sum. Rejection indicates
+predictable linear structure in the returns.
 
 ## Heteroskedasticity
 
 The Breusch-Pagan test detects variance that depends on the regressors. It
-regresses the squared residuals on the explanatory variables, here a constant and
-a time trend, and forms the Lagrange-multiplier statistic
+regresses the squared residuals on the explanatory variables, here a constant
+and a time trend, and forms the Lagrange-multiplier statistic
 
 $$
 \mathrm{LM} = T R^2 \ \sim\ \chi^2_p,
@@ -64,8 +64,8 @@ keeps the test valid when the residuals are not normal.
 
 ## ARCH effects
 
-Engle's test targets volatility clustering, where large moves follow large moves.
-It regresses the squared residual on its own $q$ lags,
+Engle's test targets volatility clustering, where large moves follow large
+moves. It regresses the squared residual on its own $q$ lags,
 
 $$
 \varepsilon_t^2 = \alpha_0 + \sum_{i=1}^{q} \alpha_i\, \varepsilon_{t-i}^2

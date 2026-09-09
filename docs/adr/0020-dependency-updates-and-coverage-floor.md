@@ -5,10 +5,10 @@
 
 ## Context
 
-Dependabot watched only the GitHub Actions workflows, so the Python
-dependencies received security alerts but no automated update pull requests, and
-the test suite measured coverage without enforcing a minimum, allowing it to
-erode unnoticed.
+Dependabot watched only the GitHub Actions workflows, so the Python dependencies
+received security alerts but no automated update pull requests, and the test
+suite measured coverage without enforcing a minimum, allowing it to erode
+unnoticed.
 
 ## Decision
 

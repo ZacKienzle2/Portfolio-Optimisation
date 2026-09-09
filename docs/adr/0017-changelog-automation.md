@@ -5,11 +5,11 @@
 
 ## Context
 
-The repository tracked a hand-maintained `CHANGELOG.md` that drifted out of date,
-while the release workflow built its notes from a raw `git log` dump. Commits
-already follow Conventional Commits and pull requests are squash-merged with
-conventional subjects, so the history carries enough structure to derive both
-artefacts automatically.
+The repository tracked a hand-maintained `CHANGELOG.md` that drifted out of
+date, while the release workflow built its notes from a raw `git log` dump.
+Commits already follow Conventional Commits and pull requests are squash-merged
+with conventional subjects, so the history carries enough structure to derive
+both artefacts automatically.
 
 ## Decision
 

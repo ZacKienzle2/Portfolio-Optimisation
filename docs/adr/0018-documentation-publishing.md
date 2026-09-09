@@ -17,8 +17,8 @@ diagrams should never lag behind the code they describe.
 
 On every push to the default branch the documentation workflow regenerates the
 code-derived diagrams, builds the site under `mkdocs build --strict`, and
-deploys it to GitHub Pages. Because the diagrams are regenerated as a build step,
-the published site always reflects the current source regardless of the
+deploys it to GitHub Pages. Because the diagrams are regenerated as a build
+step, the published site always reflects the current source regardless of the
 committed diagram files. Pull requests still run the strict build and the
 diagram drift check, so a reviewer sees correct diagrams in the diff, and the
 build uses only the documentation extra rather than the full dependency set.
