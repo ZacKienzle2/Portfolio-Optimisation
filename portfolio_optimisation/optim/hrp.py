@@ -49,7 +49,7 @@ class HRPModel:
             cov_matrix if cov_matrix is not None else self._calculate_covariance()
         )
         self.linkage_matrix: NDArray[Any] | None = None
-        # Numpy view + ticker->row index map are rebuilt lazily inside
+        # NumPy view + ticker->row index map are rebuilt lazily inside
         # optimize() so the inner-loop hot path never touches pandas.
         self._cov_values: NDArray[np.float64] | None = None
         self._ticker_to_idx: dict[str, int] = {}
@@ -96,7 +96,7 @@ class HRPModel:
     def _cluster_var_numpy(cov_values: NDArray[np.float64], idx: NDArray[np.intp]) -> float:
         """Inverse-variance portfolio variance for the index-selected sub-matrix.
 
-        Numpy-only hot path: takes the dense covariance buffer + an integer
+        NumPy-only hot path: takes the dense covariance buffer + an integer
         ticker-index array and computes ``w' @ cov_sub @ w`` where ``w`` is
         proportional to ``1/diag(cov_sub)``. Avoids pandas slicing and the
         DataFrame matmul wrap.
