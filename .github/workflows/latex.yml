@@ -54,7 +54,7 @@ jobs:
           restore-keys: tectonic-${{ runner.os }}-
 
       - name: Install Tectonic
-        uses: wtfjoke/setup-tectonic@b5cef93d8b1ba8a93b94be5c30dd5cd55ed79bea # v3
+        uses: wtfjoke/setup-tectonic@eb29fd68b7d3f76011906b6e45ea4320c8de5d2f # v4.0.5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
