@@ -4,8 +4,13 @@
 % Loaded by every document root. Single source of packages, colours, fonts,
 % headers, theorem environments, listings, alert boxes and math macros.
 
-\usepackage[utf8]{inputenc}
+% No inputenc: UTF-8 has been the kernel's default input encoding since
+% LaTeX 2018-04-01, so the line was a no-op.
 \usepackage[T1]{fontenc}
+% titling keeps what \title, \author and \date were given as \thetitle,
+% \theauthor and \thedate, which the kernel discards after \maketitle; the
+% author declaration signs with \theauthor.
+\usepackage{titling}
 
 % ***************************************************
 % Math packages (precede newtxmath/libertine)
@@ -172,8 +177,6 @@
   innertopmargin=4pt,innerbottommargin=4pt,innerleftmargin=6pt,innerrightmargin=6pt,
   skipabove=8pt,skipbelow=8pt
 ]{draftnote}
-
-\DeclareUnicodeCharacter{03B1}{\ensuremath{\alpha}}
 
 % ***************************************************
 % Latin abbreviations
