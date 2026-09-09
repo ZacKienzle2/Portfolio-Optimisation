@@ -25,8 +25,9 @@ The package is split into layers with a one-directional dependency rule:
 - `services` orchestrates the workflow and is the only layer permitted to wire
   the others together.
 
-The allowed dependencies are encoded in `tools/gen_diagrams.py` and enforced by
-`tests/test_architecture.py`, so a violating import fails the test suite.
+The allowed dependencies are a layers contract in `.importlinter`, which
+import-linter checks as a pre-commit hook, so a violating import fails before it
+is committed.
 
 ## Consequences
 

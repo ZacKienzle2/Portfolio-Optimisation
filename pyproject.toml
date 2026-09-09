@@ -3,7 +3,7 @@ name = "portfolio-optimisation"
 version = "0.0.0"
 description = "Quant infrastructure for portfolio optimisation and risk modelling."
 readme = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12"
 license = { file = "LICENSE" }
 authors = [{ name = "Zac Kienzle" }]
 keywords = [
@@ -74,6 +74,7 @@ docs = [
   # Documentation site built from docstrings and architecture diagrams.
   "mkdocs-material>=9.5",
   "mkdocstrings[python]>=1.0.4",
+  "pydeps>=3.0.8",
 ]
 
 [dependency-groups]
@@ -102,7 +103,6 @@ required-version = ">=0.5"
 # section. ruff skips what .gitignore names on its own, and the directories an
 # exclusion list used to name here held no Python.
 [tool.ruff]
-target-version = "py312"
 
 [tool.ruff.lint]
 select = [
@@ -200,6 +200,10 @@ reportPrivateImportUsage = "warning"
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
+# xfail_strict and log_cli_level are the Scientific Python Development Guide's
+# recommendations, which sp-repo-review checks for.
+xfail_strict = true
+log_cli_level = "INFO"
 addopts = [
   "-ra",
   "--strict-markers",
