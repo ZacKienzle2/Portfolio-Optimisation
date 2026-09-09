@@ -22,7 +22,6 @@ updates:
           - "patch"
     cooldown:
       default-days: 7
-
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
