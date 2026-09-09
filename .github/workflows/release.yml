@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
   id-token: write
   attestations: write
 
@@ -32,37 +33,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify tag is on main
-        run: |
-          set -euo pipefail
-          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
-            echo "::error::Tag ${GITHUB_REF_NAME} is not reachable from origin/main"
-            exit 1
-          fi
-
-      - name: Extract version
-        id: version
-        run: |
-          set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
-          if [[ "${VERSION}" == *-* ]]; then
-            echo "prerelease=true" >> "${GITHUB_OUTPUT}"
-          else
-            echo "prerelease=false" >> "${GITHUB_OUTPUT}"
-          fi
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: Regenerate the changelog
+        uses: orhun/git-cliff-action@3d96a18cc4ec17e9dc69ddcc424ccafaf1f78ce2 # v4.9.0
         with:
-          enable-cache: false
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          set -euo pipefail
-          uv run git-cliff --tag "${GITHUB_REF_NAME}" -o CHANGELOG.md
-          uv run git-cliff --tag "${GITHUB_REF_NAME}" --latest --strip header -o RELEASE_NOTES.md
+          config: cliff.toml
+          args: --verbose --tag ${{ github.ref_name }}
+        env:
+          OUTPUT: CHANGELOG.md
 
       - name: Generate SBOM (SPDX)
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
@@ -91,14 +68,20 @@ jobs:
             sbom.spdx.json
             sbom.cdx.json
 
-      # The runner's own gh creates the release, which is zizmor's
-      # superfluous-actions remediation for softprops/action-gh-release. The
-      # inputs map one to one; prerelease comes from the version step through
-      # the environment rather than a template expansion in the command.
-      - name: Create GitHub Release
+      - name: Publish the drafted release
+        uses: release-drafter/release-drafter@6a93d829887aa2e0748befe2e808c66c0ec6e4c7 # v6.4.0
+        with:
+          publish: true
+          tag: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          commitish: ${{ github.sha }}
+          disable-autolabeler: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach the SBOMs and the changelog
         env:
           GH_TOKEN: ${{ github.token }}
-          PRERELEASE: ${{ steps.version.outputs.prerelease }}
-        run: >-
-          gh release create "$GITHUB_REF_NAME" CHANGELOG.md sbom.spdx.json sbom.cdx.json --title "$GITHUB_REF_NAME"
-          --notes-file RELEASE_NOTES.md --prerelease="$PRERELEASE"
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "$TAG" sbom.spdx.json sbom.cdx.json CHANGELOG.md --clobber

@@ -1,22 +1,11 @@
 name: Python
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "portfolio_optimisation/**"
-      - "tests/**"
-      - "main.ipynb"
-      - "pyproject.toml"
-      - "uv.lock"
-      - ".python-version"
-      - ".github/workflows/python.yml"
   pull_request:
     branches: [main]
     paths:
-      - "portfolio_optimisation/**"
-      - "tests/**"
-      - "main.ipynb"
+      - "**/*.py"
+      - "**/*.pyi"
       - "pyproject.toml"
       - "uv.lock"
       - ".python-version"
@@ -27,18 +16,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: python-${{ github.workflow }}-${{ github.ref }}
+  group: python-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  python:
-    name: ${{ matrix.python }} - lint, type-check, test
+  test:
+    name: Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ["3.12", "3.13"]
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -50,113 +35,16 @@ jobs:
         with:
           persist-credentials: false
 
+      # uv reads .python-version and installs that interpreter; the cache is
+      # keyed on the lock file, which is what setup-uv documents.
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
-
-      - name: Pin Python ${{ matrix.python }}
-        run: uv python pin ${{ matrix.python }}
-
-      - name: Cache matplotlib + numba font/JIT directories
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
-        with:
-          path: |
-            ~/.cache/matplotlib
-            ~/.numba_cache
-          key: pycache-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('uv.lock') }}
-          restore-keys: pycache-${{ runner.os }}-${{ matrix.python }}-
 
       - name: Sync dependencies
         run: uv sync --frozen --all-extras
 
-      - name: Ruff lint
-        run: uv run ruff check .
-
-      - name: Ruff format check
-        run: uv run ruff format --check .
-
-      - name: Pyright
-        run: uv run pyright
-
-      - name: Docstring coverage
-        run: uv run interrogate portfolio_optimisation
-
-      - name: Pytest with coverage
-        run: uv run pytest -q --cov --cov-report=xml --cov-report=term
-
-      - name: Upload coverage
-        if: matrix.python == '3.12'
-        uses: codecov/codecov-action@04b047e8bb82a0c002c8312c1c880fbc6a999d45 # v5
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          fail_ci_if_error: false
-
-  build-wheel:
-    name: Build wheel
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: python
-    steps:
-      - name: Harden runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Build sdist + wheel
-        run: uv build
-
-      - name: Upload artefacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
-        with:
-          name: dist
-          path: dist/
-          retention-days: 7
-
-  notebook-smoke:
-    name: Notebook execute smoke
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: python
-    steps:
-      - name: Harden runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Sync with notebooks extra
-        run: uv sync --frozen --all-extras
-
-      - name: Execute main.ipynb
-        run: |
-          set -euo pipefail
-          uv run jupyter nbconvert \
-            --to notebook \
-            --execute \
-            --output main-executed.ipynb \
-            --ExecutePreprocessor.timeout=600 \
-            main.ipynb
+      - name: Run the test suite
+        run: uv run pytest

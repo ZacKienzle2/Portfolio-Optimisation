@@ -18,7 +18,7 @@ Before filing:
    [existing issues](https://github.com/ZacKienzle2/Portfolio-Optimisation/issues?q=is%3Aissue)
    for duplicates.
 2. Reproduce against latest `main`.
-3. Collect version or commit SHA, OS, runtime version, minimal reproduction.
+3. Collect version or commit SHA, OS, toolchain version, minimal reproduction.
 
 ### Feature requests
 
