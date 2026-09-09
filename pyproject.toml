@@ -98,15 +98,11 @@ packages = ["portfolio_optimisation"]
 [tool.uv]
 required-version = ">=0.5"
 
+# The width is in ruff.toml, which the template renders and which extends this
+# section. ruff skips what .gitignore names on its own, and the directories an
+# exclusion list used to name here held no Python.
 [tool.ruff]
-line-length = 100
 target-version = "py312"
-extend-exclude = [
-  "case-comp",
-  "docs",
-  ".github",
-  ".venv",
-]
 
 [tool.ruff.lint]
 select = [
