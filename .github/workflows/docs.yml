@@ -6,7 +6,7 @@ on:
     paths:
       - "portfolio_optimisation/**"
       - "docs/**"
-      - "tools/gen_diagrams.py"
+      - ".importlinter"
       - "mkdocs.yml"
       - "pyproject.toml"
       - "uv.lock"
@@ -16,7 +16,7 @@ on:
     paths:
       - "portfolio_optimisation/**"
       - "docs/**"
-      - "tools/gen_diagrams.py"
+      - ".importlinter"
       - "mkdocs.yml"
       - "pyproject.toml"
       - "uv.lock"
@@ -55,8 +55,15 @@ jobs:
       - name: Sync dependencies
         run: uv sync --frozen --extra docs
 
-      - name: Regenerate architecture diagrams
-        run: uv run python tools/gen_diagrams.py
+      # pydeps draws the module graph from the source through Graphviz; the
+      # page embeds the file it writes, so the diagram is never committed.
+      - name: Install Graphviz
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends graphviz
+
+      - name: Draw the module dependency graph
+        run:
+          uv run pydeps portfolio_optimisation --noshow --only portfolio_optimisation -T svg -o
+          docs/module_dependencies.svg
 
       - name: Build site (strict)
         run: uv run mkdocs build --strict

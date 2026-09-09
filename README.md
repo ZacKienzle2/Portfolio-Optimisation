@@ -78,14 +78,16 @@ Configuration resolves with the precedence explicit flag > `PORTFOLIO_*`
 environment variable > `portfolio.toml` > built-in default. Every Monte Carlo
 path accepts a `seed` for reproducible results.
 
-### Architecture diagrams
+### Architecture checks
 
-Module and DDD-layer dependency graphs are generated from the source and kept in
-sync by CI:
+The layering in `docs/architecture.md` is a contract in `.importlinter`, which
+the pre-commit hook enforces, and the module graph on the architecture page is
+drawn by pydeps when the site is built:
 
 ```bash
-python tools/gen_diagrams.py          # regenerate docs/diagrams/*
-python tools/gen_diagrams.py --check  # verify they match the source
+uv run lint-imports
+uv run pydeps portfolio_optimisation --noshow --only portfolio_optimisation \
+  -T svg -o docs/module_dependencies.svg
 ```
 
 ## Documentation

@@ -72,20 +72,22 @@ flowchart TB
 
 ## Layer dependencies
 
-The graph below is generated from the source by `tools/gen_diagrams.py` and kept
-in sync by continuous integration. Any edge that would violate the layering (for
-example the domain depending on infrastructure, or an analytics layer depending
-on visualisation) is detected by the generator and by a dedicated test.
-
-```mermaid
---8<-- "docs/diagrams/layer_dependencies.mmd"
-```
+The layering is a contract in [`.importlinter`](../.importlinter), checked by
+[import-linter](https://import-linter.readthedocs.io/) as a commit hook and in
+CI: each layer may import the layers below it and not those above, and layers on
+one line are independent of each other. From top to bottom: `cli`, `services`,
+`viz`, then `optim`, `risk`, `sde` and `econometrics` side by side, then
+`infra`, then `domain` and `config` side by side. An edge that breaks the order,
+the domain depending on infrastructure or an analytics layer on visualisation,
+fails `lint-imports`.
 
 ## Module dependencies
 
-```mermaid
---8<-- "docs/diagrams/module_dependencies.mmd"
-```
+The module graph is drawn from the source by
+[pydeps](https://github.com/thebjorn/pydeps) when the site is built, so it is
+never stale and never committed.
+
+![Module dependencies](module_dependencies.svg)
 
 ## Runtime flow
 
@@ -118,15 +120,16 @@ sequenceDiagram
     deactivate Pipeline
 ```
 
-## Regenerating the diagrams
+## Checking the layering and drawing the graph
 
 ```bash
-python tools/gen_diagrams.py          # regenerate docs/diagrams/*
-python tools/gen_diagrams.py --check  # verify the diagrams match the source
+uv run lint-imports                                  # the contract in .importlinter
+uv run pydeps portfolio_optimisation --noshow --only portfolio_optimisation \
+  -T svg -o docs/module_dependencies.svg    # needs Graphviz's dot
 ```
 
-When the Graphviz `dot` binary is available the generator also renders SVG
-copies alongside the Mermaid and DOT sources.
+The docs workflow runs both before `mkdocs build`, so the published graph is
+drawn from the commit it documents.
 
 ## Rationale
 

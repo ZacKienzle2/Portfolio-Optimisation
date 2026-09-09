@@ -1,0 +1,19 @@
+# import-linter enforces the layering docs/architecture.md describes: a layer
+# may import the layers below it and not those above, and layers on one line
+# are independent of each other. This replaced a generator of this
+# repository's own that walked the import graph with the ast module; the
+# contract is checked by the lint-imports hook and read by the architecture
+# page.
+[importlinter]
+root_package = portfolio_optimisation
+
+[importlinter:contract:layers]
+name = Layered architecture
+type = layers
+layers =
+    portfolio_optimisation.cli
+    portfolio_optimisation.services
+    portfolio_optimisation.viz
+    portfolio_optimisation.optim | portfolio_optimisation.risk | portfolio_optimisation.sde | portfolio_optimisation.econometrics
+    portfolio_optimisation.infra
+    portfolio_optimisation.domain | portfolio_optimisation.config
