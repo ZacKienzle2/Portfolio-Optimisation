@@ -15,10 +15,11 @@ objectives.
 
 ## Value-at-Risk and Conditional Value-at-Risk
 
-Value-at-Risk is the loss quantile $\mathrm{VaR}_\alpha(L) = \inf\{ x :
-\mathbb{P}(L > x) \le \alpha \}$. It is not sub-additive, so a portfolio can
-appear less risky than the sum of its parts. Conditional Value-at-Risk repairs
-this by averaging the tail,
+Value-at-Risk is the loss quantile
+$\mathrm{VaR}_\alpha(L) = \inf\{ x :
+\mathbb{P}(L > x) \le \alpha \}$. It is not
+sub-additive, so a portfolio can appear less risky than the sum of its parts.
+Conditional Value-at-Risk repairs this by averaging the tail,
 
 $$
 \mathrm{CVaR}_\alpha(L)
@@ -46,8 +47,7 @@ $$
 It dominates Conditional Value-at-Risk,
 $\mathrm{CVaR}_\alpha \le \mathrm{EVaR}_\alpha$, and is the tightest bound
 expressible through the moment generating function. The convex programme that
-minimises it is derived for the
-[mean-EVaR allocator](allocation.md#mean-evar).
+minimises it is derived for the [mean-EVaR allocator](allocation.md#mean-evar).
 
 ## Spectral and distortion measures
 
@@ -80,8 +80,8 @@ G_{\xi, \beta}(y) = 1 - \left( 1 + \frac{\xi y}{\beta} \right)^{-1/\xi},
 \qquad \xi \neq 0 .
 $$
 
-Fitting $(\xi, \beta)$ to the $N_u$ exceedances out of $n$ observations
-gives the peaks-over-threshold tail estimator
+Fitting $(\xi, \beta)$ to the $N_u$ exceedances out of $n$ observations gives
+the peaks-over-threshold tail estimator
 $\mathbb{P}(L > x) = \tfrac{N_u}{n} \big( 1 + \xi (x - u)/\beta \big)^{-1/\xi}$,
 and inverting it yields the tail risk
 
@@ -116,14 +116,14 @@ stationary when $\alpha + \beta < 1$. Two asymmetric variants capture the
 leverage effect, by which negative shocks raise volatility more than positive
 ones. The GJR-GARCH adds a sign term,
 $\sigma_t^2 = \omega + (\alpha + \gamma\, \mathbf{1}\{\varepsilon_{t-1} < 0\})
-\varepsilon_{t-1}^2 + \beta\, \sigma_{t-1}^2$, and the EGARCH models the log
-variance,
+\varepsilon_{t-1}^2 + \beta\, \sigma_{t-1}^2$,
+and the EGARCH models the log variance,
 $\ln \sigma_t^2 = \omega + \alpha (|z_{t-1}| - \mathbb{E}|z|) +
-\gamma\, z_{t-1} + \beta \ln \sigma_{t-1}^2$ with standardised residual
-$z_t = \varepsilon_t / \sigma_t$. The one-step forecasts give time-varying risk
-$\mathrm{VaR}_{\alpha,t} = \sigma_t\, q_\alpha$ and the matching Expected
-Shortfall, where $q_\alpha$ is the lower-tail quantile of the chosen
-innovation law, Gaussian or Student-t.
+\gamma\, z_{t-1} + \beta \ln \sigma_{t-1}^2$
+with standardised residual $z_t = \varepsilon_t / \sigma_t$. The one-step
+forecasts give time-varying risk $\mathrm{VaR}_{\alpha,t} = \sigma_t\, q_\alpha$
+and the matching Expected Shortfall, where $q_\alpha$ is the lower-tail quantile
+of the chosen innovation law, Gaussian or Student-t.
 
 ## Risk contributions
 
@@ -159,10 +159,10 @@ $$
 \right),
 $$
 
-with skewness $\hat{\gamma}_3$ and kurtosis $\hat{\gamma}_4$ of the returns.
-The deflated Sharpe ratio sets $SR^\star$ to the expected maximum of $N$
-trials under the null, which corrects for the selection bias of choosing the
-best strategy from many.
+with skewness $\hat{\gamma}_3$ and kurtosis $\hat{\gamma}_4$ of the returns. The
+deflated Sharpe ratio sets $SR^\star$ to the expected maximum of $N$ trials
+under the null, which corrects for the selection bias of choosing the best
+strategy from many.
 
 ## Backtesting Value-at-Risk
 
@@ -172,8 +172,8 @@ properties a good model must have, correct frequency and independence of
 violations.
 
 **Unconditional coverage.** Kupiec's proportion-of-failures test compares the
-observed violation rate $\hat{\pi} = x / n$ with $\alpha$ through the
-likelihood ratio
+observed violation rate $\hat{\pi} = x / n$ with $\alpha$ through the likelihood
+ratio
 
 $$
 \mathrm{LR}_{\mathrm{uc}}
@@ -187,7 +187,8 @@ Markov chain with transition counts $n_{ij}$ and rejects when a violation
 predicts the next, again through a likelihood ratio that is $\chi^2_1$ under the
 null of independence. The conditional-coverage test adds the two statistics,
 $\mathrm{LR}_{\mathrm{cc}} = \mathrm{LR}_{\mathrm{uc}} + \mathrm{LR}_{\mathrm{ind}}
-\sim \chi^2_2$, testing both properties jointly.
+\sim \chi^2_2$,
+testing both properties jointly.
 
 **Expected Shortfall.** Value-at-Risk frequency says nothing about the size of
 the tail losses, which Expected Shortfall forecasts. The Acerbi-Szekely test

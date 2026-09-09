@@ -1,8 +1,8 @@
 # Portfolio Optimisation
 
-Quant infrastructure for portfolio construction, risk modelling and time
-series diagnostics. Python 3.12+ over numpy, scipy, pandas, statsmodels,
-arch, sklearn, pypfopt and pymle.
+Quant infrastructure for portfolio construction, risk modelling and time series
+diagnostics. Python 3.12+ over numpy, scipy, pandas, statsmodels, arch, sklearn,
+pypfopt and pymle.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fe5196.svg)](https://www.conventionalcommits.org/en/v1.0.0/)
@@ -17,8 +17,8 @@ arch, sklearn, pypfopt and pymle.
 
 - Hierarchical Risk Parity (HRP) with Ledoit-Wolf shrinkage and
   stationary-bootstrap robustness checks
-- Nested Clustered Optimisation (NCO) and Hierarchical Equal Risk
-  Contribution (HERC), with variance- or CVaR-driven cluster splits
+- Nested Clustered Optimisation (NCO) and Hierarchical Equal Risk Contribution
+  (HERC), with variance- or CVaR-driven cluster splits
 - Marchenko-Pastur correlation denoising plus market-mode detoning
 - Black-Litterman Bayesian view blending against an HRP equilibrium prior
 - Minimum Conditional Drawdown-at-Risk (Chekhlov-Uryasev) LP
@@ -40,13 +40,12 @@ arch, sklearn, pypfopt and pymle.
 ### Econometrics + processes
 
 - Test battery: Jarque-Bera, ADF, Ljung-Box, Breusch-Pagan, ARCH-LM, CUSUM
-- Maximum-likelihood SDE fitting: Geometric Brownian Motion,
-  Ornstein-Uhlenbeck
+- Maximum-likelihood SDE fitting: Geometric Brownian Motion, Ornstein-Uhlenbeck
 
 ### Visualisation
 
-- Plotly and matplotlib for efficient frontier, weights, dendrogram,
-  correlation heatmap
+- Plotly and matplotlib for efficient frontier, weights, dendrogram, correlation
+  heatmap
 
 ## Install
 
@@ -125,4 +124,5 @@ sign-off required.
 
 ## Related
 
-[SECURITY](SECURITY.md) | [SUPPORT](SUPPORT.md) | [GOVERNANCE](GOVERNANCE.md) | [CHANGELOG](CHANGELOG.md) | [ROADMAP](ROADMAP.md) | [CITATION](CITATION.cff)
+[SECURITY](SECURITY.md) | [SUPPORT](SUPPORT.md) | [GOVERNANCE](GOVERNANCE.md) |
+[CHANGELOG](CHANGELOG.md) | [ROADMAP](ROADMAP.md) | [CITATION](CITATION.cff)

@@ -5,12 +5,12 @@
 
 ## Context
 
-The sample covariance is a poor estimator when the number of assets is not
-small relative to the sample length. Its extreme eigenvalues are biased away
-from the truth, which destabilises every allocator that inverts or factorises a
-covariance. The Marchenko-Pastur denoising in decision record 0008 addresses
-the bulk eigenvalues, but a complementary shrinkage family is wanted that gives
-an explicit optimal estimator for each eigenvalue.
+The sample covariance is a poor estimator when the number of assets is not small
+relative to the sample length. Its extreme eigenvalues are biased away from the
+truth, which destabilises every allocator that inverts or factorises a
+covariance. The Marchenko-Pastur denoising in decision record 0008 addresses the
+bulk eigenvalues, but a complementary shrinkage family is wanted that gives an
+explicit optimal estimator for each eigenvalue.
 
 ## Decision
 
