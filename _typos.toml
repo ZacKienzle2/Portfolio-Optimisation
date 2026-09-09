@@ -5,6 +5,8 @@ extend-ignore-identifiers-re = [
 ]
 
 [default.extend-words]
+# matplotlib.artist.setp, which typos reads as a misspelling of step.
+setp = "setp"
 # Words that are real in this project even though typos flags them.
 thm = "thm"
 
