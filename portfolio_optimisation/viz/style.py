@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 # deficiencies. Used as the categorical colour cycle across the project.
 OKABE_ITO: tuple[str, ...] = (
     "#0072B2",  # blue
-    "#D55E00",  # vermillion
+    "#D55E00",  # vermilion
     "#009E73",  # green
     "#CC79A7",  # reddish purple
     "#E69F00",  # orange

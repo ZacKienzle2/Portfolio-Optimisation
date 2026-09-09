@@ -144,7 +144,7 @@ class PortfolioVisualiser:
         labels = corr_matrix.columns.tolist()
         axis.set_xticks(np.arange(len(labels)), labels=labels)
         axis.set_yticks(np.arange(len(labels)), labels=labels)
-        plt.setp(axis.get_xticklabels(), rotation=90, ha="center")
+        plt.step(axis.get_xticklabels(), rotation=90, ha="center")
 
         if len(labels) <= 15:
             for i in range(len(labels)):
