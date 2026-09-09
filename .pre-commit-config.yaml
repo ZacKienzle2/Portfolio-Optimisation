@@ -99,6 +99,27 @@ repos:
     hooks:
       - id: nbstripout
 
+  # tex-fmt is the LaTeX formatter. pre-commit bootstraps the rust toolchain
+  # that builds it, so nothing is installed by hand, and its defaults hold:
+  # two-space indentation and wrapping at 80 columns, which .editorconfig
+  # states for editorconfig-checker. bibtex-tidy owns .bib below, so that type
+  # is kept from tex-fmt: the two wrap a long field differently and each undid
+  # the other on every run while both had the file.
+  - repo: https://github.com/WGUNDERWOOD/tex-fmt
+    rev: v0.5.7
+    hooks:
+      - id: tex-fmt
+        exclude_types: [bib]
+
+  # bibtex-tidy is the BibTeX formatter, run as its README's hook recipe.
+  # --curly writes every field value in braces, so an entry pasted with
+  # quotation marks reads like the rest.
+  - repo: https://github.com/FlamingTempura/bibtex-tidy
+    rev: v1.14.0
+    hooks:
+      - id: bibtex-tidy
+        args: [--curly]
+
   # chktex is part of every TeX Live, so the hook runs the installed one and
   # reads .chktexrc from the working directory, which is where chktex looks.
   # The manual stage keeps it off the commit path; `pre-commit run chktex

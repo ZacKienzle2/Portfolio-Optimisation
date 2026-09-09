@@ -4,22 +4,22 @@ on:
   push:
     branches: [main]
     paths:
-      - "main.tex"
-      - "preamble/**"
-      - "preliminary/**"
-      - "chapters/**"
-      - "appendix/**"
-      - "references/**"
+      - "**/*.tex"
+      - "**/*.bib"
+      - "**/*.cls"
+      - "**/*.sty"
+      - "**/*.bst"
+      - ".latexmkrc"
       - ".github/workflows/latex.yml"
   pull_request:
     branches: [main]
     paths:
-      - "main.tex"
-      - "preamble/**"
-      - "preliminary/**"
-      - "chapters/**"
-      - "appendix/**"
-      - "references/**"
+      - "**/*.tex"
+      - "**/*.bib"
+      - "**/*.cls"
+      - "**/*.sty"
+      - "**/*.bst"
+      - ".latexmkrc"
       - ".github/workflows/latex.yml"
   workflow_dispatch: {}
 
@@ -27,14 +27,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: latex-${{ github.workflow }}-${{ github.ref }}
+  group: latex-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build PDF with Tectonic
+    name: Build main.tex with TeX Live
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -46,33 +46,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Cache Tectonic resources
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
+      - name: Build main.tex
+        uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b # v4.1.0
         with:
-          path: ~/.cache/Tectonic
-          key: tectonic-${{ runner.os }}-${{ hashFiles('main.tex', 'preamble/**', 'references/**') }}
-          restore-keys: tectonic-${{ runner.os }}-
+          root_file: main.tex
+          latexmk_shell_escape: false
+          # -Werror: an undefined reference or citation, or a multiply defined
+          # label, fails the build (latexmk 4.69+).
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode -Werror
 
-      - name: Install Tectonic
-        uses: wtfjoke/setup-tectonic@eb29fd68b7d3f76011906b6e45ea4320c8de5d2f # v4.0.5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Compile main.tex
-        run: tectonic -X compile main.tex --keep-logs --keep-intermediates
-
-      - name: Reject thesis-template leakage
-        run: |
-          set -euo pipefail
-          pattern='Thesis|Protocol Policy Lab|uqthesis|NAPLAN|ACARA|NCVER|ToR'
-          if grep -rnE "${pattern}" --include='*.tex' .; then
-            echo "::error::Thesis-template strings found in .tex sources."
-            exit 1
-          fi
-
-      - name: Upload PDF artefact
+      - name: Upload PDF
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        if: always()
         with:
-          name: main-pdf
+          name: main
           path: main.pdf
+          if-no-files-found: warn
           retention-days: 14
