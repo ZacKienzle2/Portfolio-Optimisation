@@ -1,5 +1,15 @@
+# Managed by copier from ZacKienzle2/repo-template. A repository's own words go
+# under [default.extend-words] after this block.
+
+# A generated CHANGELOG.md carries short commit hashes as link text, and typos
+# reads the letters in one as a word. A type of its own, unchecked, is typos'
+# way to leave a generated file alone.
+[type.changelog]
+extend-glob = ["CHANGELOG.md"]
+check-file = false
+
 [default]
-# Skip identifiers that look like TeX theorem env names (thm/cor/lem/prop/defn).
+# Theorem environment names the preamble defines.
 extend-ignore-identifiers-re = [
   "^(thm|cor|lem|prop|defn)$",
 ]
@@ -7,32 +17,7 @@ extend-ignore-identifiers-re = [
 [default.extend-words]
 # matplotlib.artist.setp, which typos reads as a misspelling of step.
 setp = "setp"
-# Words that are real in this project even though typos flags them.
 thm = "thm"
-
-[files]
-extend-exclude = [
-  ".git/",
-  # Generated from the upstream gitignore templates, whose Visual Studio and
-  # Paket entries are their spelling rather than this project's.
-  ".gitignore",
-  "node_modules/",
-  "dist/",
-  "build/",
-  "target/",
-  "*.svg",
-  "*.lock",
-  "package-lock.json",
-  "yarn.lock",
-  "pnpm-lock.yaml",
-  "poetry.lock",
-  "Cargo.lock",
-  "go.sum",
-  "uv.lock",
-  # External Zotero export; we do not edit author-supplied titles or keys.
-  "references/references.bib",
-  # LaTeX preamble uses 'thm' / 'lem' / 'cor' tcolorbox theorem keys.
-  "preamble/packages.tex",
-  # Generated notebook outputs (cell results) are not source.
-  "main.ipynb",
-]
+# Surnames in references.bib.
+Iten = "Iten"
+Loder = "Loder"
