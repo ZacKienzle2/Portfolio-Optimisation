@@ -55,7 +55,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
-          enable-cache: true
+          enable-cache: false
 
       - name: Generate changelog
         id: changelog
@@ -91,17 +91,14 @@ jobs:
             sbom.spdx.json
             sbom.cdx.json
 
+      # The runner's own gh creates the release, which is zizmor's
+      # superfluous-actions remediation for softprops/action-gh-release. The
+      # inputs map one to one; prerelease comes from the version step through
+      # the environment rather than a template expansion in the command.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          body_path: RELEASE_NOTES.md
-          prerelease: ${{ steps.version.outputs.prerelease }}
-          draft: false
-          generate_release_notes: false
-          fail_on_unmatched_files: false
-          files: |
-            CHANGELOG.md
-            sbom.spdx.json
-            sbom.cdx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" CHANGELOG.md sbom.spdx.json sbom.cdx.json --title "$GITHUB_REF_NAME"
+          --notes-file RELEASE_NOTES.md --prerelease="$PRERELEASE"
