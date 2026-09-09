@@ -65,3 +65,16 @@ build:
           - "**/Dockerfile*"
           - "**/docker-compose*.yml"
           - ".dockerignore"
+
+python:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.py"
+          - "**/*.pyi"
+          - "pyproject.toml"
+          - ".python-version"
+
+latex:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.{tex,bib,cls,sty,bst}"
