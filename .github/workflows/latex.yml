@@ -50,7 +50,6 @@ jobs:
         uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b # v4.1.0
         with:
           root_file: main.tex
-          latexmk_shell_escape: false
           # -Werror: an undefined reference or citation, or a multiply defined
           # label, fails the build (latexmk 4.69+).
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode -Werror
