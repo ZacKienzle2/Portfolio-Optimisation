@@ -42,9 +42,9 @@ to singletons yields weights on the simplex without a single matrix inversion.
 Raffinot's (2018) allocator keeps the correlation-distance dendrogram of the
 previous method and changes three things. It cuts the tree into $K$ clusters,
 with $K$ chosen by the gap statistic of Tibshirani, Walther and Hastie (2001).
-It divides capital along the dendrogram's own splits rather than at the
-midpoint of the seriated order. And it holds each cluster by naive risk parity,
-weights proportional to $1 / \mathcal{R}_i$ for the asset risk $\mathcal{R}_i$,
+It divides capital along the dendrogram's own splits rather than at the midpoint
+of the seriated order. And it holds each cluster by naive risk parity, weights
+proportional to $1 / \mathcal{R}_i$ for the asset risk $\mathcal{R}_i$,
 volatility or expected shortfall.
 
 The gap statistic embeds the assets by classical scaling of the correlation
@@ -76,11 +76,11 @@ give the riskier child more capital, and the implementation follows the equal
 contribution condition instead. Using expected shortfall makes the allocation
 sensitive to tail co-movement that variance ignores.
 
-On planted block structures the one-standard-error rule recovers one, two,
-three and five blocks of six assets under average linkage. It stops early when
-the gap rises in steps smaller than $s_k$, returning two for eight blocks whose
-gap curve peaks at eight, and under Ward linkage it returns one for three or
-more blocks.
+On planted block structures the one-standard-error rule recovers one, two, three
+and five blocks of six assets under average linkage. It stops early when the gap
+rises in steps smaller than $s_k$, returning two for eight blocks whose gap
+curve peaks at eight, and under Ward linkage it returns one for three or more
+blocks.
 
 ## Nested clustered optimisation
 
@@ -141,6 +141,34 @@ same constant, so $w_i (\Sigma w)_i \propto b_i$ holds and the
 equal-risk-contribution condition is met. Uniqueness of the minimiser makes the
 solution independent of the solver.
 
+## Maximum diversification
+
+The diversification ratio of a long-only portfolio is its weighted average
+volatility over its volatility,
+
+$$
+\mathrm{DR}(w) = \frac{w^\top \sigma}{\sqrt{w^\top \Sigma w}},
+$$
+
+with $\sigma$ the vector of asset volatilities. It is at least one, and equals
+one only when the holdings are perfectly correlated. Choueifaty and Coignard
+(2008) maximise it over the long-only simplex. The ratio does not change when
+$w$ is scaled, so Choueifaty, Froidure and Reynier (2013) solve the quadratic
+programme
+
+$$
+\min_{y \ge 0}\ y^\top \Sigma y
+\quad\text{s.t.}\quad
+\sigma^\top y = 1, \qquad w = y / \mathbf{1}^\top y,
+$$
+
+whose solution is unique when $\Sigma$ is definite. Their core property
+characterises the optimum. Every asset held has the same correlation with the
+portfolio, and every asset left out is at least as correlated with it. The tests
+check that property directly, and check that no long-only mix drawn by
+Hypothesis reaches a higher ratio. On two hundred assets with the Ledoit-Wolf
+covariance the programme solves in 21 ms.
+
 ## Mean-variance baseline
 
 The mean-variance frontier solves $\min_w \tfrac{1}{2} w^\top \Sigma w$ subject
@@ -176,6 +204,8 @@ with $w$ in the shared constraint set. The objective and constraints are linear,
 so this is a linear programme and the solution is a global optimum. The divisor
 is $\alpha T$, the mass of the tail being averaged. The implementation states
 the objective with cvxpy's `cvar` atom, which canonicalises to this programme.
+At $\alpha = 1/T$ the average covers the single worst scenario, which is the
+minimax model of Young (1998), so that model needs no programme of its own.
 
 ## Mean-EVaR
 
@@ -214,8 +244,8 @@ maximum $M_t = \max(0, \max_{s \le t} P_s)$, the drawdown is
 $D_t = M_t - P_t \ge 0$. Conditional Drawdown-at-Risk is the Rockafellar-Uryasev
 average of the drawdown beyond its tail threshold. The drawdown obeys the
 recursion $D_t = \max(D_{t-1} - r_t^\top w, 0)$ with $D_0 = 0$, which
-Proposition 4.1 of Chekhlov, Uryasev and Zabarankin (2005) turns into the
-linear programme
+Proposition 4.1 of Chekhlov, Uryasev and Zabarankin (2005) turns into the linear
+programme
 
 $$
 \min_{w, \zeta, u, z}\
@@ -229,9 +259,8 @@ Each row carries one period's return, where the formulation with a running-peak
 variable $m_t \ge P_t$ carries the cumulative one and needs a third row per
 date. At a thousand dates and thirty assets the recursion solves in 64 ms
 against 173 ms, to the same optimum. The averaging divisor is $\alpha T$,
-consistent with the worst-$\alpha$ drawdown that the evaluation metric
-reports, and the programme shares the constraint set with the other mean-risk
-allocators.
+consistent with the worst-$\alpha$ drawdown that the evaluation metric reports,
+and the programme shares the constraint set with the other mean-risk allocators.
 
 ## Second-order stochastic dominance
 
@@ -269,6 +298,32 @@ cut whose subset is the $k$ worst scenarios, computed for every $k$ at once from
 one cumulative sum. The master problem has $N$ variables, where the formulation
 with one slack per pair of scenario and threshold has $T^2$, and on 250
 scenarios the cutting planes reach the same optimum in 25 ms against 4.3 s.
+
+## Mean-semideviation
+
+Variance penalises gains and losses alike, so a mean-variance choice can be
+dominated in the second order. Ogryczak and Ruszczynski (1999) measure risk by
+the semideviations below the mean,
+
+$$
+\bar{\delta}_X = \mathbb{E}\big[(\mu_X - X)^+\big], \qquad
+\bar{\sigma}_X = \Big(\mathbb{E}\big[\big((\mu_X - X)^+\big)^2\big]\Big)^{1/2},
+$$
+
+and show that a maximiser of $\mu_X - \lambda \bar{\delta}_X$ (their
+Corollary 4) or of $\mu_X - \lambda \bar{\sigma}_X$ (Corollary 8) is efficient
+under second-order stochastic dominance when $0 < \lambda \le 1$, apart from
+ties in mean and semideviation. Neither bound can be raised for general
+distributions. The deviations above and below the mean have equal expectation,
+so the absolute semideviation is half the mean absolute deviation, and the first
+model is the Konno-Yamazaki programme with the trade-off halved (Mansini,
+Ogryczak and Speranza, 2003). On $T$ equally likely scenarios it is a linear
+programme with $T$ shortfall variables. The standard semideviation replaces
+their mean with a Euclidean norm, a second-order cone. The tests check that no
+long-only mix drawn by Hypothesis dominates the optimum, and that the standard
+semideviation prefers the asset whose long tail lies on the gain side. On a
+thousand scenarios and thirty assets the two programmes solve in 36 ms and 47
+ms.
 
 ## Polynomial goal programming over four moments
 
