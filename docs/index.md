@@ -2,7 +2,7 @@
 
 Quant infrastructure for portfolio construction, risk modelling and time-series
 diagnostics, built on the Python scientific stack (NumPy, SciPy, pandas,
-statsmodels, arch, scikit-learn, cvxpy and pymle).
+statsmodels, arch, scikit-learn and cvxpy).
 
 ## Capabilities
 

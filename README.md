@@ -1,8 +1,8 @@
 # Portfolio Optimisation
 
 Quant infrastructure for portfolio construction, risk modelling and time series
-diagnostics. Python 3.12+ over numpy, scipy, pandas, statsmodels, arch, sklearn,
-cvxpy and pymle.
+diagnostics. Python 3.12+ over numpy, scipy, pandas, statsmodels, arch, sklearn
+and cvxpy.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fe5196.svg)](https://www.conventionalcommits.org/en/v1.0.0/)

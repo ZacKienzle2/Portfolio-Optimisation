@@ -1,67 +1,110 @@
-"""Maximum-likelihood fitting of GBM and Ornstein-Uhlenbeck parameters per asset."""
+"""Maximum-likelihood fitting of GBM and Ornstein-Uhlenbeck parameters per asset.
+
+Both models have Gaussian transitions, so both likelihoods are maximised in
+closed form rather than by a bounded numerical search.
+
+Geometric Brownian motion ``dS = mu S dt + sigma S dW`` has independent
+log-returns ``N((mu - sigma^2 / 2) dt, sigma^2 dt)``, whose maximum-likelihood
+mean and variance are the sample moments.
+
+The Ornstein-Uhlenbeck process ``dX = kappa (alpha - X) dt + sigma dW`` sampled
+at step ``dt`` is the AR(1) recursion
+``X_t = alpha (1 - b) + b X_(t-1) + e_t`` with ``b = exp(-kappa dt)`` and
+``Var(e_t) = sigma^2 (1 - b^2) / (2 kappa)``. Conditional on the first
+observation, Tang and Chen (2009, eq. 2.5) give the maximum-likelihood
+estimators from the least-squares fit of that recursion,
+
+    kappa = -log(b) / dt,   alpha = c / (1 - b),   sigma^2 = 2 kappa s^2 / (1 - b^2),
+
+with ``c`` the intercept and ``s^2`` the residual variance over ``n``, which
+``statsmodels.tsa.ar_model.AutoReg`` computes. Their Theorem 3.1.1 gives the
+bias ``E[kappa] - kappa = (5/2 + e^(kappa dt) + e^(2 kappa dt) / 2) / (n dt)``,
+of the order of ``4 / T`` for a span of ``T`` years, which ``bias_correction``
+subtracts at the estimate.
+
+The numerical search this replaced bounded ``sigma`` at 5, a volatility of
+returns, while the process is fitted to price levels, where ``sigma`` is in
+price units per root year and sat on the bound.
+"""
 
 from __future__ import annotations
 
-import contextlib
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from pymle.core.TransitionDensity import ExactDensity
-from pymle.fit.AnalyticalMLE import AnalyticalMLE
-from pymle.fit.Minimizer import ScipyMinimizer
-from pymle.models import GeometricBM, OrnsteinUhlenbeck
+from scipy.stats import norm
+from statsmodels.tools.eval_measures import aic, bic
+from statsmodels.tsa.ar_model import AutoReg
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-def _fit_columns(
-    prices: pd.DataFrame,
-    model: Any,
-    names: tuple[str, ...],
-    bounds: list[tuple[float, float]],
-    initial_guess: NDArray[np.float64],
-    dt: float,
-) -> pd.DataFrame:
-    """Fit one pymle model to every column by exact-density maximum likelihood.
+def _information(log_likelihood: float, n_obs: int, n_params: int) -> dict[str, float]:
+    return {
+        "Log-Likelihood": log_likelihood,
+        "AIC": float(aic(log_likelihood, n_obs, n_params)),
+        "BIC": float(bic(log_likelihood, n_obs, n_params)),
+    }
 
-    The fits run in this process. Each takes a fraction of a second, while a
-    spawned worker spends seconds importing the numerical stack before its
-    first fit. pymle prints its progress, which is discarded.
+
+def gbm_estimates(prices: NDArray[np.float64], dt: float) -> dict[str, float]:
+    """Maximum-likelihood GBM drift and volatility of one price series.
 
     Args:
-        prices: Price series, one column per asset.
-        model: pymle model instance defining the transition density.
-        names: Parameter names in the model's order.
-        bounds: Box bounds for each parameter.
-        initial_guess: Starting point for the optimiser.
-        dt: Time step between observations.
+        prices: Positive prices in time order.
+        dt: Time step between observations in years.
 
     Returns:
-        Estimated parameters with log-likelihood, AIC and BIC, indexed by ticker.
+        ``mu``, ``sigma`` and the log-likelihood of the prices with AIC and BIC.
     """
-    density = ExactDensity(model)
-    rows: dict[str, dict[str, float]] = {}
-    for ticker in prices.columns:
-        mle = AnalyticalMLE(
-            prices[ticker].to_numpy(), bounds, dt, density, minimizer=ScipyMinimizer()
-        )
-        with contextlib.redirect_stdout(None):
-            estimate = mle.estimate_params(initial_guess)
-        rows[str(ticker)] = {
-            **dict(zip(names, estimate.params, strict=True)),
-            "Log-Likelihood": estimate.log_like,
-            "AIC": estimate.aic,
-            "BIC": estimate.bic,
-        }
-    return pd.DataFrame.from_dict(rows, orient="index").rename_axis("Ticker")
+    log_returns = np.diff(np.log(prices))
+    location, scale = log_returns.mean(), log_returns.std()
+    sigma = scale / np.sqrt(dt)
+    log_likelihood = float(
+        norm.logpdf(log_returns, location, scale).sum() - np.log(prices[1:]).sum()
+    )
+    return {
+        "mu": float(location / dt + sigma**2 / 2.0),
+        "sigma": float(sigma),
+        **_information(log_likelihood, log_returns.size, 2),
+    }
+
+
+def ou_estimates(
+    levels: NDArray[np.float64], dt: float, *, bias_correction: bool = False
+) -> dict[str, float]:
+    """Maximum-likelihood Ornstein-Uhlenbeck parameters of one series.
+
+    Args:
+        levels: Observations in time order.
+        dt: Time step between observations in years.
+        bias_correction: Subtract the first-order bias of ``kappa`` from
+            Theorem 3.1.1 of Tang and Chen (2009).
+
+    Returns:
+        ``kappa``, ``mu`` (the long-run level ``alpha``), ``sigma`` and the
+        conditional log-likelihood with AIC and BIC. A slope of one or more
+        admits no mean reversion and gives a non-positive ``kappa``.
+    """
+    fit = AutoReg(levels, lags=1, trend="c").fit()
+    intercept, slope = fit.params
+    kappa = -np.log(slope) / dt
+    n_obs = int(fit.nobs)
+    if bias_correction:
+        kappa -= (2.5 + np.exp(kappa * dt) + np.exp(2.0 * kappa * dt) / 2.0) / (n_obs * dt)
+    sigma = np.sqrt(-2.0 * np.log(slope) / dt * fit.sigma2 / (1.0 - slope**2))
+    return {
+        "kappa": float(kappa),
+        "mu": float(intercept / (1.0 - slope)),
+        "sigma": float(sigma),
+        **_information(float(fit.llf), n_obs, 3),
+    }
 
 
 class SDEFitter:
     """Estimates GBM and Ornstein-Uhlenbeck parameters for each price series.
-
-    Fits by maximum likelihood on the exact transition density of each model.
 
     Args:
         prices_df: Asset price time series.
@@ -74,58 +117,43 @@ class SDEFitter:
         self.gbm_results: pd.DataFrame | None = None
         self.ou_results: pd.DataFrame | None = None
 
-    def fit_gbm(
-        self,
-        param_bounds: list[tuple[float, float]] | None = None,
-        initial_guess: NDArray[np.float64] | None = None,
-    ) -> pd.DataFrame:
+    def _per_column(self, estimates: dict[str, dict[str, float]]) -> pd.DataFrame:
+        return pd.DataFrame.from_dict(estimates, orient="index").rename_axis("Ticker")
+
+    def fit_gbm(self) -> pd.DataFrame:
         """Fit GBM to each asset price series.
 
-        Args:
-            param_bounds: Bounds for ``(mu, sigma)``.
-            initial_guess: Starting ``(mu, sigma)``.
-
         Returns:
-            Estimates indexed by ticker.
+            ``mu``, ``sigma``, log-likelihood, AIC and BIC indexed by ticker.
         """
-        self.gbm_results = _fit_columns(
-            self.prices_df,
-            GeometricBM(),
-            ("mu", "sigma"),
-            param_bounds if param_bounds is not None else [(-1.0, 1.0), (1e-5, 5.0)],
-            initial_guess if initial_guess is not None else np.array([0.01, 0.2]),
-            self.dt,
+        self.gbm_results = self._per_column(
+            {
+                str(ticker): gbm_estimates(
+                    self.prices_df[ticker].to_numpy(dtype=np.float64), self.dt
+                )
+                for ticker in self.prices_df.columns
+            }
         )
         return self.gbm_results
 
-    def fit_ou(
-        self,
-        param_bounds: list[tuple[float, float]] | None = None,
-        initial_guess: NDArray[np.float64] | None = None,
-    ) -> pd.DataFrame:
+    def fit_ou(self, *, bias_correction: bool = False) -> pd.DataFrame:
         """Fit an Ornstein-Uhlenbeck process to each asset price series.
 
         Args:
-            param_bounds: Bounds for ``(kappa, mu, sigma)``. Defaults span the observed
-                price range for ``mu``.
-            initial_guess: Starting ``(kappa, mu, sigma)``.
+            bias_correction: Subtract the first-order bias of ``kappa``.
 
         Returns:
-            Estimates indexed by ticker.
+            ``kappa``, ``mu``, ``sigma``, log-likelihood, AIC and BIC indexed by
+            ticker.
         """
-        prices = self.prices_df
-        if initial_guess is None:
-            initial_guess = np.array([1.0, prices.mean().mean() if not prices.empty else 1.0, 0.2])
-        if param_bounds is None:
-            low = prices.min().min() if not prices.empty else 0.0
-            high = prices.max().max() if not prices.empty else 1000.0
-            param_bounds = [(1e-5, 20.0), (low, high), (1e-5, 5.0)]
-        self.ou_results = _fit_columns(
-            prices,
-            OrnsteinUhlenbeck(),
-            ("kappa", "mu", "sigma"),
-            param_bounds,
-            initial_guess,
-            self.dt,
+        self.ou_results = self._per_column(
+            {
+                str(ticker): ou_estimates(
+                    self.prices_df[ticker].to_numpy(dtype=np.float64),
+                    self.dt,
+                    bias_correction=bias_correction,
+                )
+                for ticker in self.prices_df.columns
+            }
         )
         return self.ou_results

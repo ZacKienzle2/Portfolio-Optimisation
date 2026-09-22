@@ -40,9 +40,6 @@ dependencies = [
   "arch>=7.0",
   # Econometrics + statistics.
   "statsmodels>=0.14",
-  # Stochastic processes. PyPI distribution name is pymle-diffusion; the
-  # import path remains `pymle`.
-  "pymle-diffusion>=0.0.1",
   # Data + reporting.
   "yfinance>=0.2.40",
   "rich>=13.8",
