@@ -39,19 +39,48 @@ to singletons yields weights on the simplex without a single matrix inversion.
 
 ## Hierarchical equal risk contribution
 
-The hierarchical equal risk contribution allocator keeps the tree of the
-previous method but replaces the inverse-variance split with an equal-risk split
-under a chosen risk measure $\mathcal{R}$, either variance or Conditional
-Value-at-Risk. For a node with children $C_1, C_2$ the split is
+Raffinot's (2018) allocator keeps the correlation-distance dendrogram of the
+previous method and changes three things. It cuts the tree into $K$ clusters,
+with $K$ chosen by the gap statistic of Tibshirani, Walther and Hastie (2001).
+It divides capital along the dendrogram's own splits rather than at the
+midpoint of the seriated order. And it holds each cluster by naive risk parity,
+weights proportional to $1 / \mathcal{R}_i$ for the asset risk $\mathcal{R}_i$,
+volatility or expected shortfall.
+
+The gap statistic embeds the assets by classical scaling of the correlation
+matrix $C = Q \Lambda Q^\top$ as the rows of $X = Q \Lambda^{1/2}$, whose
+squared distances are $2 (1 - \rho_{ij})$, so clustering $X$ reproduces the
+correlation-distance dendrogram. With $W_k$ the pooled within-cluster sum of
+squares of the cut into $k$ clusters,
+
+$$
+\operatorname{Gap}(k) = \mathbb{E}^\ast [\log W_k] - \log W_k ,
+$$
+
+where the expectation is over uniform samples in the box aligned with the
+principal components of $X$. The estimate is the smallest $k$ with
+$\operatorname{Gap}(k) \ge \operatorname{Gap}(k+1) - s_{k+1}$, where $s_k$ is
+the standard deviation of the reference $\log W_k$ times $\sqrt{1 + 1/B}$.
+
+Each of the $K - 1$ splits above the cut divides a node's capital between its
+children $C_1, C_2$ so that both contribute equally,
 
 $$
 \alpha_{\text{split}}
-= \frac{\mathcal{R}(C_1)}{\mathcal{R}(C_1) + \mathcal{R}(C_2)},
+= \frac{\mathcal{R}(C_2)}{\mathcal{R}(C_1) + \mathcal{R}(C_2)},
 $$
 
-and the child risks are measured under the same $\mathcal{R}$, so the ratio is
-scale-consistent. Using Conditional Value-at-Risk makes the allocation sensitive
-to tail co-movement that variance ignores.
+with $\mathcal{R}(C)$ the risk of the naive risk parity portfolio of $C$.
+Raffinot prints the ratio with $\mathcal{R}(C_1)$ in the numerator, which would
+give the riskier child more capital, and the implementation follows the equal
+contribution condition instead. Using expected shortfall makes the allocation
+sensitive to tail co-movement that variance ignores.
+
+On planted block structures the one-standard-error rule recovers one, two,
+three and five blocks of six assets under average linkage. It stops early when
+the gap rises in steps smaller than $s_k$, returning two for eight blocks whose
+gap curve peaks at eight, and under Ward linkage it returns one for three or
+more blocks.
 
 ## Nested clustered optimisation
 
@@ -181,22 +210,28 @@ solver.
 ## Conditional drawdown at risk
 
 For the cumulative return path $P_t = \sum_{s \le t} r_s^\top w$ and running
-maximum $M_t = \max_{s \le t} P_s$, the drawdown is $D_t = M_t - P_t \ge 0$.
-Conditional Drawdown-at-Risk is the Rockafellar-Uryasev average of the drawdown
-beyond its tail threshold,
+maximum $M_t = \max(0, \max_{s \le t} P_s)$, the drawdown is
+$D_t = M_t - P_t \ge 0$. Conditional Drawdown-at-Risk is the Rockafellar-Uryasev
+average of the drawdown beyond its tail threshold. The drawdown obeys the
+recursion $D_t = \max(D_{t-1} - r_t^\top w, 0)$ with $D_0 = 0$, which
+Proposition 4.1 of Chekhlov, Uryasev and Zabarankin (2005) turns into the
+linear programme
 
 $$
-\min_{w, \zeta, u, m}\
-\zeta + \frac{1}{\alpha T} \sum_{t=1}^{T} u_t
+\min_{w, \zeta, u, z}\
+\zeta + \frac{1}{\alpha T} \sum_{t=1}^{T} z_t
 \quad\text{s.t.}\quad
-u_t \ge (m_t - P_t) - \zeta,\ \ u_t \ge 0,
+z_t \ge u_t - \zeta,\ \ u_t \ge u_{t-1} - r_t^\top w,\ \
+z_t, u_t \ge 0,\ \ u_0 = 0 .
 $$
 
-with the running maximum linearised by a non-decreasing auxiliary variable
-$m_t \ge m_{t-1}$, $m_t \ge P_t$, $m_0 \ge 0$. The averaging divisor is
-$\alpha T$, consistent with the worst-$\alpha$ drawdown that the evaluation
-metric reports. The programme is linear and shares the constraint set with the
-other mean-risk allocators.
+Each row carries one period's return, where the formulation with a running-peak
+variable $m_t \ge P_t$ carries the cumulative one and needs a third row per
+date. At a thousand dates and thirty assets the recursion solves in 64 ms
+against 173 ms, to the same optimum. The averaging divisor is $\alpha T$,
+consistent with the worst-$\alpha$ drawdown that the evaluation metric
+reports, and the programme shares the constraint set with the other mean-risk
+allocators.
 
 ## Second-order stochastic dominance
 
