@@ -15,7 +15,8 @@
     "ms-python.python",
     "charliermarsh.ruff",
     "ms-toolsai.jupyter",
-    "james-yu.latex-workshop"
+    "james-yu.latex-workshop",
+    "elijah-potter.harper"
   ],
   "unwantedRecommendations": []
 }

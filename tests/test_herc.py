@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from portfolio_optimisation.optim import HERCModel, herc_weights
 
@@ -35,15 +36,23 @@ def test_herc_cvar_split_is_long_only_simplex() -> None:
     assert np.isclose(weights.sum(), 1.0, atol=1e-9)
 
 
-def test_herc_equalises_cluster_risk_pair() -> None:
-    """At each ERC split the two sibling clusters should contribute equal risk."""
-    returns = _block_returns()
-    weights = herc_weights(returns)
-    cov = returns.cov().to_numpy()
-    w = weights.to_numpy()
-    # The full-portfolio variance should be finite and positive.
-    portfolio_var = float(w @ cov @ w)
-    assert portfolio_var > 0
+def test_herc_equalises_risk_between_two_uncorrelated_blocks() -> None:
+    rng = np.random.default_rng(3)
+    factors = rng.standard_normal((2000, 2)) * np.array([0.01, 0.03])
+    loadings = np.repeat(np.eye(2), 4, axis=1)
+    returns = pd.DataFrame(factors @ loadings + rng.standard_normal((2000, 8)) * 0.004)
+    covariance = returns.cov()
+    weights = herc_weights(returns, cov_matrix=covariance, linkage_method="average").to_numpy()
+    cov = covariance.to_numpy()
+    contributions = []
+    for block in (np.arange(4), np.arange(4, 8)):
+        inverse_vol = 1.0 / np.sqrt(np.diag(cov)[block])
+        naive = inverse_vol / inverse_vol.sum()
+        np.testing.assert_allclose(weights[block] / weights[block].sum(), naive, rtol=1e-12)
+        contributions.append(
+            weights[block].sum() * np.sqrt(naive @ cov[np.ix_(block, block)] @ naive)
+        )
+    assert contributions[0] == pytest.approx(contributions[1], rel=1e-12)
 
 
 def test_herc_model_caches_weights() -> None:

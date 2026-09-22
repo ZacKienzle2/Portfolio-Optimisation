@@ -7,7 +7,7 @@ figure is shown; rendering stays the caller's responsibility.
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,9 @@ from portfolio_optimisation.viz import (
     plot_performance_distributions,
     plot_risk_return_profiles,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _returns(seed: int = 0, n: int = 300, k: int = 5) -> pd.DataFrame:

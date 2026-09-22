@@ -7,7 +7,7 @@ on:
     branches: [main]
     paths:
       - "main.ipynb"
-      - "portfolio_optimisation/**"
+      - "src/**"
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/notebook.yml"

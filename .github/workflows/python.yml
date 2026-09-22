@@ -9,6 +9,7 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - ".python-version"
+      - ".pre-commit-config.yaml"
       - ".github/workflows/python.yml"
   workflow_dispatch: {}
 
@@ -45,6 +46,22 @@ jobs:
 
       - name: Sync dependencies
         run: uv sync --frozen --all-extras
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+
+      - name: Type-check with pyright
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+        with:
+          extra_args: pyright --all-files
+
+      # deptry compares the declared dependencies against the imports. Its own
+      # hook is language: system and wants the binary on PATH, so it runs here
+      # from the synced environment rather than as a hook.
+      - name: Check the dependencies with deptry
+        run: uv run deptry .
 
       - name: Run the test suite
         run: uv run pytest

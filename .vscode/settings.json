@@ -15,7 +15,9 @@
   },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.rulers": [80],
+    "editor.rulers": [
+      80
+    ],
     "editor.tabSize": 2,
     "editor.wordWrap": "off"
   },
@@ -34,7 +36,11 @@
   },
   "editor.formatOnSave": true,
   "editor.insertSpaces": true,
-  "editor.rulers": [72, 100, 120],
+  "editor.rulers": [
+    72,
+    100,
+    120
+  ],
   "editor.tabSize": 4,
   "files.encoding": "utf8",
   "files.eol": "\n",
@@ -46,6 +52,11 @@
   "git.inputValidationLength": 72,
   "git.inputValidationSubjectLength": 72,
   "git.useEditorAsCommitInput": true,
+  "material-icon-theme.folders.associations": {
+    "references": "bibliography",
+    "results": "dist",
+    "workflow": "pipe"
+  },
   "yaml.schemas": {
     "https://json.schemastore.org/dependabot-2.0.json": ".github/dependabot.yml",
     "https://json.schemastore.org/github-issue-forms.json": ".github/ISSUE_TEMPLATE/*.yml",

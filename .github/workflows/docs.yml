@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "portfolio_optimisation/**"
+      - "src/**"
       - "docs/**"
       - ".importlinter"
       - "mkdocs.yml"
@@ -14,7 +14,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "portfolio_optimisation/**"
+      - "src/**"
       - "docs/**"
       - ".importlinter"
       - "mkdocs.yml"
@@ -62,7 +62,7 @@ jobs:
 
       - name: Draw the module dependency graph
         run:
-          uv run pydeps portfolio_optimisation --noshow --only portfolio_optimisation -T svg -o
+          uv run pydeps src/portfolio_optimisation --noshow --only portfolio_optimisation -T svg -o
           docs/module_dependencies.svg
 
       - name: Build site (strict)

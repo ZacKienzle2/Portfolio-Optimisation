@@ -1,0 +1,158 @@
+"""Time-series econometric diagnostics.
+
+Covers stationarity, normality, autocorrelation, heteroskedasticity, ARCH
+effects and structural breaks, each a statsmodels or SciPy test applied per
+asset.
+"""
+
+from collections.abc import Callable
+from functools import reduce
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
+import pandas as pd
+from scipy.stats import jarque_bera
+from statsmodels.regression.linear_model import OLS
+from statsmodels.stats.diagnostic import (
+    acorr_ljungbox,
+    breaks_cusumolsresid,
+    het_arch,
+    het_breuschpagan,
+)
+from statsmodels.tools.tools import add_constant
+from statsmodels.tsa.stattools import adfuller
+
+from portfolio_optimisation.infra.logging import get_logger
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+logger = get_logger(__name__)
+
+
+class Econometrics:
+    """Runs a suite of econometric tests on a DataFrame of asset returns.
+
+    Args:
+        returns_df: Returns indexed by date, one column per ticker. Rows with a missing
+            value are dropped.
+    """
+
+    def __init__(self, returns_df: pd.DataFrame) -> None:
+        self.returns_df: pd.DataFrame = returns_df.dropna()
+
+    @staticmethod
+    def _run_normality(series: pd.Series) -> tuple[float, float]:
+        """Jarque-Bera test."""
+        jb_stat, jb_pval = jarque_bera(series.to_numpy())
+        return jb_stat, jb_pval
+
+    @staticmethod
+    def _run_stationarity(
+        series: pd.Series, regression: str = "c", autolag: str | None = "AIC"
+    ) -> tuple[float, float]:
+        """Augmented Dickey-Fuller test."""
+        adf_stat, p_val, _, _, _, _ = adfuller(
+            series.to_numpy(), regression=regression, autolag=autolag
+        )
+        return adf_stat, p_val
+
+    @staticmethod
+    def _run_autocorrelation(series: pd.Series, lags: int) -> tuple[float, float]:
+        """Ljung-Box test up to a given lag."""
+        res: pd.DataFrame = acorr_ljungbox(series.to_numpy(), lags=lags, return_df=True, model_df=0)
+        lb_stat = res["lb_stat"].iloc[-1]
+        lb_pval = res["lb_pvalue"].iloc[-1]
+        return lb_stat, lb_pval
+
+    @staticmethod
+    def _run_heteroskedasticity(series: pd.Series) -> tuple[float, float]:
+        """Breusch-Pagan (Koenker) test."""
+        exog: NDArray[np.float64] = add_constant(np.arange(len(series)))
+        lm_stat, lm_pval, _, _ = het_breuschpagan(series.to_numpy(), exog, robust=True)
+        return lm_stat, lm_pval
+
+    @staticmethod
+    def _run_arch_effect(series: pd.Series, lags: int) -> tuple[float, float]:
+        """ARCH-LM test."""
+        lm_stat, lm_pval, _, _ = het_arch(series.to_numpy(), nlags=lags)
+        return lm_stat, lm_pval
+
+    @staticmethod
+    def _run_structural_break(series: pd.Series) -> tuple[float, float]:
+        """CUSUM test on OLS residuals."""
+        exog = add_constant(np.ones_like(series))
+        model = OLS(series.to_numpy(), exog)
+        res = model.fit()
+        cusum_stat, p_val, _ = breaks_cusumolsresid(res.resid, ddof=1)
+        return cusum_stat, p_val
+
+    def _apply_test_to_all(
+        self,
+        test_runner: Callable[..., tuple[float, float]],
+        columns: list[str],
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Applies a test runner function to all tickers."""
+        results: dict[str, tuple[float, float]] = {}
+        for ticker in self.returns_df.columns:
+            try:
+                results[ticker] = test_runner(self.returns_df[ticker], **kwargs)
+            except (ValueError, np.linalg.LinAlgError) as error:
+                logger.warning("Test failed for %s: %s", ticker, error)
+                results[ticker] = (np.nan, np.nan)
+        return pd.DataFrame.from_dict(results, orient="index", columns=columns)
+
+    def normality_test(self) -> pd.DataFrame:
+        """Jarque-Bera test for normality on each return series."""
+        return self._apply_test_to_all(self._run_normality, columns=["JB_stat", "JB_pval"])
+
+    def stationarity_test(self, regression: str = "c", autolag: str | None = "AIC") -> pd.DataFrame:
+        """Augmented Dickey-Fuller test for stationarity (Unit Root Test)."""
+        return self._apply_test_to_all(
+            self._run_stationarity,
+            columns=["ADF_stat", "ADF_pval"],
+            regression=regression,
+            autolag=autolag,
+        )
+
+    def autocorrelation_test(self, lags: int = 10) -> pd.DataFrame:
+        """Ljung-Box test for autocorrelation up to a specified lag."""
+        return self._apply_test_to_all(
+            self._run_autocorrelation, columns=["LB_stat", "LB_pval"], lags=lags
+        )
+
+    def heteroskedasticity_test(self) -> pd.DataFrame:
+        """Breusch-Pagan (Koenker) test for heteroskedasticity."""
+        return self._apply_test_to_all(
+            self._run_heteroskedasticity, columns=["BP_LM_stat", "BP_LM_pval"]
+        )
+
+    def arch_effect_test(self, lags: int = 10) -> pd.DataFrame:
+        """Engle's ARCH-LM test for volatility clustering."""
+        return self._apply_test_to_all(
+            self._run_arch_effect, columns=["ARCH_LM_stat", "ARCH_LM_pval"], lags=lags
+        )
+
+    def structural_break_test(self) -> pd.DataFrame:
+        """CUSUM test for structural breaks in OLS residuals' mean."""
+        return self._apply_test_to_all(
+            self._run_structural_break, columns=["CUSUM_stat", "CUSUM_pval"]
+        )
+
+    def run_all_tests(
+        self,
+        adf_regression: str = "c",
+        ac_lags: int = 10,
+        arch_lags: int = 10,
+    ) -> pd.DataFrame:
+        """Run all econometric tests and join into a single summary."""
+        tests = [
+            self.normality_test(),
+            self.stationarity_test(regression=adf_regression),
+            self.autocorrelation_test(lags=ac_lags),
+            self.heteroskedasticity_test(),
+            self.arch_effect_test(lags=arch_lags),
+            self.structural_break_test(),
+        ]
+        return reduce(lambda left, right: left.join(right, how="outer"), tests)
