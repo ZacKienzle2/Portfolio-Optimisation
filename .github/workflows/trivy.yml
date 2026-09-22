@@ -55,7 +55,7 @@ jobs:
         # Code scanning takes SARIF from public repositories only.
         # The scan itself runs either way, and fails on its own findings.
         if: always() && github.event.repository.private == false
-        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v3
+        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           sarif_file: trivy-results.sarif
           category: trivy-fs
