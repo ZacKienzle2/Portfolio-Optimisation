@@ -34,6 +34,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          paths: [src]
           options:
             docstring_style: google
             show_root_heading: true
@@ -99,6 +100,9 @@ nav:
       - "Documentation publishing": adr/0018-documentation-publishing.md
       - "Documentation quality gate": adr/0019-documentation-quality-gate.md
       - "Dependency updates and coverage floor": adr/0020-dependency-updates-and-coverage-floor.md
+      - "Import latency and serial execution": adr/0021-import-latency-and-serial-execution.md
+      - "Library numerics and measured formulations": adr/0022-library-numerics-and-measured-formulations.md
+      - "Template test suite and src layout": adr/0023-template-test-suite-and-src-layout.md
   - API Reference:
       - Optimisation: reference/optim.md
       - Risk: reference/risk.md

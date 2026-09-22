@@ -9,7 +9,6 @@
 # than typed, and Dependabot's pre-commit ecosystem moves them afterwards.
 #
 # What the guide does not cover is prose, which the vale block at the end adds.
-
 exclude: ^\.copier-answers\.yml$
 
 # pre-commit install puts in only the pre-commit stage unless told otherwise,
@@ -40,8 +39,19 @@ repos:
       - id: check-json
       - id: destroyed-symlinks
       - id: forbid-submodules
+      # The mutants session and testmon find a module's tests at
+      # tests/test_<module>.py, and pytest collects test_*.py alone, so a test
+      # file named any other way is silently never run. This is the hook that
+      # says so; --pytest-test-first is the test_ prefix.
+      - id: name-tests-test
+        args: ["--pytest-test-first"]
       - id: mixed-line-ending
         args: ["--fix=lf"]
+        # tex-fmt 0.5.7 writes the platform's line ending, CRLF on Windows, and
+        # refuses an LF file there, so this fix and tex-fmt undid each other on
+        # every run. `* text=auto` in .gitattributes stores .tex, .sty and .cls
+        # with LF whatever the working tree holds.
+        exclude: \.(tex|sty|cls)$
       - id: trailing-whitespace
         args: ["--markdown-linebreak-ext=md"]
       - id: end-of-file-fixer
@@ -57,6 +67,10 @@ repos:
     hooks:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
+        # CHANGELOG.md is git-cliff's output, and prettier rewrapped its
+        # paragraphs and split its list items on the first regeneration, which
+        # the release workflow would then undo.
+        exclude: ^CHANGELOG\.md$
 
   # taplo formats TOML, which prettier does not read: pyproject, ruff, typos,
   # lychee and cliff. uv.lock is uv's own output; taplo's defaults leave lock
@@ -67,14 +81,49 @@ repos:
       - id: taplo-format
 
   # Capitalisation of the names of the tools themselves, which no linter has an
-  # opinion about and everyone gets wrong.
+  # opinion about and everyone gets wrong. The word boundaries keep an
+  # identifier that contains a name, such as \faGithub, from matching.
   - repo: local
     hooks:
       - id: disallow-caps
         name: Disallow improper capitalization
         language: pygrep
-        entry: PyBind|Numpy|Cmake|CCache|Github|PyTest
-        exclude: \.pre-commit-config\.yaml(\.jinja)?$
+        entry: \b(PyBind|Numpy|Cmake|CCache|Github|PyTest)\b
+        # A citation key is an identifier generated from a title, so
+        # harrisArrayProgrammingNumpy2020 is camel case by construction, and a
+        # .bib is left out for the reason _typos.toml leaves it unchecked.
+        exclude: \.pre-commit-config\.yaml(\.jinja)?$|\.bib$
+
+  # A hand-written timing harness is the rule most often broken here, and it
+  # was broken twice by writing a plausible file rather than by arguing with
+  # the prose in verification.md. A sentence that asks is not a check that
+  # fails, so this is the check. pre-commit's fail language exists to forbid a
+  # file by name: the entry below is printed when the pattern matches.
+  #
+  # pyperf timeit measures without a file at all. The fixture this would hold
+  # is read a second time only by the workflow track_benchmarks renders, and
+  # this repository answered that false, so nothing would ever run the file.
+  - repo: local
+    hooks:
+      - id: no-benchmark-harness
+        name: benchmark harnesses are not written by hand
+        entry: >-
+          A pyperf timeit line answers this without a file. See the benchmark section of verification.md. Answer
+          track_benchmarks true if the number has to be rechecked in CI.
+        language: fail
+        files: ^tests/test_benchmark_.*\.py$
+
+  # The Scientific Python Development Guide, checked rather than remembered.
+  # pyproject.toml's ruff selection is that guide's, and a selection copied into
+  # a file is a list that drifts. This hook names every rule the guide asks for
+  # that the repository has not selected, along with the rest of its checks, so
+  # the drift is reported instead of waiting to be noticed. --show=err, which
+  # the hook passes itself, prints the failures alone. It is published by
+  # scientific-python/cookie, the guide's own template.
+  - repo: https://github.com/scientific-python/cookie
+    rev: 2026.08.14
+    hooks:
+      - id: sp-repo-review
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.6
@@ -84,6 +133,18 @@ repos:
       - id: ruff-format
         types_or: [python, pyi, jupyter, markdown, pyproject]
 
+  # pydoclint compares each docstring's Args, Returns, Raises and Attributes
+  # sections with the signature and body, which ruff's stable pydocstyle rules
+  # do not, and ruff's own DOC port is preview-only. The hook reads
+  # [tool.pydoclint] from pyproject.toml through --config, the pre-commit setup
+  # pydoclint's documentation gives, so the docstring style stays in the file a
+  # repository already owns.
+  - repo: https://github.com/jsh9/pydoclint
+    rev: 0.9.1
+    hooks:
+      - id: pydoclint
+        args: [--config=pyproject.toml]
+
   # uv's own hook refuses a commit whose uv.lock no longer matches
   # pyproject.toml, so the lock file the CI jobs sync from is never stale.
   - repo: https://github.com/astral-sh/uv-pre-commit
@@ -91,17 +152,52 @@ repos:
     hooks:
       - id: uv-lock
 
-  # At the manual stage until a tree type-checks: measured on the first
-  # repository to take these hooks, mypy reports 28 errors through this mirror
-  # and 101 in the project's own environment, and a hook that fails every
-  # commit touching Python until they are fixed is a gate with nothing behind
-  # it yet. `pre-commit run mypy --hook-stage manual --all-files` runs it on
-  # demand; the typing pass that clears it moves it back to the commit.
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.1
+  # mirrors-mypy builds an environment holding mypy alone, where a decorator
+  # from pytest, hypothesis or nox resolves to Any. strict mode's
+  # disallow_untyped_decorators then reports one error per decorated function,
+  # 19 of them in the first repository to run this and none a type error in the
+  # code. The same tree checked inside the environment uv syncs reports
+  # `Success: no issues found in 11 source files`.
+  #
+  # `uv run --with mypy` syncs the project and adds the checker to it, which
+  # works in a repository whose dependency group names mypy and in one that
+  # declares no group at all, as the pyproject.toml rendered beside this file
+  # does not. A rev with additional_dependencies would be a second copy of the
+  # dependencies uv.lock already pins, and it would drift from them.
+  #
+  # The hook is handed the staged Python files rather than the tree. pre-commit
+  # stashes unstaged edits to tracked files while the hooks run and leaves
+  # untracked files in place, so a check over the tree read an untracked test
+  # against a stashed edit to the module it imports and failed every commit
+  # until both were staged together. Over the staged files it checks what the
+  # commit contains, and the CI job runs the hook with --all-files.
+  #
+  # Still at the manual stage, since a hook that fails every commit touching
+  # Python is a gate with nothing behind it until the tree is clean.
+  # `pre-commit run mypy --hook-stage manual --all-files` runs it on demand,
+  # and a repository that reports no errors deletes the stages line.
+  - repo: local
     hooks:
       - id: mypy
+        name: mypy
+        entry: uv run --with mypy mypy
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
         stages: [manual]
+
+  # pyright reports no errors in its standard mode on the first repository to
+  # take this hook, so it gates the commit from the start. Static checkers found
+  # 29 of 40 real type bugs once code was annotated, against 14 before, and
+  # their checking strategies differ (Xu et al., doi:10.1109/icpc58990.2023.00039),
+  # so pyright runs beside mypy rather than instead of it. The hook's own
+  # environment cannot see the project's packages, and pyright-python's README
+  # fixes that by naming the project's virtual environment in [tool.pyright].
+  # CI runs the hook in the Python workflow, after uv has synced it.
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.414
+    hooks:
+      - id: pyright
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: "0.26"
@@ -113,11 +209,16 @@ repos:
   # since a contract is about the graph. Its own hook is language: system and
   # so needs lint-imports on PATH, which the CI runner's Python does not have;
   # a local hook lets pre-commit install it, as validate-pyproject's does.
+  # lint-imports has no path option and resolves the root package from
+  # sys.path, which holds the working directory but not the src layout, so
+  # the entry puts src first and then runs the same click command.
   - repo: local
     hooks:
       - id: import-linter
         name: import-linter
-        entry: lint-imports
+        entry: >-
+          python -c "import sys; sys.path.insert(0, 'src'); from importlinter.cli import lint_imports_command;
+          lint_imports_command()"
         language: python
         additional_dependencies: [import-linter]
         pass_filenames: false
@@ -245,11 +346,20 @@ repos:
     hooks:
       - id: gitleaks
 
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.4.0
+  # commitlint at the commit, reading commitlint.config.mjs, the file the
+  # Commit Lint workflow reads. conventional-pre-commit stood here before and
+  # carried its own grammar: it passed an 89 column header and a body with no
+  # blank line after the subject, both of which that config rejects, so the
+  # rules were enforced on the pull request and not at the commit. The hook is
+  # commitlint's own CLI under pre-commit's node language, and the shared
+  # configuration the config extends is installed beside it, which is what the
+  # hook's README asks for.
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.26.0
     hooks:
-      - id: conventional-pre-commit
+      - id: commitlint
         stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional"]
 
   # Prose, which the guide does not cover. The hook entry is the bare vale
   # command, so it installs nothing the configuration names; the first entry
@@ -272,12 +382,12 @@ repos:
         args: [--no-global, --minAlertLevel=error, --output=line]
         types_or: [markdown]
       # The commit message, at the stage git hands it over. .vale.ini reads
-      # the message file as Markdown and names one published rule for it,
-      # CommitAttribution from ai-tells-commits, which knows the co-author
-      # trailers and generated-with lines a tool appends. Claude Code turns
-      # those off through its attribution settings; this catches a machine
-      # where that setting is missing, with upstream's vocabulary rather than
-      # a pattern typed here.
+      # the message file as Markdown and layers ai-tells and ai-tells-commits
+      # on it, as the vale-ai-tells README does. Among what they catch are the
+      # co-author trailers and generated-with lines a tool appends. Claude Code
+      # turns those off through its attribution settings, and this catches a
+      # machine where that setting is missing, with upstream's vocabulary
+      # rather than a pattern typed here.
       - id: vale
         alias: vale-commit-message
         name: vale on the commit message

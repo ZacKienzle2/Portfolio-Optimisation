@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -13,6 +13,9 @@ from portfolio_optimisation.optim import (
     nonlinear_shrinkage_covariance,
     oas_covariance,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 ESTIMATORS = [
     linear_shrinkage_covariance,

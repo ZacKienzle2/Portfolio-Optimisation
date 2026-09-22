@@ -16,7 +16,8 @@ sphere, then cluster with agglomerative linkage to obtain a binary tree.
 **Quasi-diagonalisation.** Reorder the assets by the tree leaves so that similar
 assets sit adjacent. The reordered covariance concentrates its mass near the
 diagonal, which makes the recursive split below behave like a sequence of
-independent sub-problems.
+independent sub-problems. The order is the left-to-right leaf order of the
+dendrogram, which SciPy's `leaves_list` returns in linear time.
 
 **Recursive bisection.** Split each cluster $C$ into halves $C_1, C_2$. For a
 cluster, the inverse-variance weights
@@ -38,19 +39,48 @@ to singletons yields weights on the simplex without a single matrix inversion.
 
 ## Hierarchical equal risk contribution
 
-The hierarchical equal risk contribution allocator keeps the tree of the
-previous method but replaces the inverse-variance split with an equal-risk split
-under a chosen risk measure $\mathcal{R}$, either variance or Conditional
-Value-at-Risk. For a node with children $C_1, C_2$ the split is
+Raffinot's (2018) allocator keeps the correlation-distance dendrogram of the
+previous method and changes three things. It cuts the tree into $K$ clusters,
+with $K$ chosen by the gap statistic of Tibshirani, Walther and Hastie (2001).
+It divides capital along the dendrogram's own splits rather than at the midpoint
+of the seriated order. And it holds each cluster by naive risk parity, weights
+proportional to $1 / \mathcal{R}_i$ for the asset risk $\mathcal{R}_i$,
+volatility or expected shortfall.
+
+The gap statistic embeds the assets by classical scaling of the correlation
+matrix $C = Q \Lambda Q^\top$ as the rows of $X = Q \Lambda^{1/2}$, whose
+squared distances are $2 (1 - \rho_{ij})$, so clustering $X$ reproduces the
+correlation-distance dendrogram. With $W_k$ the pooled within-cluster sum of
+squares of the cut into $k$ clusters,
+
+$$
+\operatorname{Gap}(k) = \mathbb{E}^\ast [\log W_k] - \log W_k ,
+$$
+
+where the expectation is over uniform samples in the box aligned with the
+principal components of $X$. The estimate is the smallest $k$ with
+$\operatorname{Gap}(k) \ge \operatorname{Gap}(k+1) - s_{k+1}$, where $s_k$ is
+the standard deviation of the reference $\log W_k$ times $\sqrt{1 + 1/B}$.
+
+Each of the $K - 1$ splits above the cut divides a node's capital between its
+children $C_1, C_2$ so that both contribute equally,
 
 $$
 \alpha_{\text{split}}
-= \frac{\mathcal{R}(C_1)}{\mathcal{R}(C_1) + \mathcal{R}(C_2)},
+= \frac{\mathcal{R}(C_2)}{\mathcal{R}(C_1) + \mathcal{R}(C_2)},
 $$
 
-and the child risks are measured under the same $\mathcal{R}$, so the ratio is
-scale-consistent. Using Conditional Value-at-Risk makes the allocation sensitive
-to tail co-movement that variance ignores.
+with $\mathcal{R}(C)$ the risk of the naive risk parity portfolio of $C$.
+Raffinot prints the ratio with $\mathcal{R}(C_1)$ in the numerator, which would
+give the riskier child more capital, and the implementation follows the equal
+contribution condition instead. Using expected shortfall makes the allocation
+sensitive to tail co-movement that variance ignores.
+
+On planted block structures the one-standard-error rule recovers one, two, three
+and five blocks of six assets under average linkage. It stops early when the gap
+rises in steps smaller than $s_k$, returning two for eight blocks whose gap
+curve peaks at eight, and under Ward linkage it returns one for three or more
+blocks.
 
 ## Nested clustered optimisation
 
@@ -111,6 +141,34 @@ same constant, so $w_i (\Sigma w)_i \propto b_i$ holds and the
 equal-risk-contribution condition is met. Uniqueness of the minimiser makes the
 solution independent of the solver.
 
+## Maximum diversification
+
+The diversification ratio of a long-only portfolio is its weighted average
+volatility over its volatility,
+
+$$
+\mathrm{DR}(w) = \frac{w^\top \sigma}{\sqrt{w^\top \Sigma w}},
+$$
+
+with $\sigma$ the vector of asset volatilities. It is at least one, and equals
+one only when the holdings are perfectly correlated. Choueifaty and Coignard
+(2008) maximise it over the long-only simplex. The ratio does not change when
+$w$ is scaled, so Choueifaty, Froidure and Reynier (2013) solve the quadratic
+programme
+
+$$
+\min_{y \ge 0}\ y^\top \Sigma y
+\quad\text{s.t.}\quad
+\sigma^\top y = 1, \qquad w = y / \mathbf{1}^\top y,
+$$
+
+whose solution is unique when $\Sigma$ is definite. Their core property
+characterises the optimum. Every asset held has the same correlation with the
+portfolio, and every asset left out is at least as correlated with it. A
+generated test compares the programme with SLSQP maximising the ratio of
+Choueifaty and Coignard directly. On two hundred assets with the Ledoit-Wolf
+covariance the programme solves in 21 ms.
+
 ## Mean-variance baseline
 
 The mean-variance frontier solves $\min_w \tfrac{1}{2} w^\top \Sigma w$ subject
@@ -144,7 +202,10 @@ $$
 
 with $w$ in the shared constraint set. The objective and constraints are linear,
 so this is a linear programme and the solution is a global optimum. The divisor
-is $\alpha T$, the mass of the tail being averaged.
+is $\alpha T$, the mass of the tail being averaged. The implementation states
+the objective with cvxpy's `cvar` atom, which canonicalises to this programme.
+At $\alpha = 1/T$ the average covers the single worst scenario, which is the
+minimax model of Young (1998), so that model needs no programme of its own.
 
 ## Mean-EVaR
 
@@ -158,43 +219,54 @@ $$
 \frac{1}{T} \sum_{t=1}^{T} e^{L_t / z} \right).
 $$
 
-The joint problem over $w$ and $z$ is convex and admits an exponential-cone
-form. Introduce $t$ and per-sample $u_t$ with the perspective constraints
-$u_t \ge z\, e^{(L_t - t)/z}$, the exponential cone, and $\sum_t u_t \le z$.
-Then
+The objective is the perspective of a log-sum-exp composed with the linear
+losses, so it is jointly convex in $w$ and $z$. Ahmadi-Javid and Fallah-Tafti
+(2019, problem 3.7) observe that it is also differentiable and has $N + 1$
+variables whatever the sample size. With $s_t = L_t / z$ and $p$ the softmax of
+$s$, the gradient is
 
 $$
-\sum_t e^{(L_t - t)/z} \le 1
-\quad\Longleftrightarrow\quad
-t \ge z \ln \sum_t e^{L_t / z},
+\nabla_w = -R^\top p, \qquad
+\partial_z = \ln \sum_t e^{s_t} - \ln(\alpha T) - p^\top s,
 $$
 
-so minimising $t - z \ln(\alpha T)$ reproduces
-$z \ln\!\big( (\alpha T)^{-1} \sum_t e^{L_t/z} \big)$, the empirical Entropic
-Value-at-Risk. Because the measure is positively homogeneous in the loss,
-scaling the per-sample losses by a constant rescales the objective without
-moving the optimal $w$, which the implementation exploits to condition the cone
-solver.
+and SLSQP minimises it over the linear rows and bounds of the shared constraint
+set, the L1 budgets split into slack variables. The exponential-cone form it
+replaced carries one cone per scenario. On thirty assets it took 64.5 ms at a
+thousand scenarios and 2.65 s at twenty thousand, against 12.6 ms and 47.9 ms.
+The returns are divided by their standard deviation, which positive homogeneity
+allows, so $z$ is of order one.
+
+When $\alpha T \le 1$ every scenario carries probability at least $\alpha$, so
+the measure of every portfolio is its largest loss, the limit of Ahmadi-Javid
+(2012, Proposition 3.2). The infimum over $z > 0$ is then not attained, and the
+programme is the minimax rule of Young (1998), which the implementation solves
+as the Mean-CVaR programme at $\alpha = 1/T$.
 
 ## Conditional drawdown at risk
 
 For the cumulative return path $P_t = \sum_{s \le t} r_s^\top w$ and running
-maximum $M_t = \max_{s \le t} P_s$, the drawdown is $D_t = M_t - P_t \ge 0$.
-Conditional Drawdown-at-Risk is the Rockafellar-Uryasev average of the drawdown
-beyond its tail threshold,
+maximum $M_t = \max(0, \max_{s \le t} P_s)$, the drawdown is
+$D_t = M_t - P_t \ge 0$. Conditional Drawdown-at-Risk is the Rockafellar-Uryasev
+average of the drawdown beyond its tail threshold. The drawdown obeys the
+recursion $D_t = \max(D_{t-1} - r_t^\top w, 0)$ with $D_0 = 0$, which
+Proposition 4.1 of Chekhlov, Uryasev and Zabarankin (2005) turns into the linear
+programme
 
 $$
-\min_{w, \zeta, u, m}\
-\zeta + \frac{1}{\alpha T} \sum_{t=1}^{T} u_t
+\min_{w, \zeta, u, z}\
+\zeta + \frac{1}{\alpha T} \sum_{t=1}^{T} z_t
 \quad\text{s.t.}\quad
-u_t \ge (m_t - P_t) - \zeta,\ \ u_t \ge 0,
+z_t \ge u_t - \zeta,\ \ u_t \ge u_{t-1} - r_t^\top w,\ \
+z_t, u_t \ge 0,\ \ u_0 = 0 .
 $$
 
-with the running maximum linearised by a non-decreasing auxiliary variable
-$m_t \ge m_{t-1}$, $m_t \ge P_t$, $m_0 \ge 0$. The averaging divisor is
-$\alpha T$, consistent with the worst-$\alpha$ drawdown that the evaluation
-metric reports. The programme is linear and shares the constraint set with the
-other mean-risk allocators.
+Each row carries one period's return, where the formulation with a running-peak
+variable $m_t \ge P_t$ carries the cumulative one and needs a third row per
+date. At a thousand dates and thirty assets the recursion solves in 64 ms
+against 173 ms, to the same optimum. The averaging divisor is $\alpha T$,
+consistent with the worst-$\alpha$ drawdown that the evaluation metric reports,
+and the programme shares the constraint set with the other mean-risk allocators.
 
 ## Second-order stochastic dominance
 
@@ -206,21 +278,58 @@ $$
 \mathbb{E}\big[(\eta - X)^+\big] \le \mathbb{E}\big[(\eta - Y)^+\big].
 $$
 
-On a discrete panel the continuum of thresholds collapses to the benchmark
-realisations $\eta_i = Y_i$. Maximising the expected return subject to dominance
+On a panel of $T$ equally likely scenarios the condition is equivalent to
+dominance of the tail sums: writing $x_{(1)} \le \dots \le x_{(T)}$ for the
+ordered outcomes,
+
+$$
+\sum_{i \le k} x_{(i)} \ge \sum_{i \le k} y_{(i)}, \qquad k = 1, \dots, T.
+$$
+
+The tail sum of the portfolio is the minimum of $\sum_{t \in J} r_t^\top w$ over
+subsets $J$ of size $k$, so maximising the expected return subject to dominance
 is the linear programme
 
 $$
 \max_{w}\ \hat{\mu}^\top w
 \quad\text{s.t.}\quad
-\frac{1}{T} \sum_t u_{t,i} \le s_i(Y),\ \
-u_{t,i} \ge \eta_i - r_t^\top w,\ \
-u_{t,i} \ge 0,
+\sum_{t \in J} r_t^\top w \ge \sum_{i \le k} y_{(i)}
+\ \ \text{for every } J \text{ with } |J| = k,
 $$
 
-where $s_i(Y) = \tfrac{1}{T} \sum_t (\eta_i - Y_t)^+$ is the benchmark lower
-partial moment at $\eta_i$. The dominance constraints are linear in $w$, so the
-problem stays a linear programme.
+with exponentially many constraints of which few bind. The implementation adds
+them by cutting planes. Each round solves the master problem with HiGHS, sorts
+the current portfolio's scenarios, and for the most violated tail sums adds the
+cut whose subset is the $k$ worst scenarios, computed for every $k$ at once from
+one cumulative sum. The master problem has $N$ variables, where the formulation
+with one slack per pair of scenario and threshold has $T^2$, and on 250
+scenarios the cutting planes reach the same optimum in 25 ms against 4.3 s.
+
+## Mean-semideviation
+
+Variance penalises gains and losses alike, so a mean-variance choice can be
+dominated in the second order. Ogryczak and Ruszczynski (1999) measure risk by
+the semideviations below the mean,
+
+$$
+\bar{\delta}_X = \mathbb{E}\big[(\mu_X - X)^+\big], \qquad
+\bar{\sigma}_X = \Big(\mathbb{E}\big[\big((\mu_X - X)^+\big)^2\big]\Big)^{1/2},
+$$
+
+and show that a maximiser of $\mu_X - \lambda \bar{\delta}_X$ (their
+Corollary 4) or of $\mu_X - \lambda \bar{\sigma}_X$ (Corollary 8) is efficient
+under second-order stochastic dominance when $0 < \lambda \le 1$, apart from
+ties in mean and semideviation. Neither bound can be raised for general
+distributions. The deviations above and below the mean have equal expectation,
+so the absolute semideviation is half the mean absolute deviation, and the first
+model is the Konno-Yamazaki programme with the trade-off halved (Mansini,
+Ogryczak and Speranza, 2003). On $T$ equally likely scenarios it is a linear
+programme with $T$ shortfall variables. The standard semideviation replaces
+their mean with a Euclidean norm, a second-order cone. A generated test compares
+both with the deviations written as variables, the absolute model as the linear
+programme of Mansini, Ogryczak and Speranza on HiGHS and the standard model by
+SLSQP. On a thousand scenarios and thirty assets the two programmes solve in 36
+ms and 47 ms.
 
 ## Polynomial goal programming over four moments
 
@@ -235,9 +344,9 @@ M_4 = \mathbb{E}\big[(r - \mu)(r - \mu)^\top \otimes (r - \mu)^\top \otimes
 $$
 
 estimated by the sample averages of the outer products, which the implementation
-forms with `einsum`. The portfolio moments are the contractions
-$s(w) = w^\top \hat{\mu}$, $v(w) = w^\top \Sigma w$,
-$\text{sk}(w) = w^\top M_3 (w \otimes w)$ and
+forms as one matrix product with the row-wise Kronecker square of the centred
+returns. The portfolio moments are the contractions $s(w) = w^\top \hat{\mu}$,
+$v(w) = w^\top \Sigma w$, $\text{sk}(w) = w^\top M_3 (w \otimes w)$ and
 $\text{ku}(w) = w^\top M_4 (w \otimes w \otimes w)$. Polynomial goal programming
 maximises mean and skewness while minimising variance and kurtosis by minimising
 the weighted relative deviations from each moment's aspiration level $g$,
@@ -250,6 +359,10 @@ $$
 
 where $f_k$ ranges over the four moments and $\lambda_k$ encodes the investor
 preference. The objective is nonlinear, so a general nonlinear solver is used.
+The optimiser never forms the tensors. With $p = (R - \bar{r}) w$ the centred
+portfolio return, $w^\top M_3 (w \otimes w)$ is the mean of $p^3$ and
+$w^\top M_4 (w \otimes w \otimes w)$ the mean of $p^4$, so every objective
+evaluation costs $O(TN)$ rather than $O(N^4)$.
 
 ## Black-Litterman
 
@@ -273,9 +386,21 @@ $$
 
 a precision-weighted average of prior and views, with the posterior parameter
 covariance $\big[ (\tau \Sigma)^{-1} + P^\top \Omega^{-1} P \big]^{-1}$ added to
-$\Sigma$ for the posterior return covariance. Feeding $\mu_{\text{BL}}$ into the
-mean-variance step replaces noisy sample means with a shrunk, view-adjusted
-estimate.
+$\Sigma$ for the posterior return covariance. By the Woodbury identity the same
+quantities are
+
+$$
+\mu_{\text{BL}} = \pi + \tau \Sigma P^\top A^{-1} (Q - P \pi),
+\qquad
+M = \tau \Sigma - \tau \Sigma P^\top A^{-1} P \tau \Sigma,
+\qquad
+A = P \tau \Sigma P^\top + \Omega,
+$$
+
+which the implementation evaluates with one Cholesky solve of the $k \times k$
+system $A$ instead of three $N \times N$ inversions, and which stays defined for
+a view held with certainty. Feeding $\mu_{\text{BL}}$ into the mean-variance
+step replaces noisy sample means with a shrunk, view-adjusted estimate.
 
 ## Resampled efficiency
 
@@ -291,7 +416,12 @@ $$
 
 which remains on the simplex as a convex combination of feasible points. The
 averaging shrinks the weights toward the centre of the efficient region and
-reduces turnover relative to the single-shot solution.
+reduces turnover relative to the single-shot solution. For a Gaussian resample
+of length $T$ the estimates are sufficient statistics with known laws, the mean
+$\hat{\mu}^{(b)} \sim \mathcal{N}(\hat{\mu}, \Sigma / T)$ independent of
+$(T - 1)\, \Sigma^{(b)} \sim W_N(T - 1, \Sigma)$. The implementation draws them
+directly, the Wishart through SciPy's Bartlett decomposition, and solves all $B$
+systems in one batched call.
 
 ## Robust mean-variance
 

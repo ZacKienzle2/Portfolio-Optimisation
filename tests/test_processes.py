@@ -81,3 +81,31 @@ def test_heston_variance_non_negative_and_prices_positive() -> None:
     assert prices.shape == variances.shape == (1000, 253)
     assert bool((variances >= 0.0).all())
     assert bool((prices > 0.0).all())
+
+
+def test_ornstein_uhlenbeck_matches_the_exact_transition_in_one_step() -> None:
+    kappa, theta, sigma, x0 = 2.0, 0.1, 0.3, 1.0
+    terminal = simulate_ornstein_uhlenbeck(
+        x0=x0, kappa=kappa, theta=theta, sigma=sigma, t=1.0, n_steps=1, n_paths=200_000, seed=0
+    )[:, -1]
+    mean = theta + (x0 - theta) * np.exp(-kappa)
+    variance = sigma**2 * (1.0 - np.exp(-2.0 * kappa)) / (2.0 * kappa)
+    assert abs(terminal.mean() - mean) < 4.0 * np.sqrt(variance / terminal.size)
+    assert abs(terminal.var() / variance - 1.0) < 0.02
+
+
+def test_merton_mean_is_exact_with_several_jumps_per_step() -> None:
+    terminal = simulate_merton_jump_diffusion(
+        s0=1.0,
+        mu=0.05,
+        sigma=0.2,
+        jump_intensity=3.0,
+        jump_mean=-0.1,
+        jump_std=0.3,
+        t=1.0,
+        n_steps=1,
+        n_paths=400_000,
+        seed=0,
+    )[:, -1]
+    assert abs(terminal.mean() / np.exp(0.05) - 1.0) < 0.01
+    assert abs(np.log(terminal).var() / (0.2**2 + 3.0 * (0.1**2 + 0.3**2)) - 1.0) < 0.02

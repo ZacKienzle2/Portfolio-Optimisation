@@ -1,8 +1,8 @@
 # Portfolio Optimisation
 
 Quant infrastructure for portfolio construction, risk modelling and time series
-diagnostics. Python 3.12+ over numpy, scipy, pandas, statsmodels, arch, sklearn,
-pypfopt and pymle.
+diagnostics. Python 3.12+ over numpy, scipy, pandas, statsmodels, arch, sklearn
+and cvxpy.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fe5196.svg)](https://www.conventionalcommits.org/en/v1.0.0/)
@@ -86,7 +86,7 @@ drawn by pydeps when the site is built:
 
 ```bash
 uv run lint-imports
-uv run pydeps portfolio_optimisation --noshow --only portfolio_optimisation \
+uv run pydeps src/portfolio_optimisation --noshow --only portfolio_optimisation \
   -T svg -o docs/module_dependencies.svg
 ```
 

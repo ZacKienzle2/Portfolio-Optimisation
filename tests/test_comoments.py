@@ -8,12 +8,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from portfolio_optimisation.optim.higher_moments import (
     cokurtosis_tensor,
     coskewness_tensor,
-    pgp_higher_moment_weights,
 )
 
 
@@ -48,9 +46,3 @@ def test_cokurtosis_matches_definition() -> None:
                         centred[:, i] * centred[:, j] * centred[:, k] * centred[:, ell]
                     )
     np.testing.assert_allclose(cokurtosis_tensor(df), ref, atol=1e-12)
-
-
-def test_pgp_rejects_oversized_universe() -> None:
-    df = _sample(n=6)
-    with pytest.raises(ValueError, match="O\\(N\\^4\\)"):
-        pgp_higher_moment_weights(df, max_assets=5)

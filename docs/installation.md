@@ -11,12 +11,11 @@ uv sync --frozen --all-extras
 
 This installs the core runtime together with the optional extras:
 
-| Extra       | Purpose                                                       |
-| ----------- | ------------------------------------------------------------- |
-| `perf`      | Numba and numexpr accelerators for hot loops.                 |
-| `optim`     | cvxpy and solvers for the CDaR, SSD and goal-programming LPs. |
-| `notebooks` | JupyterLab and nbconvert for the worked example.              |
-| `docs`      | MkDocs Material and mkdocstrings for this site.               |
+| Extra       | Purpose                                                        |
+| ----------- | -------------------------------------------------------------- |
+| `optim`     | cvxpy for the CVaR, EVaR and CDaR programmes and the frontier. |
+| `notebooks` | JupyterLab and nbconvert for the worked example.               |
+| `docs`      | MkDocs Material and mkdocstrings for this site.                |
 
 To install only the core runtime:
 

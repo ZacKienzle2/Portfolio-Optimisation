@@ -5,12 +5,17 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+from hypothesis.extra.numpy import arrays
 
+from portfolio_optimisation import baselines
 from portfolio_optimisation.optim import (
     HRPModel,
     black_litterman_weights,
     implied_equilibrium_returns,
 )
+from portfolio_optimisation.optim.black_litterman import black_litterman_posterior
 
 
 def _returns_and_hrp(seed: int = 21, t: int = 600, n: int = 6):
@@ -89,3 +94,29 @@ def test_black_litterman_rejects_dimension_mismatch() -> None:
             views_matrix=bad_p,
             views_returns=np.array([0.0]),
         )
+
+
+@st.composite
+def _black_litterman_inputs(draw: st.DrawFn) -> dict[str, np.ndarray | float]:
+    n = draw(st.integers(1, 8))
+    k = draw(st.integers(1, n))
+    unit = st.floats(-1.0, 1.0)
+    factor = draw(arrays(np.float64, (n, n), elements=unit))
+    return {
+        "sigma": 1e-4 * (factor @ factor.T + 0.1 * np.eye(n)),
+        "pi": draw(arrays(np.float64, n, elements=st.floats(-0.01, 0.01))),
+        "p": draw(arrays(np.float64, (k, n), elements=unit)),
+        "q": draw(arrays(np.float64, k, elements=st.floats(-0.01, 0.01))),
+        "omega": np.diag(draw(arrays(np.float64, k, elements=st.floats(1e-6, 1e-3)))),
+        "tau": draw(st.floats(0.01, 0.2)),
+    }
+
+
+@given(inputs=_black_litterman_inputs())
+def test_equivalent_black_litterman_posterior(inputs: dict[str, np.ndarray | float]) -> None:
+    for old, new in zip(
+        baselines.black_litterman_posterior(**inputs),
+        black_litterman_posterior(**inputs),
+        strict=True,
+    ):
+        np.testing.assert_allclose(old, new, rtol=1e-6, atol=1e-12)

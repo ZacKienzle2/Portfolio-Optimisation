@@ -13,6 +13,7 @@ from portfolio_optimisation.optim import (
     min_cvar_weights,
     min_evar_weights,
 )
+from portfolio_optimisation.optim.mean_risk import efficient_frontier
 
 
 def _drifting_returns(seed: int = 23, t: int = 400, n: int = 5) -> pd.DataFrame:
@@ -115,3 +116,13 @@ def test_mean_risk_model_caches_weights() -> None:
     model = MeanRiskModel(_drifting_returns(), measure="evar", alpha=0.05)
     weights = model.optimise()
     pd.testing.assert_series_equal(weights, model.weights)
+
+
+def test_efficient_frontier_rises_in_both_risk_and_return() -> None:
+    returns = _drifting_returns()
+    risks, levels = efficient_frontier(
+        returns.mean().to_numpy(), returns.cov().to_numpy(), points=15
+    )
+    assert risks.size == levels.size == 15
+    assert np.all(np.diff(levels) > -1e-9)
+    assert np.all(np.diff(risks) > -1e-9)
