@@ -1,11 +1,14 @@
-"""Tests for the Chekhlov-Uryasev minimum-CDaR LP."""
+"""Tests for the minimum-CDaR linear programme."""
 
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
+from portfolio_optimisation import baselines
 from portfolio_optimisation.optim import PortfolioConstraints, cdar, min_cdar_weights
 
 
@@ -83,3 +86,27 @@ def test_min_cdar_minimises_worst_alpha_tail() -> None:
     weights = min_cdar_weights(returns, alpha=alpha)
     achieved = cdar(returns @ weights, alpha=alpha)
     assert achieved <= min(grid_cdar) + 1e-3
+
+
+def _tail_mean_drawdown(portfolio: np.ndarray, alpha: float) -> float:
+    cumulative = np.cumsum(portfolio)
+    drawdowns = np.maximum.accumulate(np.maximum(cumulative, 0.0)) - cumulative
+    tail = round(alpha * drawdowns.size)
+    return float(np.sort(drawdowns)[-tail:].mean())
+
+
+@settings(deadline=None, max_examples=20)
+@given(
+    periods=st.integers(5, 30).map(lambda tens: 10 * tens),
+    n_assets=st.integers(2, 6),
+    seed=st.integers(0, 2**32 - 1),
+)
+def test_equivalent_recursion_and_peak_cdar_programmes(
+    periods: int, n_assets: int, seed: int
+) -> None:
+    rng = np.random.default_rng(seed)
+    returns = rng.normal(0.0003, 0.01, size=(periods, n_assets))
+    weights = min_cdar_weights(pd.DataFrame(returns), alpha=0.1).to_numpy()
+    assert _tail_mean_drawdown(returns @ weights, 0.1) == pytest.approx(
+        baselines.min_cdar_objective(returns, 0.1), abs=1e-7
+    )

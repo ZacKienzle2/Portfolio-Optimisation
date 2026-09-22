@@ -159,6 +159,35 @@ def ssd_expected_return(returns: NDArray[np.float64], benchmark: NDArray[np.floa
     return float(problem.value)
 
 
+def min_cdar_objective(returns: NDArray[np.float64], alpha: float) -> float:
+    """Minimum CDaR with a running-peak variable per date.
+
+    Rows state ``m_t >= P_t`` on the cumulative return, ``m_t >= m_{t-1}`` and
+    ``m_0 >= 0``, three rows per date with the cumulative returns dense in the
+    weights, where the rewrite uses the drawdown recursion. Long-only and
+    fully invested. Needs the ``[optim]`` extra.
+
+    Args:
+        returns: Asset returns, one row per date.
+        alpha: Tail level.
+
+    Returns:
+        The minimum CDaR.
+    """
+    import cvxpy as cp
+
+    t_steps, n_assets = returns.shape
+    w = cp.Variable(n_assets, nonneg=True)
+    peak = cp.Variable(t_steps)
+    cumulative = cp.cumsum(returns @ w)
+    problem = cp.Problem(
+        cp.Minimize(cp.cvar(peak - cumulative, 1.0 - alpha)),
+        [cp.sum(w) == 1, peak >= cumulative, peak[1:] >= peak[:-1], peak[0] >= 0],
+    )
+    problem.solve()
+    return float(problem.value)
+
+
 def marchenko_pastur_variance(
     eigenvalues: NDArray[np.float64], q: float, bandwidth: float = 0.01
 ) -> float:

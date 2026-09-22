@@ -29,7 +29,11 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 
-from portfolio_optimisation.optim.constraints import PortfolioConstraints, require_cvxpy
+from portfolio_optimisation.optim.constraints import (
+    DEFAULT_SOLVER,
+    PortfolioConstraints,
+    require_cvxpy,
+)
 from portfolio_optimisation.optim.constraints import long_only as project_long_only
 
 if TYPE_CHECKING:
@@ -50,7 +54,7 @@ def min_cvar_weights(
     *,
     alpha: float = 0.05,
     constraints: PortfolioConstraints | None = None,
-    solver: str | None = None,
+    solver: str = DEFAULT_SOLVER,
 ) -> pd.Series:
     """Solve the Rockafellar-Uryasev minimum-CVaR linear programme.
 
@@ -59,7 +63,7 @@ def min_cvar_weights(
         alpha: Tail level in (0, 1). The objective averages losses in the worst
             ``alpha`` fraction of scenarios.
         constraints: Feasibility set. Defaults to a long-only, fully-invested mandate.
-        solver: Optional ``cvxpy`` solver name. Defaults to automatic selection.
+        solver: ``cvxpy`` solver name.
 
     Returns:
         pd.Series: Optimal weights indexed by ticker.
@@ -94,7 +98,7 @@ def min_evar_weights(
     *,
     alpha: float = 0.05,
     constraints: PortfolioConstraints | None = None,
-    solver: str | None = None,
+    solver: str = DEFAULT_SOLVER,
 ) -> pd.Series:
     """Solve the minimum-EVaR exponential-cone programme.
 
@@ -102,8 +106,7 @@ def min_evar_weights(
         returns: Asset returns; rows are scenarios, columns assets.
         alpha: Tail level in (0, 1).
         constraints: Feasibility set. Defaults to a long-only, fully-invested mandate.
-        solver: Optional ``cvxpy`` solver name. Defaults to automatic selection of an
-            exponential-cone-capable solver.
+        solver: ``cvxpy`` solver name.
 
     Returns:
         pd.Series: Optimal weights indexed by ticker.
@@ -152,7 +155,7 @@ def mean_risk_weights(
     measure: Literal["cvar", "evar"] = "cvar",
     alpha: float = 0.05,
     constraints: PortfolioConstraints | None = None,
-    solver: str | None = None,
+    solver: str = DEFAULT_SOLVER,
 ) -> pd.Series:
     """Dispatch to the minimum-CVaR or minimum-EVaR optimiser.
 
@@ -162,7 +165,7 @@ def mean_risk_weights(
             exponential-cone EVaR programme.
         alpha: Tail level in (0, 1).
         constraints: Shared feasibility set.
-        solver: Optional ``cvxpy`` solver name.
+        solver: ``cvxpy`` solver name.
 
     Returns:
         pd.Series: Optimal weights indexed by ticker.
@@ -184,7 +187,7 @@ def efficient_frontier(
     *,
     points: int = 100,
     constraints: PortfolioConstraints | None = None,
-    solver: str | None = None,
+    solver: str = DEFAULT_SOLVER,
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Trace the mean-variance frontier from minimum variance to maximum return.
 
@@ -196,7 +199,7 @@ def efficient_frontier(
         covariance: Positive semi-definite covariance matrix.
         points: Number of frontier portfolios.
         constraints: Feasibility set. Defaults to long-only and fully invested.
-        solver: Optional ``cvxpy`` solver name.
+        solver: ``cvxpy`` solver name.
 
     Returns:
         Volatility and expected return of each frontier portfolio.
@@ -236,7 +239,7 @@ class MeanRiskModel:
         measure: Literal["cvar", "evar"] = "cvar",
         alpha: float = 0.05,
         constraints: PortfolioConstraints | None = None,
-        solver: str | None = None,
+        solver: str = DEFAULT_SOLVER,
     ) -> None:
         self.returns = returns
         self.measure: Literal["cvar", "evar"] = measure

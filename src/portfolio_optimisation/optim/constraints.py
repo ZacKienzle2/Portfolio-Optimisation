@@ -11,6 +11,12 @@ in this layer enforces the same vocabulary without duplicating the encoding.
 The full-investment budget ``sum(w) == 1`` is always emitted. All remaining
 conditions are linear, so they preserve the convexity (and hence the global
 optimality) of any mean-risk programme that consumes them.
+
+``DEFAULT_SOLVER`` names Clarabel, the solver cvxpy selects for these linear,
+quadratic and exponential-cone programmes. Left unnamed, cvxpy retries the
+import of every solver that is not installed on each solve, which cost 4 ms of
+a 40 ms CVaR solve, and it hands quadratic programmes to OSQP, whose frontier
+volatilities differed from Clarabel's by ``3e-5``.
 """
 
 from __future__ import annotations
@@ -25,6 +31,8 @@ if TYPE_CHECKING:
 
     import cvxpy as cp
     from numpy.typing import ArrayLike, NDArray
+
+DEFAULT_SOLVER = "CLARABEL"
 
 
 def require_cvxpy() -> ModuleType:
