@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from hypothesis import given
+from hypothesis import strategies as st
+from hypothesis.extra.numpy import arrays
 
+from portfolio_optimisation import baselines
 from portfolio_optimisation.optim import (
     cokurtosis_tensor,
     coskewness_tensor,
     pgp_higher_moment_weights,
 )
+from portfolio_optimisation.optim.higher_moments import portfolio_third_and_fourth_moments
 
 
 def _skewed_returns(seed: int = 41, t: int = 800, n: int = 4) -> pd.DataFrame:
@@ -58,3 +63,24 @@ def test_pgp_preference_exponents_shift_allocation() -> None:
     aggressive = pgp_higher_moment_weights(returns, gamma=4.0, beta=0.25)
     # Higher gamma penalises skew shortfall more sharply -> allocations differ.
     assert not np.allclose(default.weights.to_numpy(), aggressive.weights.to_numpy())
+
+
+@given(
+    data=st.tuples(st.integers(2, 60), st.integers(1, 6)).flatmap(
+        lambda shape: st.tuples(
+            arrays(np.float64, shape, elements=st.floats(-0.2, 0.2)),
+            arrays(np.float64, shape[1], elements=st.floats(-1.0, 1.0)),
+        )
+    )
+)
+def test_equivalent_portfolio_third_and_fourth_moments(
+    data: tuple[np.ndarray, np.ndarray],
+) -> None:
+    returns, weights = data
+    centred = returns - returns.mean(axis=0)
+    np.testing.assert_allclose(
+        baselines.portfolio_third_and_fourth_moments(weights=weights, centred=centred),
+        portfolio_third_and_fourth_moments(weights=weights, centred=centred),
+        rtol=1e-9,
+        atol=1e-15,
+    )

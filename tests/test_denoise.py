@@ -5,12 +5,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
+from portfolio_optimisation import baselines
 from portfolio_optimisation.optim import (
     HRPModel,
     denoise_correlation,
     denoise_covariance,
     detone_correlation,
+    marchenko_pastur_variance,
 )
 
 
@@ -42,8 +46,7 @@ def test_denoised_correlation_collapses_pure_noise() -> None:
 
 
 def test_detoned_correlation_zeroes_market_component() -> None:
-    """Top eigenvector of the detoned matrix should be orthogonal to the
-    original top eigenvector (the removed market mode)."""
+    """Detoning leaves the top eigenvector orthogonal to the removed market mode."""
     returns = _gaussian_returns()
     corr = returns.corr().to_numpy()
     _, eigvecs_before = np.linalg.eigh(corr)
@@ -87,3 +90,23 @@ def test_hrp_accepts_external_covariance() -> None:
 def test_denoise_rejects_q_le_one() -> None:
     with pytest.raises(ValueError, match="q = T/N must be greater than 1"):
         denoise_correlation(np.eye(5), q=0.5)
+
+
+@settings(deadline=None, max_examples=25)
+@given(
+    n_assets=st.integers(150, 400),
+    q=st.floats(1.5, 10.0),
+    signal=st.floats(0.0, 0.6),
+    seed=st.integers(0, 2**32 - 1),
+)
+def test_equivalent_marchenko_pastur_variance(
+    n_assets: int, q: float, signal: float, seed: int
+) -> None:
+    rng = np.random.default_rng(seed)
+    n_obs = int(q * n_assets)
+    data = rng.standard_normal((n_obs, n_assets)) + signal * rng.standard_normal((n_obs, 1))
+    eigenvalues = np.linalg.eigvalsh(np.corrcoef(data, rowvar=False))
+    ratio = n_obs / n_assets
+    assert marchenko_pastur_variance(eigenvalues, ratio) == pytest.approx(
+        baselines.marchenko_pastur_variance(eigenvalues, ratio), abs=1e-3
+    )

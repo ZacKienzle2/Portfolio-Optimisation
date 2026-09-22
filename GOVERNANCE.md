@@ -10,8 +10,8 @@ Use the project. Contribute via bug reports, feature requests, discussions.
 
 ### Contributors
 
-Submit contributions (code, docs, tests, design). Listed in
-[AUTHORS.md](AUTHORS.md) after first merge.
+Submit contributions (code, docs, tests, design). Recorded by git, and listed on
+the repository's contributors page after first merge.
 
 ### Maintainers
 
