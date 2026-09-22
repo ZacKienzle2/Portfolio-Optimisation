@@ -1,0 +1,414 @@
+\chapter{Performance Review}
+\label{app:performance}
+
+% How the package was profiled, which routines the profile implicated, what
+% replaced them and the literature behind each replacement. The timings come
+% from one Windows workstation under CPython 3.12.
+
+This appendix records a review of the package driven by measurement. Each
+change began from a profile, was checked against the implementation it
+replaced, and was timed against that implementation on the same inputs in the
+same interpreter.
+
+\section{Method}
+\label{app:performance:method}
+
+A timing is a sample from a distribution that the machine, the operating
+system and the memory layout all shape, and innocuous changes to the
+environment can bias it \citep{mytkowicz_producing_2009}. A single run
+therefore cannot separate a change from noise
+\citep{georges_statistically_2007,kalibera_rigorous_2013}. Each question in
+the review had its own tool.
+
+\begin{itemize}
+  \item \texttt{py-spy} sampled a workload that calls every public routine,
+    following child processes, and rendered the stacks as flame graphs
+    \citep{gregg_flame_2016}. A sampling profiler needs no instrumentation,
+    unlike the call-graph profiler of \citet{graham_gprof_1982}, so the
+    profile is of the program as it runs.
+  \item \texttt{python -X importtime} attributed start-up time to each
+    import.
+  \item \texttt{hyperfine} timed whole command-line invocations after
+    warm-up runs.
+  \item \texttt{pyperf timeit} timed each routine in several fresh worker
+    processes and reported the mean and standard deviation across them, the
+    repetition at more than one level that \citet{kalibera_rigorous_2013}
+    recommend.
+\end{itemize}
+
+The baseline was the tree before the review, placed first on the import path
+so that both versions ran in the same environment.
+
+Every rewrite that changed an algorithm keeps its predecessor in the
+\texttt{baselines} module, and a property-based test compares the two on
+generated inputs \citep{claessen_quickcheck_2000}. Hypothesis
+\citep{maciver_hypothesis_2019} shrinks a disagreement to its smallest case,
+and inputs are quantised where a solver tolerance would otherwise decide the
+outcome, as with the dominance constraints below. Mutation testing
+\citep{jia_analysis_2011} runs in the template's \texttt{mutants} session, and
+pyright gates every commit. Static checkers found most real type bugs in
+annotated Python in the study of \citet{xu_static_2023}.
+
+\section{Findings}
+\label{app:performance:findings}
+
+Two costs dominated the first profile, and neither was numerical.
+
+Importing \texttt{portfolio\_optimisation.optim} took 45 per cent of the wall
+time of the workload. Each subpackage imported every module it exported, so
+touching the logging helper loaded PyPortfolioOpt and cvxpy, and printing the
+version took 2.9~s. The subpackages now export through stubs loaded lazily by
+\texttt{lazy\_loader}, the mechanism of Scientific Python SPEC~1, and the
+command starts in 0.20~s.
+
+The bootstrap and the diffusion fits ran in process pools. On Windows a
+worker is spawned, and it imports the numerical stack before its first task.
+One bootstrap resample takes 1.3~ms on six assets, so 1000 resamples took
+8.8~s in the pool and 1.3~s in one process, with identical statistics. The
+fits of geometric Brownian motion and the Ornstein-Uhlenbeck process fell
+from 2.96~s to 0.21~s and from 3.34~s to 0.64~s.
+
+\Cref{tab:performance:timings} gives the per-call timings. Each entry is a
+pyperf mean over its worker processes. The baseline and the rewrite of the
+coverage test, EVaR, denoising, nonlinear shrinkage and the Ornstein-Uhlenbeck
+simulator were timed back to back. The other baselines come from an earlier
+session on the same machine, where repeated runs of one routine moved by up to
+a tenth.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Mean time per call before and after the review.}
+  \label{tab:performance:timings}
+  \begin{tabular}{lrrr}
+    \toprule
+    Routine & Before & After & Speed-up \\
+    \midrule
+    HRP, 200 assets & 9.04~ms & 7.19~ms & 1.26 \\
+    HERC, 200 assets & 10.1~ms & 8.76~ms & 1.16 \\
+    NCO, 200 assets & 7.57~ms & 4.67~ms & 1.62 \\
+    Risk parity, 200 assets & 9.34~ms & 7.30~ms & 1.28 \\
+    Black-Litterman, 200 assets, 5 views & 23.3~ms & 1.48~ms & 16 \\
+    Resampled efficiency, 30 assets, 500 draws & 260~ms & 7.70~ms & 34 \\
+    Co-kurtosis tensor, 20 assets & 299~ms & 1.22~ms & 245 \\
+    Higher-moment PGP, 10 assets & 53.3~ms & 25.4~ms & 2.10 \\
+    Higher-moment PGP, 20 assets & 435~ms & 70.1~ms & 6.21 \\
+    Mean-CVaR, 30 assets & 43.5~ms & 39.4~ms & 1.10 \\
+    Min-CDaR, 30 assets & 191~ms & 173~ms & 1.11 \\
+    EVaR, 10\,000 losses & 0.498~ms & 1.70~ms & 0.29 \\
+    SSD-constrained, 150 scenarios & 1.05~s & 7.74~ms & 136 \\
+    SSD-constrained, 250 scenarios & 4.32~s & 16.2~ms & 267 \\
+    Whole shares, 20 assets & 4.70~ms & 42.2~ms & 0.11 \\
+    RMT denoising, 100 assets & 26.6~ms & 6.46~ms & 4.12 \\
+    Nonlinear shrinkage, 200 assets & 8.95~ms & 9.23~ms & 0.97 \\
+    $t$ copula fit and simulation, 10 assets & 369~ms & 207~ms & 1.79 \\
+    Sharpe bootstrap interval & 20.2~ms & 17.6~ms & 1.15 \\
+    Risk and performance metrics & 0.461~ms & 0.402~ms & 1.15 \\
+    Conditional coverage test, 100\,000 days & 0.466~ms & 0.132~ms & 3.54 \\
+    Ornstein-Uhlenbeck, 20\,000 paths & 63.9~ms & 62.3~ms & 1.03 \\
+    CIR, 20\,000 paths & 68.4~ms & 47.8~ms & 1.43 \\
+    Merton jump diffusion & 136~ms & 111~ms & 1.22 \\
+    Heston & 124~ms & 97.9~ms & 1.27 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Two rows are slower. EVaR and whole-share allocation are discussed with their
+changes below.
+
+\section{Changes and their literature}
+\label{app:performance:literature}
+
+\subsection{Hierarchical allocation}
+
+Hierarchical risk parity \citep{lopezdeprado_building_2016} clusters assets
+on the correlation distance of \citet{mantegna_hierarchical_1999}, orders the
+leaves of the dendrogram so that similar assets are adjacent, and splits the
+ordered list by inverse cluster variance. The package spliced the leaf order
+out of the linkage matrix in a loop that rebuilt a Python list at every
+merge. The order is the left-to-right leaf sequence of the dendrogram, which
+\texttt{scipy.cluster.hierarchy.leaves\_list} returns from compiled code
+\citep{virtanen_scipy_2020}, and a property test confirms that the two agree
+under Ward \citep{ward_hierarchical_1963}, single, complete and average
+linkage, whose updates SciPy computes with the algorithms of
+\citet{mullner_fastcluster_2013}. The optimal leaf ordering of
+\citet{barjoseph_fast_2001} would change the seriation and with it the
+weights, so it was not adopted. The same clustering helpers now serve
+hierarchical equal risk contribution
+\citep{raffinot_hierarchical_2017,raffinot_hierarchical_2018}
+and nested clustered optimisation
+\citep{lopezdeprado_robust_2019,lopezdeprado_machine_2020}. The equal risk
+contribution routine bisects the seriated list at its midpoint rather than
+cutting the tree at an optimal number of clusters, a simplification of
+\citet{raffinot_hierarchical_2018} that the review records rather than
+corrects.
+
+\subsection{Covariance estimation}
+
+Every allocator starts from a covariance estimate. The package offers linear
+shrinkage towards a scaled identity
+\citep{ledoit_honey_2004,ledoit_wellconditioned_2004}, oracle approximating
+shrinkage \citep{chen_shrinkage_2010}, analytical nonlinear shrinkage
+\citep{ledoit_nonlinear_2012,ledoit_analytical_2020} and a factor model
+\citep{fama_common_1993,fan_large_2013}. Random matrix denoising
+\citep{laloux_noise_1999,plerou_universal_1999,laloux_random_2000,bouchaud_theory_2003,lopezdeprado_machine_2020}
+fits the Marchenko-Pastur law \citep{marchenko_distribution_1967} to a kernel
+density of the eigenvalues. The profile put nine tenths of the time in that
+density, a sum of $N$ Gaussian kernels evaluated afresh at 1000 points for each
+of the twenty-five candidate variances. The density is now computed once by the
+binned fast Fourier transform of \citet{silverman_algorithm_1982}, with the
+correction of \citet{jones_remark_1984}, as statsmodels implements it, and
+each candidate grid reads it by linear interpolation. The error of linear
+binning falls with the square of the bin width relative to the bandwidth
+\citep{hall_accuracy_1996}, so the grid holds 32 bins per bandwidth, which
+kept the density within $10^{-4}$ of the exact sum and the fitted variance
+within $10^{-3}$ of the exact fit on generated spectra of 150 to 400 assets.
+
+The same property test exposed a defect in the method rather than the
+rewrite. With 19 eigenvalues and the fixed bandwidth of 0.01, which
+\citet{lopezdeprado_machine_2020} sets for spectra of a thousand, the
+squared-distance objective had eight local minima between variances of 0.45
+and 0.90, two of them within 0.15 per cent of each other, and its global
+minimum lay on the bound. Brent's bounded search is local, so a perturbation
+of $4 \times 10^{-4}$ in the density moved the fit from one basin to the
+other. A bandwidth that shrinks with the number of eigenvalues, such as the
+rule of \citet{silverman_density_2018}, or an estimator that needs no fit,
+such as the rotationally invariant estimator of \citet{bun_cleaning_2017},
+would remove the ambiguity. The
+review records the defect and leaves the estimator unchanged. Conversion between
+covariance and correlation, and the
+eigenvalue floor that restores positive definiteness, come from statsmodels
+\citep{seabold_statsmodels_2010}. Its \texttt{corr\_clipped} is a cheaper
+alternative to the nearest correlation matrix of \citet{higham_computing_2002},
+which statsmodels provides as \texttt{corr\_nearest}.
+
+\subsection{Black-Litterman}
+
+The posterior of \citet{black_global_1992}, in the form derived by
+\citet{he_intuition_2002} and \citet{walters_blacklitterman_2011}, was
+computed with the precision matrix and three inversions of order $N$. By the
+matrix inversion lemma \citep{hager_updating_1989} the posterior mean is
+\begin{equation}
+  \mu_{BL} = \pi + \tau \Sigma P^{\top}
+  \left( P \tau \Sigma P^{\top} + \Omega \right)^{-1} (q - P \pi),
+\end{equation}
+which needs one solve of order $k$, the number of views, and the posterior
+covariance follows from the same factor. The default view uncertainty
+$\Omega = \diag(P \tau \Sigma P^{\top})$ is the proportional choice of
+\citet{he_intuition_2002}, which the code had named after Idzorek.
+
+\subsection{Resampled efficiency}
+
+Resampled efficiency \citep{michaud_markowitz_1989} averages optimal weights
+over resampled inputs. The package drew $T$ normal returns per resample and
+estimated both moments from them. For normal data the sample mean and the
+sample covariance are independent, with
+$\hat{\mu}^{(b)} \sim \mathcal{N}(\hat{\mu}, \hat{\Sigma} / T)$ and
+$(T - 1) \hat{\Sigma}^{(b)} \sim W_N(T - 1, \hat{\Sigma})$
+\citep{wishart_generalised_1928}, so the resamples are now drawn from those
+laws directly. SciPy draws the Wishart matrix by the Bartlett decomposition
+of \citet{smith_algorithm_1972}, and the $B$ linear systems are solved in one
+batched call. The $O(B T N^{2})$ cost of re-estimation is gone.
+\citet{goldfarb_robust_2003} and \citet{tutuncu_robust_2004} treat the same
+estimation error by robust optimisation instead, an alternative the package
+does not implement.
+
+\subsection{Higher moments}
+
+Polynomial goal programming over the mean, variance, skewness and kurtosis
+\citep{lai_portfolio_1991,jondeau_optimal_2006,harvey_portfolio_2010}
+evaluated the portfolio skewness and kurtosis by contracting the co-skewness
+and co-kurtosis tensors \citep{boudt_higher_2015}, with $N^{3}$ and $N^{4}$
+entries. A portfolio moment is a moment of the scalar series $X w$, so each
+evaluation of the objective now costs $O(T N)$. The tensors, which the
+package still reports, are built as products of the centred returns and
+their pairwise products. A matrix product has the arithmetic intensity that
+the roofline model of \citet{williams_roofline_2009} places in the
+compute-bound region, and BLAS runs it close to the peak rate of the
+processor \citep{goto_anatomy_2008}.
+
+\subsection{Mean-risk programmes}
+
+The mean-CVaR programme
+\citep{rockafellar_optimization_2000,rockafellar_conditional_2002}
+was written out with one auxiliary variable per scenario. It now uses the
+\texttt{cvar} atom of cvxpy, whose rewriting system
+\citep{agrawal_rewriting_2018} expands it into the same linear programme, so
+the solver sees the same problem and the gain is small. Conditional drawdown
+at risk \citep{chekhlov_drawdown_2005} applies the atom to the drawdown
+series. Both measures are coherent
+\citep{artzner_coherent_1999,acerbi_coherence_2002}, and CVaR is the spectral
+measure with a flat spectrum on the tail
+\citep{acerbi_spectral_2002,wang_class_2000}.
+The efficient frontier, previously drawn by PyPortfolioOpt
+\citep{markowitz_portfolio_1952}, is a parametrised programme in which only
+the return target changes, so cvxpy compiles it once and re-solves it at each
+point. Clarabel \citep{goulart_clarabel_2026} and HiGHS
+\citep{huangfu_parallelizing_2018} are the solvers, and
+\citet{boyd_convex_2004} and \citet{cornuejols_optimization_2007} give the
+formulations.
+
+The entropic value at risk \citep{ahmadijavid_entropic_2012} is an infimum
+over the logarithm of a moment generating function, found by a bounded scalar
+search in about fifteen evaluations. The baseline shifted the log-sum-exp by
+its maximum by hand, and SciPy's \texttt{logsumexp} now computes the same sum.
+On SciPy 1.18 the library call takes 103~\textmu s on 10\,000 losses against
+28~\textmu s for the same arithmetic, the difference being its dispatch over
+array libraries, and that overhead is the whole of the regression in
+\cref{tab:performance:timings}. A Newton iteration on the stationarity
+condition, whose derivative is the variance of the exponentially tilted
+losses, needs fewer evaluations but diverged where that variance vanishes, and
+was not adopted.
+
+\subsection{Stochastic dominance}
+
+Second-order stochastic dominance constraints
+\citep{dentcheva_optimization_2003,dentcheva_portfolio_2006,ogryczak_dual_2002,kuosmanen_efficient_2004}
+were imposed through the pairwise formulation, with one shortfall variable
+for each pair of scenario and benchmark threshold, $T^{2}$ in all.
+\citet{luedtke_new_2008} and \citet{rudolf_optimization_2008} give smaller
+equivalent formulations. With equally likely scenarios, a portfolio dominates
+the benchmark exactly when, for every $k$, the sum of its $k$ smallest
+outcomes is at least the benchmark's
+\citep{roman_portfolio_2006,fabian_processing_2011}.
+\citet{fabian_processing_2011}
+impose the violated tail-sum inequalities as cutting planes. The
+implementation follows that scheme with the HiGHS dual simplex
+\citep{huangfu_parallelizing_2018}, adds the twenty most violated cuts in each
+round, and computes every tail sum at once from the cumulative sums of the
+sorted outcomes. An instance with 2000 scenarios and 30 assets, four million
+variables in the pairwise form, solves in 1.6~s.
+
+\subsection{Whole-share allocation}
+
+Converting weights to share counts minimises the deviation from the targets
+plus the cash left over, over integer counts within the budget, a
+mixed-integer linear programme that HiGHS solves by branch and bound
+\citep{land_automatic_1960,huangfu_parallelizing_2018}. The baseline passed it
+to PyPortfolioOpt, and the first rewrite solved the deviation form directly
+with money in units of the budget. Property tests found two defects in that
+form. At the default relative gap of $10^{-4}$ it stopped at allocations worse
+than rounding every target down, because the objective sits near $-1$, and in
+units of the budget a shortfall of a few cents lies below the solver's
+feasibility tolerance.
+
+With weights that sum to one the objective equals twice the total shortfall
+below target, since a share bought above target adds as much deviation as it
+removes cash. The programme is therefore posed over shortfall variables and
+steps from rounding every target down, with money in units of the dearest
+share, so every quantity is of the order of one share price. A step above one
+lowers no shortfall, and the optimal shortfall is at most the cash that
+rounding down leaves, which bounds the shares dropped from each asset. The
+bounded box lets HiGHS finish at its root node. That cash is the sum of the
+remainders, which \texttt{numpy.divmod} returns exactly. Subtracting the
+rounded-down spend from the budget in floating point instead left it a
+fraction of a cent below zero when a target rounded onto a whole share, and
+emptied the box. The solve is certified to
+$10^{-6}$ of the dearest share and takes 42~ms against the baseline's 4.7~ms.
+HiGHS spends that time in root heuristics and restarts rather than in
+branching, and SciPy exposes no option that turns them off.
+
+\subsection{Dependence and simulation}
+
+The Student $t$ copula \citep{demarta_t_2005,embrechts_correlation_2002}
+was fitted by estimating Kendall's $\tau$ for each pair of assets
+\citep{knight_computer_1966}, mapping it to a correlation by
+$\rho = \sin(\pi \tau / 2)$ \citep{lindskog_kendalls_2003}, and repairing the
+result to positive definiteness, all in Python loops. The statsmodels
+\texttt{StudentTCopula.fit\_corr\_param} performs the same inversion, and the
+degrees of freedom are fitted by maximum pseudo-likelihood
+\citep{genest_semiparametric_1995,joe_asymptotic_2005} with a bounded scalar
+minimiser. \citet{nelsen_introduction_1999} and \citet{joe_dependence_2014}
+cover the families involved. The column order had followed the iteration
+order of a Python set, so two runs with the same seed could attach margins to
+different columns. It now follows the input.
+
+\subsection{Performance statistics and backtests}
+
+The probabilistic and deflated Sharpe ratios
+\citep{lo_statistics_2002,bailey_sharpe_2012,bailey_deflated_2014} need the
+sample skewness and kurtosis, now from \texttt{scipy.stats}. The confidence
+interval resamples with the stationary bootstrap
+\citep{politis_stationary_1994,efron_introduction_1993} at the block length of
+\citet{politis_automatic_2004} as corrected by \citet{patton_correction_2009},
+through the \texttt{StationaryBootstrap} of the arch package
+\citep{sheppard_arch_2024} in place of an index generator written by hand.
+\citet{ledoit_robust_2008} give a studentised alternative. The coverage tests
+of \citet{kupiec_techniques_1995} and \citet{christoffersen_evaluating_1998}
+need the four transition counts of the violation sequence. They form a
+$2 \times 2$ contingency table, fixed by the joint count of consecutive
+violations and the two margins, each a count of nonzero entries in a boolean
+array of one byte per day. Encoding the pairs for \texttt{numpy.bincount}
+moved eight bytes per day through three temporaries and was forty times
+slower, and SciPy's \texttt{crosstab} sorts its input.
+
+\subsection{Stochastic differential equations}
+
+The simulators \citep{kloeden_numerical_1992,glasserman_monte_2003} stored
+paths with the path index first and advanced them one column at a time, a
+strided access at every step. They now store the time index first, so each
+step reads and writes one contiguous row. The Ornstein-Uhlenbeck process
+\citep{uhlenbeck_theory_1930,vasicek_equilibrium_1977} is sampled from its
+exact Gaussian transition \citep{gillespie_exact_1996}, a first-order linear
+recursion that \texttt{scipy.signal.lfilter} evaluates in compiled code with
+no discretisation error. The filter walks along each path, so this process
+alone stores the path index first. Filtering along the time axis of the
+time-major layout, with two scaled copies of the normals, was slower than the
+Euler loop it replaced. The normals are now drawn into the output buffer and
+scaled in place, and the exact scheme runs at the cost of the Euler one. The
+Cox-Ingersoll-Ross process
+\citep{cox_theory_1985} keeps its Euler and Milstein
+\citep{milstein_approximate_1975} schemes on the new layout.
+
+The Merton jump diffusion \citep{merton_option_1976} multiplied one normal
+draw by the jump count, which gives the summed log jumps a standard deviation
+of $N s$ in place of $\sqrt{N} s$. At a coarse step the simulated mean price
+was 1.758 against the analytic 1.051. The sum is now drawn from its exact
+conditional law, and only on the steps where a jump occurred. The Heston
+model \citep{heston_closedform_1993} keeps the full truncation Euler scheme,
+the least biased of the simple schemes that \citet{lord_comparison_2010}
+compare. Exact simulation \citep{broadie_exact_2006} and the
+quadratic-exponential scheme \citep{andersen_simple_2008} remain available
+if discretisation bias matters more than speed. Antithetic variates
+\citep{hammersley_new_1956} would halve the draws of every simulator and were
+not introduced, since no measurement asked for them.
+
+The diffusion parameters are fitted by maximum likelihood
+\citep{aitsahalia_maximum_2002}. On the project data the Ornstein-Uhlenbeck
+volatility estimate sits at its upper bound of 5.0, so the bound rather than
+the likelihood determines it. The review records this for investigation.
+
+\subsection{Routines left unchanged}
+
+The profile did not implicate the econometric tests
+\citep{jarque_efficient_1980,dickey_distribution_1979,ljung_measure_1978,breusch_simple_1979,koenker_note_1981,ploberger_cusum_1992},
+the conditional volatility models
+\citep{engle_autoregressive_1982,bollerslev_generalized_1986,nelson_conditional_1991,glosten_relation_1993,tsay_analysis_2010},
+the extreme value estimators
+\citep{balkema_residual_1974,pickands_statistical_1975,hill_simple_1975,embrechts_modelling_1997,mcneil_estimation_2000}
+or risk parity
+\citep{maillard_properties_2010,spinu_algorithm_2013,roncalli_introduction_2013},
+beyond the change of covariance estimator in the last. They delegate to
+statsmodels, arch and SciPy's quasi-Newton and simplex optimisers
+\citep{nocedal_numerical_2006,byrd_limited_1995,nelder_simplex_1965}. The
+array code rests on NumPy and pandas
+\citep{harris_array_2020,vanderwalt_numpy_2011,mckinney_data_2010}, and the
+plots on matplotlib and seaborn
+\citep{hunter_matplotlib_2007,waskom_seaborn_2021}.
+\citet{meucci_risk_2005} is the reference for the allocation framework as a
+whole.
+
+Numba \citep{lam_numba_2015} and Cython \citep{behnel_cython_2011} were not
+adopted. The loops that remain in Python, such as the Heston time step,
+iterate over steps with vectorised work in each, and no compiled kernel was
+measured against them.
+
+\subsection{Tooling}
+
+The package moved to the source layout and the repository template shared
+with the other projects, whose configuration is defined once and reaches each
+repository through \texttt{copier update}. Duplicated and drifting
+configuration is a recognised defect
+\citep{sharma_configuration_2016}, as is continuous integration configured
+in ways that skip or mask its checks \citep{gallaba_use_2020}. Tests now run
+in random order under a time limit, and the same hooks run locally and in
+continuous integration.
