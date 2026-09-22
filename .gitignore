@@ -2,6 +2,11 @@
 # template repository, not here. A path of this repository's own is the
 # gitignore_own answer in .copier-answers.yml, rendered at the end.
 
+# vale's StylesPath, which .vale.ini sets and the sync hook fills on every
+# repository whatever its languages; the Python and C++ blocks below name the
+# same directory, the others do not.
+.cache/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -222,6 +227,25 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Upstream covers .hypothesis, .pytest_cache, .coverage and htmlcov. It names
+# none of the measurement tools, which write into the working directory and so
+# left untracked output after every profiling or mutation run. Each name below
+# comes from the tool rather than from a guess. `scalene --help` documents
+# `scalene run` as saving to scalene-profile.json. pytest-benchmark's usage
+# page gives file://./.benchmarks as the --benchmark-storage default, written
+# when a run is saved for a later comparison. cosmic-ray takes its session
+# database as an argument rather than defaulting to one, and session.sqlite is
+# the name verification.md uses.
+scalene-profile.json
+.benchmarks/
+session.sqlite
+# pytest-testmon's dependency database, which its documentation names and
+# which it rewrites on every run. It records this machine's paths, so it is
+# local state rather than anything to share. SQLite in write-ahead mode keeps
+# .testmondata-wal and .testmondata-shm beside it, which a run leaves behind
+# and editorconfig-checker then reports.
+.testmondata*
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
@@ -554,6 +578,14 @@ TSWLatexianTemp*
 # option is specified. Footnotes are the stored in a file with suffix Notes.bib.
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
+
+# memoize externalises each memoised graphic to its own PDF and records the
+# hashes beside it, so a build leaves a .mmz file and a .memo.dir tree of .memo
+# and .pdf pairs. github/gitignore's TeX template predates the package and names
+# none of them.
+*.mmz
+*.memo
+*.memo.dir/
 
 # This repository's own, the gitignore_own answer in .copier-answers.yml.
 /cache/

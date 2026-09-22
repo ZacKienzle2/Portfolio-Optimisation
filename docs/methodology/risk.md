@@ -39,7 +39,7 @@ level $\alpha$ and optimising over $z$ gives
 
 $$
 \mathrm{EVaR}_\alpha(L)
-= \inf_{z > 0}\ z \ln\!\left( \frac{M_L(z)}{\alpha} \right),
+= \inf_{z > 0}\ \frac{1}{z} \ln\!\left( \frac{M_L(z)}{\alpha} \right),
 \qquad
 M_L(z) = \mathbb{E}\big[ e^{zL} \big].
 $$
@@ -48,6 +48,26 @@ It dominates Conditional Value-at-Risk,
 $\mathrm{CVaR}_\alpha \le \mathrm{EVaR}_\alpha$, and is the tightest bound
 expressible through the moment generating function. The convex programme that
 minimises it is derived for the [mean-EVaR allocator](allocation.md#mean-evar).
+
+The evaluation searches over $t = 1/z$. Ahmadi-Javid (2012, Proposition 3.2)
+bounds the measure between $\mathbb{E}[L]$ and the largest loss, the limit as
+$t \to 0$, and Jensen's inequality bounds the objective below by
+$\mathbb{E}[L] + t \ln(1/\alpha)$, so the infimum lies at
+$t \le (\max L - \mathbb{E}[L]) / \ln(1/\alpha)$. The measure is translation
+invariant and positively homogeneous, so the losses are centred and scaled by
+$\max L - \mathbb{E}[L]$ and the bounded search runs over $(0, 1/\ln(1/\alpha)]$
+in any units. The search it replaced bounded $z$ by 1000, which excluded the
+optimum for losses near a tenth of a per cent and overstated the measure by 4 to
+12 per cent there, and returned a positive value for a sample of zeros. A
+generated test compares the evaluation with the dual representation of
+Ahmadi-Javid (2012, Theorem 3.3),
+
+$$
+\mathrm{EVaR}_\alpha(L)
+= \sup \big\{ \mathbb{E}_Q[L] : D_{\mathrm{KL}}(Q \,\|\, P) \le \ln(1/\alpha) \big\},
+$$
+
+a maximum over a compact set that cvxpy states with relative-entropy cones.
 
 ## Spectral and distortion measures
 

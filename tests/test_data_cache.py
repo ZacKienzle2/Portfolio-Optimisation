@@ -8,7 +8,7 @@ the served frame is always subset and windowed to what was asked for.
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,9 @@ from portfolio_optimisation.infra.data import (
     clean_prices,
 )
 from portfolio_optimisation.infra.repositories import YfinanceParquetRepository
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_prices(seed: int = 7, n: int = 300, k: int = 6) -> pd.DataFrame:

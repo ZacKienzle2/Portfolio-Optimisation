@@ -8,12 +8,15 @@ network access is required.
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
-import pytest
+from typing import TYPE_CHECKING
 
 from portfolio_optimisation import __version__
 from portfolio_optimisation.cli import main
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import pytest
 
 
 def test_cli_version(capsys: pytest.CaptureFixture[str]) -> None:

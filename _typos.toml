@@ -15,14 +15,34 @@ check-file = false
 extend-glob = ["CHANGELOG.md"]
 check-file = false
 
+# A .bib composed from registrar records carries author surnames, abbreviated
+# journal titles and abstracts verbatim, so a spelling there is the registrar's
+# to correct. A .bst is a BibTeX style program the TeX distribution ships, and
+# the abbreviated journal titles in it are its data.
+[type.bibtex]
+extend-glob = ["*.bib"]
+check-file = false
+
+[type.bibtexstyle]
+extend-glob = ["*.bst"]
+check-file = false
+
+# A cross-reference or a citation carries a key rather than prose, and
+# \Cref{lem:Name} reads as the word "lem". A key a registrar composes from an
+# accented surname reads the same way once the accent is dropped. Matching the
+# commands that take a key leaves the text around them checked, which a path
+# exclusion would not.
 [default]
-# Theorem environment names the preamble defines.
-extend-ignore-identifiers-re = ["^(thm|cor|lem|prop|defn)$"]
+extend-ignore-re = [
+  '\\(?:label|ref|Cref|cref|eqref|autoref|nameref|pageref|pagenumbering)\{[^}]*\}',
+  '\\(?:no)?cite[a-zA-Z]*\*?(?:\[[^\]]*\])*\{[^}]*\}',
+  '\\(?:newtheorem|theoremstyle|AtBeginEnvironment|AtEndEnvironment)\{[^}]*\}',
+  '\\(?:begin|end)\{(?:thm|lem|cor|prop|defn|rem)[^}]*\}',
+  '\\frac\{[^}]*\}\{[^}]*\}',
+]
 
 [default.extend-words]
 # matplotlib.artist.setp, which typos reads as a misspelling of step.
 setp = "setp"
+# The theorem environment and counter names the preamble defines.
 thm = "thm"
-# Surnames in references.bib.
-Iten = "Iten"
-Loder = "Loder"

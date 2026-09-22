@@ -4,14 +4,19 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+from hypothesis.extra.numpy import arrays
 from scipy.stats import norm
 
+from portfolio_optimisation import baselines
 from portfolio_optimisation.risk import (
     acerbi_szekely_z2,
     christoffersen_conditional_coverage_test,
     christoffersen_independence_test,
     kupiec_pof_test,
 )
+from portfolio_optimisation.risk.backtesting import transition_counts
 
 ALPHA = 0.05
 
@@ -94,3 +99,10 @@ def test_zero_es_forecast_raises() -> None:
             np.zeros_like(returns),
             alpha=ALPHA,
         )
+
+
+@given(violations=arrays(np.bool_, st.integers(min_value=1, max_value=300)))
+def test_equivalent_transition_counts_transition_counts(violations: np.ndarray) -> None:
+    assert baselines.transition_counts(violations=violations) == transition_counts(
+        violations=violations
+    )
