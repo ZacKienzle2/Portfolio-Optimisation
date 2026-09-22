@@ -48,7 +48,9 @@ The Ornstein-Uhlenbeck process $dX_t = \kappa(\theta - X_t)\, dt +
 is Gaussian with an exact transition, mean
 $\theta + (X_t - \theta) e^{-\kappa \Delta t}$ and variance
 $\tfrac{\sigma^2}{2\kappa}(1 - e^{-2\kappa \Delta t})$, which the simulator
-samples directly. The Cox-Ingersoll-Ross process
+samples directly. The paths are then a first-order autoregression, a linear
+filter that SciPy's `lfilter` runs along every path in compiled code. The
+Cox-Ingersoll-Ross process
 $dX_t = \kappa(\theta - X_t)\, dt + \sigma \sqrt{X_t}\, dW_t$ stays non-negative
 when the Feller condition $2 \kappa \theta \ge \sigma^2$ holds. A plain Euler
 step can go negative through the square root, so the implementation applies full
@@ -59,8 +61,12 @@ well defined.
 
 The Merton model adds a compound-Poisson jump to geometric Brownian motion,
 $dS_t / S_t = \mu\, dt + \sigma\, dW_t + dJ_t$, where jumps arrive at rate
-$\lambda$ with lognormal sizes. Over a step the number of jumps is Poisson with
-mean $\lambda \Delta t$ and the log return gains the sum of the jump sizes. The
+$\lambda$ with lognormal sizes. Over a step the number of jumps $N$ is Poisson
+with mean $\lambda \Delta t$, and given $N$ the sum of the log jump sizes is
+normal with mean $N m$ and variance $N s^2$. Its standard deviation grows as
+$\sqrt{N}$ rather than $N$. The drift includes the compensator
+$\lambda (e^{m + s^2/2} - 1)$, which makes $\mathbb{E}[S_t] = S_0 e^{\mu t}$,
+and every increment is drawn at once so the log price is one cumulative sum. The
 Heston model gives the volatility its own mean-reverting square-root process,
 
 $$
@@ -89,4 +95,6 @@ transition densities. For geometric Brownian motion the log-increments are
 independent and normal, so the estimates are the sample mean and variance of the
 log returns rescaled by $\Delta t$. For the Ornstein-Uhlenbeck process the
 Gaussian transition gives a likelihood whose maximiser is available in closed
-form, and the fitter maximises it per asset, in parallel across the universe.
+form, and the fitter maximises it per asset. The fits run in one process, since
+each takes a fraction of a second while a spawned worker spends seconds
+importing the numerical stack before its first fit.

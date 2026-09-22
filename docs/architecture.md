@@ -124,7 +124,7 @@ sequenceDiagram
 
 ```bash
 uv run lint-imports                                  # the contract in .importlinter
-uv run pydeps portfolio_optimisation --noshow --only portfolio_optimisation \
+uv run pydeps src/portfolio_optimisation --noshow --only portfolio_optimisation \
   -T svg -o docs/module_dependencies.svg    # needs Graphviz's dot
 ```
 

@@ -67,9 +67,15 @@ $$
 the Marchenko-Pastur support. Eigenvalues inside the band are indistinguishable
 from noise, so denoising fits $\sigma^2$ to the empirical bulk, replaces every
 eigenvalue below $\lambda_+$ by their common average while preserving the trace,
-and rebuilds the correlation. Detoning additionally removes the largest
-eigenvalue, the market mode, so the clustering used by the hierarchical
-allocators sees the residual structure rather than the dominant common factor.
+and rebuilds the correlation. The fit minimises the squared distance between the
+Marchenko-Pastur density and a Gaussian kernel density of the eigenvalues. That
+density is computed once by the binned fast Fourier transform of Silverman
+(1982), with 32 bins per bandwidth so that the binning error, which falls with
+the square of the bin width (Hall and Wand, 1996), stays near $10^{-4}$ of the
+exact kernel sum. Each candidate $\sigma^2$ then reads it by interpolation.
+Detoning additionally removes the largest eigenvalue, the market mode, so the
+clustering used by the hierarchical allocators sees the residual structure
+rather than the dominant common factor.
 
 ## Factor-model covariance
 
