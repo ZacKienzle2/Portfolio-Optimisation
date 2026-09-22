@@ -47,17 +47,22 @@ def entropic_value_at_risk(
     *,
     alpha: float = 0.05,
     kind: Literal["loss", "return"] = "return",
-    z_bounds: tuple[float, float] = (1e-6, 1e3),
 ) -> float:
     """Empirical Entropic Value-at-Risk.
 
-    ``EVaR_alpha(L) = inf_{z>0} z^-1 log(M_L(z) / alpha)``.
+    ``EVaR_alpha(L) = inf_{t>0} t log(M_L(1/t) / alpha)``, whose limit as
+    ``t -> 0`` is the largest loss. Ahmadi-Javid (2012, Proposition 3.2) bounds
+    it between the mean and that largest loss, and Jensen's inequality bounds the
+    objective below by ``mean + t log(1/alpha)``, so the infimum lies at
+    ``t <= (max - mean) / log(1/alpha)``. The measure is translation invariant
+    and positively homogeneous, so the losses are centred on their mean and
+    scaled by ``max - mean`` and the search runs over ``(0, 1/log(1/alpha)]``
+    whatever the units of the sample.
 
     Args:
         values: Loss or return sample.
         alpha: Tail level in (0, 1).
         kind: ``"loss"`` if values are positive-loss, ``"return"`` otherwise.
-        z_bounds: (lo, hi) bounds for the scalar minimisation over ``z > 0``.
 
     Returns:
         float: EVaR in the same units as the input (positive = loss).
@@ -71,13 +76,20 @@ def entropic_value_at_risk(
     losses = _as_losses(values, kind=kind)
     if losses.size == 0:
         return float("nan")
+    centre = float(losses.mean())
+    spread = float(losses.max()) - centre
+    if spread <= 0.0:
+        return centre
+    standardised = (losses - centre) / spread
     log_scale = np.log(alpha * losses.size)
 
-    def objective(z: float) -> float:
-        return float((logsumexp(z * losses) - log_scale) / z)
+    def objective(t: float) -> float:
+        return float(t * (logsumexp(standardised / t) - log_scale))
 
-    result = minimize_scalar(objective, bounds=z_bounds, method="bounded")
-    return float(result.fun)
+    result = minimize_scalar(
+        objective, bounds=(0.0, -1.0 / np.log(alpha)), method="bounded", options={"xatol": 1e-10}
+    )
+    return centre + spread * min(float(result.fun), 1.0)
 
 
 def spectral_risk_measure(

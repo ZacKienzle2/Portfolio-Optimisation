@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
-from hypothesis.extra.numpy import arrays
 
-from portfolio_optimisation import baselines
 from portfolio_optimisation.risk import (
     entropic_value_at_risk,
     exponential_spectrum,
@@ -34,21 +30,6 @@ def test_evar_bounded_below_by_cvar() -> None:
 def test_evar_rejects_invalid_alpha() -> None:
     with pytest.raises(ValueError, match="alpha"):
         entropic_value_at_risk(np.array([0.0]), alpha=1.5)
-
-
-@settings(deadline=None, max_examples=50)
-@given(
-    losses=arrays(
-        np.float64,
-        st.integers(5, 3000),
-        elements=st.floats(-0.3, 0.3, allow_nan=False, allow_infinity=False),
-    ),
-    alpha=st.floats(0.005, 0.5),
-)
-def test_equivalent_entropic_value_at_risk(losses: np.ndarray, alpha: float) -> None:
-    assert entropic_value_at_risk(losses, alpha=alpha, kind="loss") == pytest.approx(
-        baselines.entropic_value_at_risk(losses, alpha), rel=1e-6, abs=1e-9
-    )
 
 
 def test_spectral_risk_with_exponential_spectrum_positive() -> None:

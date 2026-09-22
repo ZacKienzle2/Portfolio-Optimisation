@@ -44,6 +44,11 @@ def mean_semideviation_weights(
 ) -> pd.Series:
     """Maximise mean return less ``risk_aversion`` times a semideviation.
 
+    The objective is positively homogeneous in the returns, so they are divided
+    by their standard deviation before the solve. Daily returns otherwise put
+    the objective near ``1e-4``, where the solver's absolute tolerance left one
+    solve in a hundred short of the optimum by more than ``1e-6`` relative.
+
     Args:
         returns: Asset returns; rows are equally likely scenarios.
         risk_aversion: Trade-off ``lambda``. Values in ``(0, 1]`` give choices
@@ -67,9 +72,10 @@ def mean_semideviation_weights(
     spec = constraints if constraints is not None else PortfolioConstraints()
     r = returns.to_numpy(dtype=np.float64)
     t_steps, n_assets = r.shape
-    mu = r.mean(axis=0)
+    scaled = r / (float(r.std()) or 1.0)
+    mu = scaled.mean(axis=0)
     w = cp.Variable(n_assets)
-    shortfall = cp.pos(mu @ w - r @ w)
+    shortfall = cp.pos(mu @ w - scaled @ w)
     risk = (
         cp.sum(shortfall) / t_steps
         if measure == "absolute"
@@ -77,7 +83,7 @@ def mean_semideviation_weights(
     )
     problem = cp.Problem(
         cp.Maximize(mu @ w - risk_aversion * risk),
-        spec.build(cp, w, n_assets=n_assets, expected_returns=mu),
+        spec.build(cp, w, n_assets=n_assets, expected_returns=r.mean(axis=0)),
     )
     problem.solve(solver=solver)
     if problem.status not in {"optimal", "optimal_inaccurate"}:

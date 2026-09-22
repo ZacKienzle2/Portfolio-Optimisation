@@ -164,9 +164,9 @@ $$
 
 whose solution is unique when $\Sigma$ is definite. Their core property
 characterises the optimum. Every asset held has the same correlation with the
-portfolio, and every asset left out is at least as correlated with it. The tests
-check that property directly, and check that no long-only mix drawn by
-Hypothesis reaches a higher ratio. On two hundred assets with the Ledoit-Wolf
+portfolio, and every asset left out is at least as correlated with it. A
+generated test compares the programme with SLSQP maximising the ratio of
+Choueifaty and Coignard directly. On two hundred assets with the Ledoit-Wolf
 covariance the programme solves in 21 ms.
 
 ## Mean-variance baseline
@@ -219,23 +219,29 @@ $$
 \frac{1}{T} \sum_{t=1}^{T} e^{L_t / z} \right).
 $$
 
-The joint problem over $w$ and $z$ is convex and admits an exponential-cone
-form. Introduce $t$ and per-sample $u_t$ with the perspective constraints
-$u_t \ge z\, e^{(L_t - t)/z}$, the exponential cone, and $\sum_t u_t \le z$.
-Then
+The objective is the perspective of a log-sum-exp composed with the linear
+losses, so it is jointly convex in $w$ and $z$. Ahmadi-Javid and Fallah-Tafti
+(2019, problem 3.7) observe that it is also differentiable and has $N + 1$
+variables whatever the sample size. With $s_t = L_t / z$ and $p$ the softmax of
+$s$, the gradient is
 
 $$
-\sum_t e^{(L_t - t)/z} \le 1
-\quad\Longleftrightarrow\quad
-t \ge z \ln \sum_t e^{L_t / z},
+\nabla_w = -R^\top p, \qquad
+\partial_z = \ln \sum_t e^{s_t} - \ln(\alpha T) - p^\top s,
 $$
 
-so minimising $t - z \ln(\alpha T)$ reproduces
-$z \ln\!\big( (\alpha T)^{-1} \sum_t e^{L_t/z} \big)$, the empirical Entropic
-Value-at-Risk. Because the measure is positively homogeneous in the loss,
-scaling the per-sample losses by a constant rescales the objective without
-moving the optimal $w$, which the implementation exploits to condition the cone
-solver.
+and SLSQP minimises it over the linear rows and bounds of the shared constraint
+set, the L1 budgets split into slack variables. The exponential-cone form it
+replaced carries one cone per scenario. On thirty assets it took 64.5 ms at a
+thousand scenarios and 2.65 s at twenty thousand, against 12.6 ms and 47.9 ms.
+The returns are divided by their standard deviation, which positive homogeneity
+allows, so $z$ is of order one.
+
+When $\alpha T \le 1$ every scenario carries probability at least $\alpha$, so
+the measure of every portfolio is its largest loss, the limit of Ahmadi-Javid
+(2012, Proposition 3.2). The infimum over $z > 0$ is then not attained, and the
+programme is the minimax rule of Young (1998), which the implementation solves
+as the Mean-CVaR programme at $\alpha = 1/T$.
 
 ## Conditional drawdown at risk
 
@@ -319,11 +325,11 @@ so the absolute semideviation is half the mean absolute deviation, and the first
 model is the Konno-Yamazaki programme with the trade-off halved (Mansini,
 Ogryczak and Speranza, 2003). On $T$ equally likely scenarios it is a linear
 programme with $T$ shortfall variables. The standard semideviation replaces
-their mean with a Euclidean norm, a second-order cone. The tests check that no
-long-only mix drawn by Hypothesis dominates the optimum, and that the standard
-semideviation prefers the asset whose long tail lies on the gain side. On a
-thousand scenarios and thirty assets the two programmes solve in 36 ms and 47
-ms.
+their mean with a Euclidean norm, a second-order cone. A generated test compares
+both with the deviations written as variables, the absolute model as the linear
+programme of Mansini, Ogryczak and Speranza on HiGHS and the standard model by
+SLSQP. On a thousand scenarios and thirty assets the two programmes solve in 36
+ms and 47 ms.
 
 ## Polynomial goal programming over four moments
 

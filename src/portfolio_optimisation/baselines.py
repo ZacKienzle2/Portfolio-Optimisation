@@ -1,15 +1,19 @@
 """Implementations that a library call or a faster formulation replaced.
 
-Each function is the version the package ran before its rewrite, kept so an
-equivalence test can compare the rewrite against it on generated inputs. None
+Each function is the version the package ran before its rewrite, or for an
+allocator with no predecessor the formulation its paper states, kept so an
+equivalence test can compare the package against it on generated inputs. None
 of them is called by the package itself.
 """
 
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, LinearConstraint, milp, minimize_scalar
+from scipy.optimize import Bounds, LinearConstraint, linprog, milp, minimize, minimize_scalar
+
+from portfolio_optimisation.optim.shrinkage import linear_shrinkage_covariance
 
 
 def quasi_diagonal(linkage_matrix: NDArray[np.float64]) -> NDArray[np.intp]:
@@ -220,29 +224,6 @@ def marchenko_pastur_variance(
     return float(minimize_scalar(loss, bounds=(1e-5, 1.0 - 1e-5), method="bounded").x)
 
 
-def entropic_value_at_risk(losses: NDArray[np.float64], alpha: float) -> float:
-    """EVaR with the log-sum-exp shifted by its maximum by hand.
-
-    Replaced by ``scipy.special.logsumexp``, which computes the same sum and is
-    slower per call on SciPy 1.18.
-
-    Args:
-        losses: Loss sample, positive for a loss.
-        alpha: Tail level.
-
-    Returns:
-        The entropic value at risk.
-    """
-    log_scale = np.log(alpha * losses.size)
-
-    def objective(z: float) -> float:
-        scaled = z * losses
-        peak = scaled.max()
-        return float((peak + np.log(np.exp(scaled - peak).sum()) - log_scale) / z)
-
-    return float(minimize_scalar(objective, bounds=(1e-6, 1e3), method="bounded").fun)
-
-
 def whole_shares(targets: NDArray[np.float64], prices: NDArray[np.float64]) -> NDArray[np.float64]:
     """Share counts minimising L1 deviation plus leftover cash, in budget units.
 
@@ -288,3 +269,196 @@ def transition_counts(violations: NDArray[np.bool_]) -> tuple[int, int, int, int
         int(np.sum((previous == 1) & (current == 0))),
         int(np.sum((previous == 1) & (current == 1))),
     )
+
+
+def evar_dual_representation(
+    values: NDArray[np.float64], *, alpha: float = 0.05, kind: str = "return"
+) -> float:
+    """EVaR of a sample by the dual representation of Ahmadi-Javid (2012).
+
+    Theorem 3.3 writes ``EVaR = sup E_Q[L]`` over the measures ``Q`` whose
+    relative entropy to the empirical measure is at most ``log(1/alpha)``. On
+    ``T`` scenarios that is a maximum of ``q'L`` over the simplex with
+    ``sum q log(q T) <= log(1/alpha)``, attained on a compact set, where the
+    primal infimum over the EVaR parameter is not attained once the largest
+    loss carries probability ``alpha``. The scalar search this replaced bounded
+    the parameter ``1/t`` by 1000, which excluded the optimum of a sample whose
+    losses are of the order of a tenth of a per cent. The losses are scaled to
+    unit magnitude, and Clarabel's step is held to nine tenths of the distance
+    to the cone boundary, since its default of 0.99 stalled on about one sample
+    in sixty. Needs the ``[optim]`` extra.
+
+    Args:
+        values: Loss or return sample.
+        alpha: Tail level.
+        kind: ``"loss"`` if values are positive-loss, ``"return"`` otherwise.
+
+    Returns:
+        The entropic value at risk.
+    """
+    import cvxpy as cp
+
+    losses = np.asarray(values, dtype=np.float64) * (1.0 if kind == "loss" else -1.0)
+    scale = float(np.abs(losses).max()) or 1.0
+    q = cp.Variable(losses.size, nonneg=True)
+    problem = cp.Problem(
+        cp.Maximize(q @ (losses / scale)),
+        [
+            cp.sum(q) == 1,
+            cp.sum(cp.rel_entr(q, np.full(losses.size, 1.0 / losses.size))) <= -np.log(alpha),
+        ],
+    )
+    problem.solve(solver=cp.CLARABEL, max_step_fraction=0.9)
+    return float(problem.value) * scale
+
+
+def min_evar_cone_weights(returns: pd.DataFrame, *, alpha: float = 0.05) -> pd.Series:
+    """Long-only minimum-EVaR weights from the exponential-cone programme.
+
+    One cone per date, the form the smooth programme of Ahmadi-Javid and
+    Fallah-Tafti (2019) replaced. The returns are divided by their standard
+    deviation, which positive homogeneity allows, and Clarabel's step is held
+    to nine tenths of the distance to the cone boundary, since its default of
+    0.99 stalled on about one panel in six hundred. Needs the ``[optim]`` extra.
+
+    Args:
+        returns: Asset returns, one row per date.
+        alpha: Tail level.
+
+    Returns:
+        Weights indexed by ticker.
+    """
+    import cvxpy as cp
+
+    r = returns.to_numpy(dtype=np.float64)
+    t_steps, n_assets = r.shape
+    w = cp.Variable(n_assets, nonneg=True)
+    t = cp.Variable()
+    z = cp.Variable(nonneg=True)
+    u = cp.Variable(t_steps)
+    problem = cp.Problem(
+        cp.Minimize(t - z * np.log(alpha * t_steps)),
+        [
+            cp.sum(w) == 1,
+            cp.sum(u) <= z,
+            cp.constraints.ExpCone(-(r @ w) / r.std() - t, z * np.ones(t_steps), u),
+        ],
+    )
+    problem.solve(solver=cp.CLARABEL, max_step_fraction=0.9)
+    return pd.Series(np.asarray(w.value), index=returns.columns)
+
+
+def max_diversification_ratio_weights(
+    returns: pd.DataFrame, *, cov_matrix: pd.DataFrame | None = None
+) -> pd.Series:
+    """Long-only weights maximising the diversification ratio directly.
+
+    Choueifaty and Coignard (2008) define the most-diversified portfolio as the
+    maximiser of ``w' sigma / sqrt(w' Sigma w)`` over the simplex, a
+    quasi-concave ratio, solved here by SLSQP with its analytic gradient.
+
+    Args:
+        returns: Asset returns; columns are tickers.
+        cov_matrix: Covariance to use. Defaults to Ledoit-Wolf shrinkage.
+
+    Returns:
+        Weights indexed by ticker.
+    """
+    cov_df = linear_shrinkage_covariance(returns) if cov_matrix is None else cov_matrix
+    covariance = cov_df.to_numpy(dtype=np.float64)
+    volatilities = np.sqrt(np.diag(covariance))
+    n_assets = volatilities.size
+
+    def negative_ratio(w: NDArray[np.float64]) -> tuple[float, NDArray[np.float64]]:
+        variance = w @ covariance @ w
+        spread = w @ volatilities
+        ratio = spread / np.sqrt(variance)
+        gradient = volatilities / np.sqrt(variance) - spread * (covariance @ w) / variance**1.5
+        return -ratio, -gradient
+
+    result = minimize(
+        negative_ratio,
+        np.full(n_assets, 1.0 / n_assets),
+        jac=True,
+        method="SLSQP",
+        bounds=Bounds(0.0, 1.0),
+        constraints=[LinearConstraint(np.ones((1, n_assets)), 1.0, 1.0)],
+        options={"ftol": 1e-14, "maxiter": 1000},
+    )
+    return pd.Series(result.x, index=cov_df.columns)
+
+
+def mean_semideviation_lp_weights(
+    returns: pd.DataFrame, *, risk_aversion: float = 1.0, measure: str = "absolute"
+) -> pd.Series:
+    """Long-only mean-semideviation weights with the deviations as variables.
+
+    The absolute model is the linear programme of Mansini, Ogryczak and Speranza
+    (2003, constraints 28 to 31), one deviation ``d_t >= mu'w - r_t'w`` per
+    date, solved by HiGHS. The standard model maximises
+    ``mu'w - lambda sqrt(mean(d^2))`` by SLSQP, the root being differentiable
+    wherever the semideviation is positive.
+
+    Args:
+        returns: Asset returns; rows are equally likely scenarios.
+        risk_aversion: Trade-off ``lambda``.
+        measure: ``"absolute"`` or ``"standard"``.
+
+    Returns:
+        Weights indexed by ticker.
+    """
+    r = returns.to_numpy(dtype=np.float64)
+    t_steps, n_assets = r.shape
+    mu = r.mean(axis=0)
+    below = mu - r
+    if measure == "absolute":
+        result = linprog(
+            np.concatenate([-mu, np.full(t_steps, risk_aversion / t_steps)]),
+            A_ub=np.hstack([below, -np.eye(t_steps)]),
+            b_ub=np.zeros(t_steps),
+            A_eq=np.concatenate([np.ones(n_assets), np.zeros(t_steps)])[None, :],
+            b_eq=[1.0],
+            bounds=(0.0, None),
+            method="highs",
+        )
+        return pd.Series(result.x[:n_assets], index=returns.columns)
+
+    def negative_objective(w: NDArray[np.float64]) -> tuple[float, NDArray[np.float64]]:
+        shortfall = np.maximum(below @ w, 0.0)
+        deviation = np.sqrt(shortfall @ shortfall / t_steps)
+        gradient = below.T @ shortfall / (t_steps * deviation) if deviation > 0.0 else 0.0 * mu
+        return -(mu @ w) + risk_aversion * deviation, -mu + risk_aversion * gradient
+
+    result = minimize(
+        negative_objective,
+        np.full(n_assets, 1.0 / n_assets),
+        jac=True,
+        method="SLSQP",
+        bounds=Bounds(0.0, 1.0),
+        constraints=[LinearConstraint(np.ones((1, n_assets)), 1.0, 1.0)],
+        options={"ftol": 1e-14, "maxiter": 1000},
+    )
+    return pd.Series(result.x, index=returns.columns)
+
+
+def mean_semideviation_objective(
+    returns: pd.DataFrame, weights: pd.Series, *, risk_aversion: float, measure: str
+) -> float:
+    """Mean return less ``risk_aversion`` times the semideviation, at given weights.
+
+    The absolute model is a linear programme whose optimal weights need not be
+    unique, so two solvers are compared on the objective they reach.
+
+    Args:
+        returns: Asset returns; rows are equally likely scenarios.
+        weights: Portfolio weights.
+        risk_aversion: Trade-off ``lambda``.
+        measure: ``"absolute"`` or ``"standard"``.
+
+    Returns:
+        The objective of Ogryczak and Ruszczynski (1999).
+    """
+    portfolio = returns.to_numpy(dtype=np.float64) @ weights.to_numpy(dtype=np.float64)
+    shortfall = np.maximum(portfolio.mean() - portfolio, 0.0)
+    risk = shortfall.mean() if measure == "absolute" else np.sqrt(np.mean(shortfall**2))
+    return float(portfolio.mean() - risk_aversion * risk)
