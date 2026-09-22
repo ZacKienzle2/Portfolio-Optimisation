@@ -84,7 +84,7 @@ a tenth.
     Routine & Before & After & Speed-up \\
     \midrule
     HRP, 200 assets & 9.04~ms & 7.19~ms & 1.26 \\
-    HERC, 200 assets & 10.1~ms & 8.76~ms & 1.16 \\
+    HERC, 200 assets & 10.1~ms & 57.6~ms & 0.18 \\
     NCO, 200 assets & 7.57~ms & 4.67~ms & 1.62 \\
     Risk parity, 200 assets & 9.34~ms & 7.30~ms & 1.28 \\
     Black-Litterman, 200 assets, 5 views & 23.3~ms & 1.48~ms & 16 \\
@@ -92,8 +92,8 @@ a tenth.
     Co-kurtosis tensor, 20 assets & 299~ms & 1.22~ms & 245 \\
     Higher-moment PGP, 10 assets & 53.3~ms & 25.4~ms & 2.10 \\
     Higher-moment PGP, 20 assets & 435~ms & 70.1~ms & 6.21 \\
-    Mean-CVaR, 30 assets & 43.5~ms & 39.4~ms & 1.10 \\
-    Min-CDaR, 30 assets & 191~ms & 173~ms & 1.11 \\
+    Mean-CVaR, 30 assets & 43.5~ms & 37.2~ms & 1.17 \\
+    Min-CDaR, 30 assets & 191~ms & 64.2~ms & 2.98 \\
     EVaR, 10\,000 losses & 0.498~ms & 1.70~ms & 0.29 \\
     SSD-constrained, 150 scenarios & 1.05~s & 7.74~ms & 136 \\
     SSD-constrained, 250 scenarios & 4.32~s & 16.2~ms & 267 \\
@@ -112,8 +112,11 @@ a tenth.
   \end{tabular}
 \end{table}
 
-Two rows are slower. EVaR and whole-share allocation are discussed with their
-changes below.
+Three rows are slower. EVaR, hierarchical equal risk contribution and
+whole-share allocation are discussed with their changes below. The equal risk
+contribution routine ranged from 54~ms to 88~ms across runs while other
+processes loaded the machine, and limiting OpenBLAS to one thread removed most
+of that spread, since small products woke a pool of 24 threads.
 
 \section{Changes and their literature}
 \label{app:performance:literature}
@@ -136,11 +139,27 @@ weights, so it was not adopted. The same clustering helpers now serve
 hierarchical equal risk contribution
 \citep{raffinot_hierarchical_2017,raffinot_hierarchical_2018}
 and nested clustered optimisation
-\citep{lopezdeprado_robust_2019,lopezdeprado_machine_2020}. The equal risk
-contribution routine bisects the seriated list at its midpoint rather than
-cutting the tree at an optimal number of clusters, a simplification of
-\citet{raffinot_hierarchical_2018} that the review records rather than
-corrects.
+\citep{lopezdeprado_robust_2019,lopezdeprado_machine_2020}.
+
+The equal risk contribution routine bisected the seriated list at its
+midpoint, a simplification of \citet{raffinot_hierarchical_2018}, and now
+follows the paper. It embeds the assets by classical scaling of the
+correlation matrix, whose Euclidean distances reproduce the correlation
+distance, and chooses the number of clusters by the gap statistic of
+\citet{tibshirani_estimating_2001} with the reference box aligned to the
+principal components. SciPy's compiled \texttt{fcluster} cuts the dendrogram,
+and capital is divided along its own splits so that sibling clusters
+contribute equal risk. The published split ratio has the two risks
+transposed, which would give the riskier cluster more capital, and the
+implementation follows the equal contribution condition instead. The gap
+statistic clusters twenty reference samples, which accounts for the time in
+\cref{tab:performance:timings}. SciPy validates the linkage matrix again on
+each of the 210 cuts, and the validation is nine tenths of the time spent
+cutting. \texttt{cut\_tree} cuts every level in one call but walks the tree
+in Python and took 115~ms. On planted blocks of six assets the
+one-standard-error rule recovers one, two, three and five blocks under average
+linkage and returns two for eight. Under Ward linkage, the default, it returns
+one for three or more blocks.
 
 \subsection{Covariance estimation}
 
@@ -233,9 +252,23 @@ The mean-CVaR programme
 was written out with one auxiliary variable per scenario. It now uses the
 \texttt{cvar} atom of cvxpy, whose rewriting system
 \citep{agrawal_rewriting_2018} expands it into the same linear programme, so
-the solver sees the same problem and the gain is small. Conditional drawdown
-at risk \citep{chekhlov_drawdown_2005} applies the atom to the drawdown
-series. Both measures are coherent
+the solver sees the same problem and the gain is small. Left unnamed, the
+solver was chosen afresh on every solve, and cvxpy spent 4~ms of a 40~ms
+solve retrying imports of solvers that are not installed. It chose OSQP for
+quadratic programmes, whose frontier volatilities lay $3 \times 10^{-5}$ from
+Clarabel's, so Clarabel is now named. HiGHS solved the scenario programmes no
+faster, in 67~ms against 36~ms on the mean-semideviation programme below and
+115~ms against 63~ms on the drawdown programme. The L-shaped decomposition of
+\citet{kunzibay_computational_2006}, which adds optimality cuts in the manner
+of \citet{kelley_cuttingplane_1960}, left a gap of six per cent after 380
+rounds on the CVaR programme and was not adopted.
+
+Conditional drawdown at risk \citep{chekhlov_drawdown_2005} was posed with a
+running-peak variable, which needs three constraint rows per date. Their
+Proposition~4.1 writes the drawdown as a recursion in the period returns,
+which needs two, and the recursion reaches the same optimum in a third of the
+time, which a property test confirms on generated paths. Both measures are
+coherent
 \citep{artzner_coherent_1999,acerbi_coherence_2002}, and CVaR is the spectral
 measure with a flat spectrum on the tail
 \citep{acerbi_spectral_2002,wang_class_2000}.
@@ -246,6 +279,19 @@ point. Clarabel \citep{goulart_clarabel_2026} and HiGHS
 \citep{huangfu_parallelizing_2018} are the solvers, and
 \citet{boyd_convex_2004} and \citet{cornuejols_optimization_2007} give the
 formulations.
+
+Two allocators were added from the literature the review consulted. The most
+diversified portfolio \citep{choueifaty_toward_2008} solves the quadratic
+programme of \citet{choueifaty_properties_2013} in 21~ms on 200 assets, and
+its tests check their core property, that every held asset has the same
+correlation with the portfolio. Mean-semideviation models with a trade-off of
+at most one are consistent with second-order stochastic dominance
+\citep{ogryczak_stochastic_1999}. The absolute model is the programme of
+\citet{konno_meanabsolute_1991} in the semideviation form that
+\citet{mansini_lp_2003} recommend, and it solves in 35~ms on 1000 scenarios
+and 30 assets, against 47~ms for the second-order cone of the standard
+model. The minimax rule of \citet{young_minimax_1998} is the CVaR programme
+with a tail of one scenario and needs no programme of its own.
 
 The entropic value at risk \citep{ahmadijavid_entropic_2012} is an infimum
 over the logarithm of a moment generating function, found by a bounded scalar
@@ -372,10 +418,16 @@ if discretisation bias matters more than speed. Antithetic variates
 \citep{hammersley_new_1956} would halve the draws of every simulator and were
 not introduced, since no measurement asked for them.
 
-The diffusion parameters are fitted by maximum likelihood
+The diffusion parameters were fitted by a numerical search over the likelihood
 \citep{aitsahalia_maximum_2002}. On the project data the Ornstein-Uhlenbeck
-volatility estimate sits at its upper bound of 5.0, so the bound rather than
-the likelihood determines it. The review records this for investigation.
+volatility sat on its upper bound of 5.0, a bound suited to the volatility of
+returns while the process is fitted to price levels. Both transition densities
+are Gaussian, so the maximum likelihood estimators have closed forms. Those of
+\citet{tang_parameter_2009} come from a first-order autoregression that
+statsmodels fits by least squares, and their Theorem~3.1.1 gives the bias of
+the mean-reversion estimate, which the fitter subtracts on request. A property
+test confirms that a Nelder-Mead search finds no higher likelihood than the
+closed form, and the package that ran the search is no longer a dependency.
 
 \subsection{Routines left unchanged}
 
