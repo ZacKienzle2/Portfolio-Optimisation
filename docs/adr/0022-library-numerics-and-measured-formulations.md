@@ -50,6 +50,16 @@ Where the formulation was the cost, it is replaced by an equivalent one.
   than the programme with one variable per pair of scenarios.
 - CDaR follows the drawdown recursion of Chekhlov, Uryasev and Zabarankin (2005,
   Proposition 4.1), two constraint rows per date rather than three.
+- Minimum EVaR is the smooth programme of Ahmadi-Javid and Fallah-Tafti (2019)
+  in the weights and the EVaR parameter, solved by SLSQP, in place of one
+  exponential cone per scenario. When `alpha T <= 1` it is the minimax rule and
+  is solved as the CVaR programme at `alpha = 1/T`.
+- The constraint set is encoded once as SciPy's `LinearConstraint` and `Bounds`,
+  each L1 budget split into a slack block, which `build` renders for cvxpy and
+  SLSQP reads directly.
+- EVaR evaluation searches a bracket derived from Ahmadi-Javid (2012,
+  Proposition 3.2) on centred and scaled losses, where a fixed bound on the
+  parameter overstated the measure for small losses.
 - Black-Litterman solves one `k x k` system in the Woodbury form.
 - The four-moment objective evaluates skewness and kurtosis from the portfolio
   return series, never forming the co-moment tensors, and the tensors themselves
@@ -77,7 +87,17 @@ rather than `sqrt(N)` times. It now draws the sum from its exact law.
   scenarios of 30 assets, which the pairwise programme could not hold, take 1.6
   s.
 - CDaR on 1000 dates and 30 assets takes 64 ms against 191 ms.
-- Three routines are slower. EVaR takes 1.7 ms against 0.5 ms, all of it the
+- Minimum EVaR on 30 assets takes 12.6 ms against 64.5 ms at 1000 scenarios and
+  47.9 ms against 2.65 s at 20000. Clarabel stalled on about one cone programme
+  in six hundred at its default step.
+- The tests of these changes are written by `nox -s generate` against the
+  formulation each paper states, kept in `baselines.py`, and edited only to
+  narrow the strategies and set a tolerance. The mean-semideviation test
+  compares objectives, since a linear programme's optimal weights need not be
+  unique.
+- cvxpy 1.9.3 is the lowest version allowed, since earlier versions took the
+  shape of a sum from an uninitialised array and warned at random.
+- Three routines are slower. EVaR takes 1.4 ms against 0.5 ms, all of it the
   per-call dispatch of SciPy 1.18's `logsumexp`. Whole-share allocation takes 42
   ms against 4.7 ms, spent in HiGHS's root heuristics, and in exchange is
   certified optimal. HERC on 200 assets takes 58 ms against 10 ms, the cost of

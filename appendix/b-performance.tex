@@ -94,7 +94,9 @@ a tenth.
     Higher-moment PGP, 20 assets & 435~ms & 70.1~ms & 6.21 \\
     Mean-CVaR, 30 assets & 43.5~ms & 37.2~ms & 1.17 \\
     Min-CDaR, 30 assets & 191~ms & 64.2~ms & 2.98 \\
-    EVaR, 10\,000 losses & 0.498~ms & 1.70~ms & 0.29 \\
+    Min-EVaR, 30 assets, 1000 scenarios & 64.5~ms & 12.6~ms & 5.12 \\
+    Min-EVaR, 30 assets, 20\,000 scenarios & 2.65~s & 47.9~ms & 55 \\
+    EVaR, 10\,000 losses & 0.498~ms & 1.41~ms & 0.35 \\
     SSD-constrained, 150 scenarios & 1.05~s & 7.74~ms & 136 \\
     SSD-constrained, 250 scenarios & 4.32~s & 16.2~ms & 267 \\
     Whole shares, 20 assets & 4.70~ms & 42.2~ms & 0.11 \\
@@ -282,28 +284,75 @@ formulations.
 
 Two allocators were added from the literature the review consulted. The most
 diversified portfolio \citep{choueifaty_toward_2008} solves the quadratic
-programme of \citet{choueifaty_properties_2013} in 21~ms on 200 assets, and
-its tests check their core property, that every held asset has the same
-correlation with the portfolio. Mean-semideviation models with a trade-off of
-at most one are consistent with second-order stochastic dominance
+programme of \citet{choueifaty_properties_2013} in 21~ms on 200 assets, and a
+generated test compares it with SLSQP maximising the ratio of
+\citet{choueifaty_toward_2008} directly. Mean-semideviation models with a
+trade-off of at most one are consistent with second-order stochastic dominance
 \citep{ogryczak_stochastic_1999}. The absolute model is the programme of
 \citet{konno_meanabsolute_1991} in the semideviation form that
 \citet{mansini_lp_2003} recommend, and it solves in 35~ms on 1000 scenarios
 and 30 assets, against 47~ms for the second-order cone of the standard
-model. The minimax rule of \citet{young_minimax_1998} is the CVaR programme
+model. Daily returns put the objective near $10^{-4}$, where Clarabel's
+absolute tolerance left one solve in a hundred short of the optimum by more
+than $10^{-6}$ relative. The objective is positively homogeneous in the
+returns, so they are divided by their standard deviation first, and no solve
+fell short in 200 more. The generated test compares the reached objective with
+the linear programme of \citet{mansini_lp_2003} on HiGHS rather than the
+weights, since the optimal weights of a linear programme need not be unique
+and differed by $2 \times 10^{-3}$ at equal objective on one panel in about a
+thousand. The minimax rule of \citet{young_minimax_1998} is the CVaR programme
 with a tail of one scenario and needs no programme of its own.
+
+Every programme reads its feasible set from one encoding, SciPy's two-sided
+\texttt{LinearConstraint} and \texttt{Bounds} over the weights and a slack
+block for each L1 budget, the split that makes a leverage or turnover budget
+linear. cvxpy renders it for the conic programmes, and SLSQP reads it directly
+for the smooth one below. Up to cvxpy 1.9.1 the shape of a sum was taken
+from \texttt{numpy.sum} over an uninitialised array, which raised a
+floating-point warning at random and so failed tests at random, and 1.9.3,
+which computes the shape exactly, is now the lowest version allowed.
 
 The entropic value at risk \citep{ahmadijavid_entropic_2012} is an infimum
 over the logarithm of a moment generating function, found by a bounded scalar
-search in about fifteen evaluations. The baseline shifted the log-sum-exp by
-its maximum by hand, and SciPy's \texttt{logsumexp} now computes the same sum.
-On SciPy 1.18 the library call takes 103~\textmu s on 10\,000 losses against
-28~\textmu s for the same arithmetic, the difference being its dispatch over
-array libraries, and that overhead is the whole of the regression in
-\cref{tab:performance:timings}. A Newton iteration on the stationarity
-condition, whose derivative is the variance of the exponentially tilted
-losses, needs fewer evaluations but diverged where that variance vanishes, and
-was not adopted.
+search. The baseline shifted the log-sum-exp by its maximum by hand, and
+SciPy's \texttt{logsumexp} now computes the same sum. On SciPy 1.18 the library
+call takes 103~\textmu s on 10\,000 losses against 28~\textmu s for the same
+arithmetic, the difference being its dispatch over array libraries, and that
+overhead is the regression in \cref{tab:performance:timings}. A Newton
+iteration on the stationarity condition, whose derivative is the variance of
+the exponentially tilted losses, needs fewer evaluations but diverged where
+that variance vanishes, and was not adopted.
+
+The search bounded the inverse of the EVaR parameter by 1000, which excluded
+the optimum of a sample whose losses are near a tenth of a per cent,
+overstated the measure there by 4 to 12 per cent, and returned a positive
+value for a sample of zeros. Proposition~3.2 of
+\citet{ahmadijavid_entropic_2012} bounds the measure between the mean and the
+largest loss, and with Jensen's inequality this bounds the optimal parameter
+by the gap between the two over $\ln(1/\alpha)$. The losses are centred and
+scaled by that gap, which translation invariance and positive homogeneity
+allow, and the search then runs over one bracket in any units. A generated
+test compares the evaluation with the dual representation of their
+Theorem~3.3, a maximum of the expected loss over measures within relative
+entropy $\ln(1/\alpha)$ of the sample, and fails on the old bracket by
+6.7 per cent.
+
+Minimum-EVaR portfolios were an exponential-cone programme with one cone per
+scenario. \citet{ahmadijavid_portfolio_2019} show that the problem is a
+differentiable convex programme in the weights and the EVaR parameter whose
+size does not depend on the number of scenarios. SLSQP on it, with the
+analytic gradient, takes 12.6~ms against 64.5~ms at 1000 scenarios and
+47.9~ms against 2.65~s at 20\,000. Clarabel's default step of 0.99 of the
+distance to the cone boundary stalled on about one panel in six hundred of
+the cone form, and SCS and a step of 0.9 both reached the SLSQP weights to six
+digits there. SLSQP's function tolerance of $10^{-12}$ sat at the rounding
+floor, so whether it stopped depended on the OpenBLAS thread count, and
+$10^{-10}$ converged on all of 8000 generated panels, where the two
+programmes' weights agree to $2.5 \times 10^{-5}$ and their measures to
+$10^{-10}$. When $\alpha T \le 1$ every scenario has probability at least
+$\alpha$, the measure of every portfolio is its largest loss by the same
+proposition, the infimum is not attained, and the programme is the minimax
+rule, solved as the CVaR programme.
 
 \subsection{Stochastic dominance}
 
