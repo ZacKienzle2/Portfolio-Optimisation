@@ -63,7 +63,7 @@ repos:
   # formatter across yaml, markdown, json and the web languages, rather than a
   # rule per file type argued out by hand.
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.9.6
+    rev: v3.9.8
     hooks:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
@@ -126,7 +126,7 @@ repos:
       - id: sp-repo-review
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.6
+    rev: v0.16.8
     hooks:
       - id: ruff-check
         args: ["--fix", "--show-fixes"]
@@ -148,7 +148,7 @@ repos:
   # uv's own hook refuses a commit whose uv.lock no longer matches
   # pyproject.toml, so the lock file the CI jobs sync from is never stale.
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.12.11
+    rev: 0.12.17
     hooks:
       - id: uv-lock
 
@@ -287,7 +287,7 @@ repos:
   # open issues for it (rhysd/actionlint#711, #732) have no maintainer reply,
   # so `./` stays until actionlint accepts `$/` and this threshold goes.
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.30.0
+    rev: v1.30.1
     hooks:
       - id: zizmor
         args: ["--min-severity=medium"]
@@ -304,26 +304,26 @@ repos:
         args: ["--strict", "--config-file=.yamllint.yaml"]
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.23.2
+    rev: v0.23.3
     hooks:
       - id: markdownlint-cli2
 
   # shfmt reads .editorconfig for its indent and style when given no flags,
   # so the shell scripts follow the same file every other language does.
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.13.1-1
+    rev: v3.14.1-1
     hooks:
       - id: shfmt
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1-1
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
 
   # .editorconfig is read by every editor and by prettier; this is the check
   # that the tree agrees with it, which three repositories carried by hand.
   - repo: https://github.com/editorconfig-checker/editorconfig-checker
-    rev: v4.0.1
+    rev: v4.0.2
     hooks:
       - id: editorconfig-checker
 
@@ -336,7 +336,7 @@ repos:
   # An immutable tag is the point of pinning, so the version stays exact and
   # Dependabot's pre-commit ecosystem moves it.
   - repo: https://github.com/crate-ci/typos
-    rev: v1.50.1
+    rev: v1.50.2
     hooks:
       - id: typos
         args: ["--force-exclude"]
@@ -355,7 +355,7 @@ repos:
   # configuration the config extends is installed beside it, which is what the
   # hook's README asks for.
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.26.0
+    rev: v9.27.0
     hooks:
       - id: commitlint
         stages: [commit-msg]
@@ -367,7 +367,7 @@ repos:
   # before linting. --no-global reads this repository's configuration alone, so
   # the hook reports the same thing here as on a runner.
   - repo: https://github.com/errata-ai/vale
-    rev: v3.20.0
+    rev: v3.22.0
     hooks:
       # vale's own pre-commit recipe: sync runs whenever the hooks run, so the
       # styles .vale.ini names are present on a runner that checks only the
